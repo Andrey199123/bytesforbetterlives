@@ -14,25 +14,25 @@ window.BFBL_DATA = {
         {
             name: "Andrey Vasilyev",
             title: "Co-President",
-            photo: "/images/team/andrey.jpg",
+            photo: "images/our team/andrey vasilyev.avif",
             fallbackPhoto: "images/our team/andrey vasilyev.avif",
-            bio: "Andrey helps guide Bytes for Better Lives strategy, technology projects, and responsible chapter expansion.",
+            bio: "Bio placeholder: Andrey helps guide Bytes for Better Lives strategy, technology projects, and responsible chapter expansion.",
             contact: "Officer contact or profile link placeholder"
         },
         {
             name: "Jonathan Wu",
             title: "Co-President",
-            photo: "/images/team/jonathan.jpg",
+            photo: "images/logo.avif",
             fallbackPhoto: "images/logo.avif",
-            bio: "Jonathan supports program leadership, outreach partnerships, and service planning across senior and youth initiatives.",
+            bio: "Bio placeholder: Jonathan supports program leadership, outreach partnerships, and service planning across senior and youth initiatives.",
             contact: "Officer contact or profile link placeholder"
         },
         {
             name: "Joel Cardenas",
             title: "Vice President",
-            photo: "/images/team/joel.jpg",
+            photo: "images/logo.avif",
             fallbackPhoto: "images/logo.avif",
-            bio: "Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
+            bio: "Bio placeholder: Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
             contact: "Officer contact or profile link placeholder"
         }
     ],

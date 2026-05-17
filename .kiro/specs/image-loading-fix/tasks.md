@@ -1,0 +1,189 @@
+# Implementation Plan
+
+- [ ] 1. Write bug condition exploration test
+  - **Property 1: Bug Condition** - Image Path Mismatches Prevent Loading
+  - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate the bug exists
+  - **Scoped PBT Approach**: Scope the property to concrete failing cases identified in the design document
+  - Test that images fail to load when paths don't match file system structure:
+    - Case sensitivity: `images/Donations/Christmas%20Haiti%201.jpeg` fails (actual: `images/donations/christmas haiti 1.jpeg`)
+    - URL encoding: `images/Donations/Nicklaus%201.JPG` fails (actual: `images/donations/nicklaus 1.jpg`)
+    - Missing files: `/images/team/andrey.jpg` fails (file doesn't exist)
+    - Path format: absolute paths `/images/` may fail on non-root pages
+  - Write automated test that checks if files exist at referenced paths from HTML/data.js
+  - Run test on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS (this is correct - it proves the bug exists)
+  - Document counterexamples found:
+    - Browser console 404 errors for incorrect paths
+    - Broken image icons on donations.html and other pages
+    - Specific files that fail to load due to case/encoding/missing file issues
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Correctly-Loading Images Remain Unchanged
+  - **IMPORTANT**: Follow observation-first methodology
+  - Observe behavior on UNFIXED code for correctly-loading images:
+    - `images/logo.avif` loads successfully
+    - `images/hero-bg.avif` loads successfully
+    - `images/work with seniors/tech help 1.png` loads successfully
+    - Navigation, styling, and JavaScript functionality work correctly
+  - Write property-based tests capturing observed behavior patterns:
+    - For all image paths that match file system structure (isBugCondition returns false), images load successfully
+    - For all correctly-referenced .avif files, images load successfully
+    - For all non-image-related code, functionality remains unchanged
+  - Property-based testing generates many test cases for stronger guarantees
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [x] 3. Fix image loading issues across HTML and JavaScript files
+
+  - [x] 3.1 Fix case sensitivity issues in donations.html
+    - Replace `images/Donations/` with `images/donations/` throughout the file
+    - Replace `images/Past%20Events/` with `images/past events/` throughout the file
+    - Replace `images/Contact%20Us%20logo/` with `images/contact us logo/` in footer social links
+    - Replace `images/Work%20with%20Kids/` with `images/work with kids/` if present
+    - _Bug_Condition: isBugCondition(imagePath) where imagePath contains uppercase folder names that don't match lowercase file system folders_
+    - _Expected_Behavior: Images load successfully when paths use correct lowercase folder names matching file system_
+    - _Preservation: Correctly-loading images with proper paths remain unchanged_
+    - _Requirements: 1.1, 2.1, 3.1_
+
+  - [x] 3.2 Fix URL encoding issues in donations.html
+    - Replace all `%20` with literal spaces in image paths
+    - Examples:
+      - `Christmas%20Haiti%201.jpeg` → `christmas haiti 1.jpeg`
+      - `Christmas%20Haiti%202.jpeg` → `christmas haiti 2.jpeg`
+      - `Christmas%20Haiti%203.jpeg` → `christmas haiti 3.jpeg`
+      - `Christmas%20Haiti%20Vid.mp4` → `christmas haiti vid.mp4`
+      - `Nicklaus%201.JPG` → `nicklaus 1.jpg`
+      - `Sep%20Board%20Game%205.png` → `sep board game 5.png`
+      - `His%20House%201.png` → `his house 1.png`
+      - `His%20House%202.png` → `his house 2.png`
+      - `Joe%201.png` → `joe 1.png`
+      - `Joe%202.png` → `joe 2.png`
+      - `Joe%203.png` → `joe 3.png`
+      - `Mamma%20Curry.jpeg` → `mamma curry.jpeg`
+      - `Mamma%20Curry%202.jpeg` → `mamma curry 2.jpeg`
+      - `Haiti%201.mp4` → `haiti 1.mp4`
+    - _Bug_Condition: isBugCondition(imagePath) where imagePath contains %20 but file system uses literal spaces_
+    - _Expected_Behavior: Images load successfully when paths use literal spaces matching file system_
+    - _Preservation: Correctly-loading images with proper paths remain unchanged_
+    - _Requirements: 1.2, 2.2, 3.3_
+
+  - [x] 3.3 Fix file extension case issues in donations.html
+    - Replace `.JPG` with `.jpg` where actual files use lowercase extensions
+    - Example: `Nicklaus%201.JPG` → `nicklaus 1.jpg` (combined with URL encoding fix)
+    - _Bug_Condition: isBugCondition(imagePath) where imagePath has uppercase extension but file system has lowercase_
+    - _Expected_Behavior: Images load successfully when extensions match file system case_
+    - _Preservation: Correctly-loading images with proper extensions remain unchanged_
+    - _Requirements: 1.3, 2.3, 3.3_
+
+  - [x] 3.4 Fix filename case issues in donations.html
+    - Ensure all filenames match actual file system casing (all lowercase)
+    - Examples:
+      - `Christmas Haiti 1.jpeg` → `christmas haiti 1.jpeg`
+      - `Christmas Haiti 2.jpeg` → `christmas haiti 2.jpeg`
+      - `Christmas Haiti 3.jpeg` → `christmas haiti 3.jpeg`
+      - `Christmas Haiti Vid.mp4` → `christmas haiti vid.mp4`
+      - `His House 1.png` → `his house 1.png`
+      - `His House 2.png` → `his house 2.png`
+      - `Joe 1.png` → `joe 1.png`
+      - `Joe 2.png` → `joe 2.png`
+      - `Joe 3.png` → `joe 3.png`
+      - `joe 4.png` → `joe 4.png` (already correct)
+      - `Mamma Curry.jpeg` → `mamma curry.jpeg`
+      - `Mamma Curry 2.jpeg` → `mamma curry 2.jpeg`
+      - `Sep Board Game 5.png` → `sep board game 5.png`
+      - `Nicklaus 1.jpg` → `nicklaus 1.jpg`
+    - _Bug_Condition: isBugCondition(imagePath) where imagePath has incorrect filename case_
+    - _Expected_Behavior: Images load successfully when filenames match file system case_
+    - _Preservation: Correctly-loading images with proper filenames remain unchanged_
+    - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.3_
+
+  - [x] 3.5 Fix missing file references in data.js
+    - Update officer photo paths to use existing .avif fallback files or correct paths
+    - Replace `/images/team/andrey.jpg` with `images/our team/andrey vasilyev.avif`
+    - Replace `/images/team/jonathan.jpg` with `images/logo.avif` (fallback)
+    - Replace `/images/team/joel.jpg` with `images/logo.avif` (fallback)
+    - _Bug_Condition: isBugCondition(imagePath) where fileExists(imagePath) returns false_
+    - _Expected_Behavior: Images load successfully when paths reference existing files_
+    - _Preservation: Correctly-loading images with existing file paths remain unchanged_
+    - _Requirements: 1.4, 2.4, 3.4_
+
+  - [x] 3.6 Standardize path format in data.js
+    - Convert all absolute paths (`/images/`) to relative paths (`images/`)
+    - Update officer photo paths from `/images/team/` to `images/our team/` or `images/logo.avif`
+    - Ensure consistency with HTML files that use relative paths
+    - _Bug_Condition: isBugCondition(imagePath) where imagePath starts with /images/ and may fail on non-root pages_
+    - _Expected_Behavior: Images load successfully with consistent relative paths_
+    - _Preservation: Correctly-loading images with proper path format remain unchanged_
+    - _Requirements: 1.6, 2.6, 3.1_
+
+  - [x] 3.7 Fix case sensitivity and URL encoding in data.js gallery array
+    - Review all image paths in gallery array for case sensitivity issues
+    - Replace any uppercase folder names with lowercase
+    - Remove any URL encoding (%20) if present
+    - Ensure all paths match actual file system structure
+    - _Bug_Condition: isBugCondition(imagePath) where data.js paths don't match file system_
+    - _Expected_Behavior: Dynamically-generated gallery images load successfully_
+    - _Preservation: Correctly-loading gallery images remain unchanged_
+    - _Requirements: 1.5, 2.5, 3.4_
+
+  - [x] 3.8 Verify and fix any issues in index.html (if present)
+    - Check all image paths in index.html for case sensitivity, URL encoding, and path format issues
+    - Apply same corrections as donations.html if issues found
+    - Ensure hero background, logo, and any other images load correctly
+    - _Bug_Condition: isBugCondition(imagePath) where index.html paths don't match file system_
+    - _Expected_Behavior: All images on index.html load successfully_
+    - _Preservation: Correctly-loading images on index.html remain unchanged_
+    - _Requirements: 1.1, 1.2, 1.3, 1.6, 2.1, 2.2, 2.3, 2.6, 3.1, 3.2, 3.3_
+
+  - [x] 3.9 Verify and fix any issues in gallery.html (if present)
+    - Check if gallery.html uses data.js for image paths (likely)
+    - If gallery.html has hardcoded image paths, apply same corrections
+    - Ensure all dynamically-generated images load correctly
+    - _Bug_Condition: isBugCondition(imagePath) where gallery.html paths don't match file system_
+    - _Expected_Behavior: All images on gallery.html load successfully_
+    - _Preservation: Correctly-loading images on gallery.html remain unchanged_
+    - _Requirements: 1.5, 2.5, 3.4_
+
+  - [x] 3.10 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - Image Paths Match File System
+    - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
+    - The test from task 1 encodes the expected behavior
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run bug condition exploration test from step 1
+    - **EXPECTED OUTCOME**: Test PASSES (confirms bug is fixed)
+    - Verify all previously-failing image paths now load successfully:
+      - Case sensitivity corrections work
+      - URL encoding removal works
+      - File extension case corrections work
+      - Missing file corrections work
+      - Path format standardization works
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
+
+  - [x] 3.11 Verify preservation tests still pass
+    - **Property 2: Preservation** - Correctly-Loading Images Remain Unchanged
+    - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
+    - Run preservation property tests from step 2
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+    - Confirm all tests still pass after fix:
+      - `images/logo.avif` still loads correctly
+      - `images/hero-bg.avif` still loads correctly
+      - `images/work with seniors/tech help 1.png` still loads correctly
+      - Navigation, styling, and JavaScript functionality still work correctly
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [x] 4. Checkpoint - Ensure all tests pass and images load correctly
+  - Run all tests (bug condition + preservation) and verify they pass
+  - Manually test all pages (index.html, donations.html, gallery.html) in browser
+  - Verify no 404 errors in browser console for image requests
+  - Verify all images display correctly (no broken image icons)
+  - Verify carousel functionality works with corrected image paths
+  - Verify modal/lightbox functionality works with corrected image paths
+  - Verify navigation between pages works correctly
+  - Ask the user if questions arise or if additional testing is needed
