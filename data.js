@@ -16,7 +16,7 @@ window.BFBL_DATA = {
             title: "Co-President",
             photo: "/images/team/andrey.jpg",
             fallbackPhoto: "images/our team/andrey vasilyev.avif",
-            bio: "Bio placeholder: Andrey helps guide Bytes for Better Lives strategy, technology projects, and responsible chapter expansion.",
+            bio: "Andrey helps guide Bytes for Better Lives strategy, technology projects, and responsible chapter expansion.",
             contact: "Officer contact or profile link placeholder"
         },
         {
@@ -24,7 +24,7 @@ window.BFBL_DATA = {
             title: "Co-President",
             photo: "/images/team/jonathan.jpg",
             fallbackPhoto: "images/logo.avif",
-            bio: "Bio placeholder: Jonathan supports program leadership, outreach partnerships, and service planning across senior and youth initiatives.",
+            bio: "Jonathan supports program leadership, outreach partnerships, and service planning across senior and youth initiatives.",
             contact: "Officer contact or profile link placeholder"
         },
         {
@@ -32,7 +32,7 @@ window.BFBL_DATA = {
             title: "Vice President",
             photo: "/images/team/joel.jpg",
             fallbackPhoto: "images/logo.avif",
-            bio: "Bio placeholder: Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
+            bio: "Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
             contact: "Officer contact or profile link placeholder"
         }
     ],
