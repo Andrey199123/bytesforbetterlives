@@ -57,11 +57,11 @@ window.BFBL_DATA = {
         },
         {
             id: "cypress",
-            name: "Cypress Chapter",
+            name: "Cypress Bay Chapter",
             location: "Florida, United States",
-            status: "Launching",
+            status: "Active",
             leadName: "Placeholder Name",
-            leadTitle: "Launching Chapter Lead",
+            leadTitle: "Chapter Lead",
             leadPhoto: "images/logo.avif",
             coordinates: { lat: 26.3017, lng: -80.2551 },
             description: "Local chapter expanding BFBL service projects and digital literacy outreach.",
@@ -88,12 +88,12 @@ window.BFBL_DATA = {
             id: "turkiye",
             name: "Türkiye Chapter",
             location: "Türkiye",
-            status: "Prospective",
+            status: "Launching",
             leadName: "Ipek Placeholder",
-            leadTitle: "Prospective Chapter Lead",
+            leadTitle: "Launching Chapter Lead",
             leadPhoto: "images/logo.avif",
             coordinates: { lat: 41.0082, lng: 28.9784 },
-            description: "Prospective chapter focused on local community service and digital literacy support.",
+            description: "Launching chapter focused on local community service and digital literacy support.",
             photos: [
                 "images/logo.avif"
             ]
