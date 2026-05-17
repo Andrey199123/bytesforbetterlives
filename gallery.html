@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Photo stories from Bytes for Better Lives service events, donations, senior tech help, and digital literacy programs.">
+    <title>Gallery | Bytes for Better Lives</title>
+    <link rel="icon" type="image/avif" href="images/logo.avif">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.avif" alt="Bytes for Better Lives logo">
+            </a>
+            <button class="hamburger" type="button">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu"></ul>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">Gallery</p>
+                <h1>Photo storytelling from BFBL service.</h1>
+                <p>Tap or click any image to reveal the story, date, location, related chapter, and program category.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Stories Behind the Photos</p>
+                    <h2 class="section-title">A growing archive of impact.</h2>
+                    <p class="section-description">This gallery is powered by a central data array so new events, photos, and descriptions can be added without rebuilding the page structure.</p>
+                </div>
+                <div class="gallery-grid" id="gallery-grid" aria-label="Clickable gallery story cards"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container"></div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

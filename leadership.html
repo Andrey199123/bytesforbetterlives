@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Meet the executive board and chapter leaders of Bytes for Better Lives.">
+    <title>Leadership | Bytes for Better Lives</title>
+    <link rel="icon" type="image/avif" href="images/logo.avif">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.avif" alt="Bytes for Better Lives logo">
+            </a>
+            <button class="hamburger" type="button">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu"></ul>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">Leadership</p>
+                <h1>Executive board and chapter leaders.</h1>
+                <p>BFBL is student-led, measurable, and built around accountable leadership across programs and chapters.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Executive Board</p>
+                    <h2 class="section-title">Organization leadership</h2>
+                    <p class="section-description">The executive board coordinates service strategy, partnerships, fundraising, chapter support, and volunteer operations.</p>
+                </div>
+                <div class="officer-grid" id="executive-board-grid" aria-label="Executive board members"></div>
+            </div>
+        </section>
+
+        <section class="section surface-band">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Chapter Leaders</p>
+                    <h2 class="section-title">Local leadership by chapter status</h2>
+                    <p class="section-description">Chapter leaders are pulled from the same chapter data used on the Chapters page. Active, launching, and prospective chapters are labeled clearly.</p>
+                </div>
+                <div class="leaders-grid" id="chapter-leaders-grid" aria-label="Chapter leaders"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container"></div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -3,144 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Start your own Bytes for Better Lives chapter in your community">
-    <title>Start a Chapter | Bytes for Better Lives</title>
+    <meta name="description" content="Explore active, launching, and prospective Bytes for Better Lives chapters around the world.">
+    <title>Chapters | Bytes for Better Lives</title>
+    <link rel="icon" type="image/avif" href="images/logo.avif">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="logo">
-                <img src="images/logo.avif" alt="Bytes for Better Lives Logo">
+                <img src="images/logo.avif" alt="Bytes for Better Lives logo">
             </a>
-            <div class="hamburger">
+            <button class="hamburger" type="button">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="index.html" class="nav-link">Home</a></li>
-                <li><a href="work-with-seniors.html" class="nav-link">Work With Seniors</a></li>
-                <li><a href="work-with-kids.html" class="nav-link">Work With Kids</a></li>
-                <li><a href="donations.html" class="nav-link">Our Donations</a></li>
-                <li><a href="ongoing-initiatives.html" class="nav-link">Ongoing Initiatives</a></li>
-                <li><a href="impact.html" class="nav-link">Our Impact</a></li>
-                <li><a href="team.html" class="nav-link">Meet the Team</a></li>
-                <li><a href="contact.html" class="nav-link">Contact Us</a></li>
-                <li><a href="https://www.gofundme.com/f/help-provide-ipads-to-local-schools" target="_blank" class="btn-donate">Donate</a></li>
-            </ul>
+            </button>
+            <ul class="nav-menu"></ul>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Start Your Own Chapter</h1>
-            <p>Join us in making a difference in your community</p>
-        </div>
-    </section>
-
-    <!-- Chapter Info Section -->
-    <section class="section">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">BYTES FOR BETTER LIVES</h2>
-                <p class="section-description" style="font-size: 1.5rem; margin-top: 1rem; font-weight: 600;">Start your own chapter with us!</p>
-                <p class="section-description" style="margin-top: 1rem;">Fill this form and we'll get back to you as soon as possible!</p>
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">Chapter Network</p>
+                <h1>Student-led service, expanding with care.</h1>
+                <p>Every chapter has a clear status so active chapters, launching teams, and prospective chapters are never confused.</p>
             </div>
+        </section>
 
-            <!-- Contact Form -->
-            <div style="max-width: 600px; margin: 3rem auto;">
-                <form class="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
-                    <div class="form-group">
-                        <label for="name">Name *</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="school">School/Organization</label>
-                        <input type="text" id="school" name="school">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="location">Location (City, State) *</label>
-                        <input type="text" id="location" name="location" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="message">Tell us about your interest in starting a chapter *</label>
-                        <textarea id="message" name="message" rows="6" required></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Submit</button>
-                </form>
-                <p style="text-align: center; margin-top: 2rem; color: #34d399; font-weight: 600;">Thanks for your interest!</p>
+        <section class="section compact">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Overview</p>
+                    <h2 class="section-title">Chapter status at a glance</h2>
+                    <p class="section-description">Only chapters with status <strong>Active</strong> count as official active chapters. Launching and prospective chapters are shown separately while they build leadership, projects, and approval readiness.</p>
+                </div>
+                <div class="chapter-summary" id="chapter-summary" aria-label="Chapter counts and model"></div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Contact Section -->
-    <section class="section bg-light">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Contact Us</h2>
-                <p class="section-description">Please feel free to reach out to us at any time. We'll reply as soon as possible!</p>
+        <section class="section surface-band">
+            <div class="wide-container">
+                <div class="section-header">
+                    <p class="section-kicker">Map</p>
+                    <h2 class="section-title">Chapters by location</h2>
+                    <p class="section-description">Pins are generated from the coordinates in the chapter data array. Select a pin or card to view chapter details.</p>
+                </div>
+                <div class="map-layout">
+                    <div class="world-map" id="chapter-map" aria-label="World map with chapter pins"></div>
+                    <aside class="map-index" id="chapter-map-index" aria-label="Clickable chapter directory"></aside>
+                </div>
             </div>
-            <div class="text-center">
-                <p style="font-size: 1.25rem; color: var(--dark); margin-top: 2rem;">
-                    Email: <a href="mailto:bytesforbetterlives@gmail.com" style="color: var(--primary-color); font-weight: 600;">bytesforbetterlives@gmail.com</a>
-                </p>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Directory</p>
+                    <h2 class="section-title">All chapters</h2>
+                    <p class="section-description">Each chapter card includes its location, status, president or lead, description, photos, and a chapter detail view.</p>
+                </div>
+                <div class="chapter-grid" id="chapter-grid" aria-label="All chapter cards"></div>
+                <section class="chapter-detail" id="chapter-detail" aria-live="polite" aria-label="Selected chapter details"></section>
+            </div>
+        </section>
+
+        <section class="section surface-band" id="start-chapter">
+            <div class="container">
+                <div class="split-section">
+                    <div class="section-header">
+                        <p class="section-kicker">Start a Chapter</p>
+                        <h2 class="section-title">Bring BFBL service to your community.</h2>
+                        <p class="section-description">Students interested in launching a chapter should be ready to identify local needs, recruit volunteers, communicate clearly with BFBL leadership, and label the chapter accurately while it is being reviewed.</p>
+                    </div>
+                    <div class="impact-card">
+                        <h3>Chapter applicants can reach out directly.</h3>
+                        <p>Include your name, school or organization, city, country, proposed leadership team, and the service projects you want to start first.</p>
+                        <div class="btn-row mt-2">
+                            <a href="mailto:bytesforbetterlives@gmail.com?subject=Bytes%20for%20Better%20Lives%20Chapter%20Interest" class="btn btn-primary">Email About a Chapter</a>
+                            <a href="contact.html" class="btn btn-secondary">Contact Us</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Bytes for Better Lives</h3>
-                    <p>A student-run nonprofit based in South Florida empowering underserved individuals through education and equitable entertainment.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <a href="index.html">Home</a>
-                    <a href="team.html">Meet the Team</a>
-                    <a href="contact.html">Contact Us</a>
-                </div>
-                <div class="footer-section">
-                    <h3>Get Involved</h3>
-                    <a href="work-with-seniors.html">Work With Seniors</a>
-                    <a href="work-with-kids.html">Work With Kids</a>
-                    <a href="donations.html">Our Donations</a>
-                    <a href="https://www.gofundme.com/f/help-provide-ipads-to-local-schools" target="_blank">Donate</a>
-                </div>
-                <div class="footer-section">
-                    <img src="images/logo.avif" alt="Bytes for Better Lives" style="width: 80px; height: auto; margin-bottom: 1rem;">
-                    <h3>Contact</h3>
-                    <p>Email: bytesforbetterlives@gmail.com</p>
-                    <div class="social-links" style="display: flex; gap: 1rem; align-items: center; justify-content: center;">
-                        <a href="https://www.instagram.com/bytesforbetterlives?igsh=cmgzYzEwczV6YWI1" target="_blank" class="social-link" title="Instagram" style="width: 40px; height: 40px; padding: 0;">
-                            <img src="images/Contact%20Us%20logo/instagram%20logo.jpg" alt="Instagram" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                        </a>
-                        <a href="https://www.linkedin.com/in/bytesforbetterlives-assist-393112371/" target="_blank" class="social-link" title="LinkedIn" style="width: 40px; height: 40px; padding: 0;">
-                            <img src="images/Contact%20Us%20logo/linkedin.jpeg" alt="LinkedIn" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 Bytes for Better Lives. All rights reserved.</p>
-            </div>
-        </div>
+        <div class="container"></div>
     </footer>
 
-    <script src="scripts.js"></script>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
