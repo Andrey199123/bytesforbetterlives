@@ -36,6 +36,10 @@
 
     --radius-sm: 4px;
     --radius-md: 8px;
+    /* Arc-like rounding (rounded rectangles, not pill capsules). */
+    --radius-lg: 14px;
+    --radius-xl: 16px;
+    --radius-2xl: 22px;
     --space-2xs: 4px;
     --space-xs: 8px;
     --space-sm: 12px;
@@ -290,7 +294,7 @@ main {
     justify-content: center;
     min-height: 42px;
     padding: 0.62rem 1rem;
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
     background: var(--blue);
     color: var(--paper);
     font-weight: 800;
@@ -421,7 +425,7 @@ main {
     min-height: 40px;
     padding: 0.45rem 0.8rem;
     border: 1px solid color-mix(in oklch, var(--paper) 28%, transparent);
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
     color: var(--paper);
     background: color-mix(in oklch, var(--blue-dark) 42%, transparent);
     backdrop-filter: blur(12px);
@@ -436,7 +440,7 @@ main {
     min-height: 48px;
     padding: 0.82rem 1.25rem;
     border: 1px solid transparent;
-    border-radius: 999px;
+    border-radius: var(--radius-xl);
     font-weight: 800;
     line-height: 1;
     transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
@@ -621,7 +625,7 @@ main {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 999px;
+    border-radius: 50%;
     background: var(--green-soft);
     color: var(--green-dark);
     font-weight: 900;
@@ -710,7 +714,7 @@ main {
     width: fit-content;
     min-height: 30px;
     padding: 0.24rem 0.62rem;
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
     font-size: 0.84rem;
     font-weight: 900;
 }
@@ -994,7 +998,7 @@ main {
     align-items: center;
     gap: var(--space-xs);
     padding: 0.4rem 0.58rem;
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
     background: color-mix(in oklch, var(--ink) 76%, transparent);
     color: var(--paper);
     font-size: 0.85rem;
@@ -1004,7 +1008,7 @@ main {
 .story-category {
     width: fit-content;
     padding: 0.24rem 0.58rem;
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
     background: var(--green-soft);
     color: var(--green-dark);
     font-weight: 900;
@@ -1270,7 +1274,7 @@ main {
     bottom: 18px;
     left: 50%;
     padding: 0.35rem 0.8rem;
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
     background: color-mix(in oklch, var(--ink) 62%, transparent);
     color: var(--paper);
     transform: translateX(-50%);
@@ -1336,7 +1340,7 @@ main {
     min-height: 40px;
     padding: 0.45rem 0.75rem;
     border: 1px solid color-mix(in oklch, var(--paper) 18%, transparent);
-    border-radius: 999px;
+    border-radius: var(--radius-lg);
     font-weight: 800;
 }
 
