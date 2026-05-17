@@ -860,3 +860,58 @@
         });
     }
 })();
+
+window.openEmailModal = function() {
+    const modal = document.getElementById("email-modal");
+    if (modal) modal.classList.add("active");
+};
+
+window.closeEmailModal = function() {
+    const modal = document.getElementById("email-modal");
+    if (modal) modal.classList.remove("active");
+};
+
+window.submitEmailForm = async function(event) {
+    event.preventDefault();
+    const btn = document.getElementById("submit-email-btn");
+    const status = document.getElementById("email-status");
+    const email = document.getElementById("sender-email").value;
+    const message = document.getElementById("sender-message").value;
+
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+    status.textContent = "";
+
+    try {
+        const response = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer re_db7VDSCS_9nq5Zus2V7zzM8jx8MpBxTHU",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                from: "Bytes for Better Lives <onboarding@resend.dev>",
+                to: "bytesforbetterlives@gmail.com",
+                subject: "New Chapter Interest Form Submission",
+                html: `<p><strong>From:</strong> ${email}</p><p><strong>Message:</strong></p><p>${message.replace(/\\n/g, '<br>')}</p>`
+            })
+        });
+
+        if (response.ok) {
+            status.style.color = "var(--green)";
+            status.textContent = "Email sent successfully! We will get back to you soon.";
+            document.getElementById("email-form").reset();
+            setTimeout(closeEmailModal, 3000);
+        } else {
+            const errorText = await response.text();
+            throw new Error(errorText);
+        }
+    } catch (error) {
+        console.error(error);
+        status.style.color = "var(--red)";
+        status.textContent = "Failed to send email. Please try again or email us directly.";
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Send Email";
+    }
+};

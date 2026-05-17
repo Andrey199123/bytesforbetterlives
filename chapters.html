@@ -81,13 +81,32 @@
                         <h3>Chapter applicants can reach out directly.</h3>
                         <p>Include your name, school or organization, city, country, proposed leadership team, and the service projects you want to start first.</p>
                         <div class="btn-row mt-2">
-                            <a href="mailto:bytesforbetterlives@gmail.com?subject=Bytes%20for%20Better%20Lives%20Chapter%20Interest" class="btn btn-primary">Email About a Chapter</a>
+                            <button onclick="openEmailModal()" class="btn btn-primary">Email About a Chapter</button>
                             <a href="contact.html" class="btn btn-secondary">Contact Us</a>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+        <!-- Email Modal -->
+        <div id="email-modal" class="modal-overlay">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeEmailModal()">&times;</button>
+                <h2>Start a Chapter</h2>
+                <form id="email-form" onsubmit="submitEmailForm(event)">
+                    <div class="form-group">
+                        <label for="sender-email">Your Email Address</label>
+                        <input type="email" id="sender-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="sender-message">Message</label>
+                        <textarea id="sender-message" rows="5" required placeholder="Include your name, school or organization, city, country, proposed leadership team, and the service projects you want to start first."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="submit-email-btn">Send Email</button>
+                    <p id="email-status" class="form-status"></p>
+                </form>
+            </div>
+        </div>
     </main>
 
     <footer class="footer">
