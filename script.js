@@ -263,7 +263,6 @@
                     <p class="officer-title">${escapeHTML(officer.title)}</p>
                 </div>
                 <p>${escapeHTML(officer.bio)}</p>
-                ${compact ? "" : `<p class="contact-placeholder">${escapeHTML(officer.contact || "Contact placeholder")}</p>`}
             </article>
         `;
     }
@@ -355,6 +354,24 @@
             }).join("");
         }
 
+        // Leaflet map
+        var leafletEl = document.querySelector("#leaflet-map");
+        if (leafletEl && typeof L !== "undefined") {
+            var map = L.map("leaflet-map", { scrollWheelZoom: false }).setView([30, 0], 2);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+            (data.chapters || []).forEach(function (chapter) {
+                if (!chapter.coordinates) return;
+                var marker = L.marker([chapter.coordinates.lat, chapter.coordinates.lng]).addTo(map);
+                marker.bindPopup("<strong>" + escapeHTML(chapter.name) + "</strong><br>" + escapeHTML(chapter.location) + "<br><em>" + escapeHTML(statusLabel(chapter.status)) + "</em>");
+                marker.on("click", function () {
+                    selectChapter(chapter.id, true);
+                });
+            });
+        }
+
         const indexRoot = document.querySelector("#chapter-map-index");
         if (indexRoot) {
             indexRoot.innerHTML = `
@@ -376,6 +393,13 @@
 
         if (gridRoot) {
             gridRoot.innerHTML = (data.chapters || []).map(chapterCardMarkup).join("");
+        }
+
+        const flipGrid = document.querySelector("#chapter-flip-grid");
+        if (flipGrid) {
+            flipGrid.innerHTML = (data.chapters || [])
+                .filter(function (chapter) { return chapter.id !== "ahs"; })
+                .map(chapterFlipCardMarkup).join("");
         }
 
         bindChapterButtons(document, true);
@@ -412,9 +436,57 @@
                         <p>${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
                     </div>
                 </div>
+                ${chapter.leadBio ? `<p style="color: var(--ink-soft); font-style: italic; font-size: 0.9rem;">${escapeHTML(chapter.leadBio)}</p>` : ""}
                 <p>${escapeHTML(chapter.description)}</p>
                 <span class="btn btn-quiet chapter-actions">View Chapter</span>
             </article>
+        `;
+    }
+
+    function chapterFlipCardMarkup(chapter) {
+        const photo = chapter.photos && chapter.photos[0] ? chapter.photos[0] : "images/logo.avif";
+        return `
+            <div class="flip-card" role="button" tabindex="0" data-chapter-select="${escapeHTML(chapter.id)}">
+                <div class="flip-card-inner">
+                    <!-- Front Side -->
+                    <div class="flip-card-front">
+                        <div class="flip-card-image-container">
+                            <img src="${escapeHTML(photo)}" alt="${escapeHTML(chapter.name)}" class="flip-card-image" onerror="this.src='images/logo.avif'">
+                            <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
+                        </div>
+                        <div class="flip-card-front-content">
+                            <h3>${escapeHTML(chapter.name)}</h3>
+                            <p class="flip-card-location">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="location-icon" style="vertical-align: middle; margin-right: 4px; color: var(--gold);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHTML(chapter.location)}
+                            </p>
+                            <p class="flip-card-desc">${escapeHTML(chapter.description)}</p>
+                            <div class="flip-hint">
+                                <span>Hover to Reveal President</span>
+                                <svg class="flip-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 6px;"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Back Side -->
+                    <div class="flip-card-back">
+                        <div class="flip-card-back-header">
+                            <img src="${escapeHTML(chapter.leadPhoto || 'images/logo.avif')}" alt="${escapeHTML(chapter.leadName)}" class="flip-card-lead-photo" onerror="this.src='images/logo.avif'">
+                            <div class="flip-card-lead-meta">
+                                <h4>${escapeHTML(chapter.leadName)}</h4>
+                                <p class="flip-card-lead-title">${escapeHTML(chapter.leadTitle || 'Chapter Lead')}</p>
+                            </div>
+                        </div>
+                        <div class="flip-card-back-content">
+                            <p class="flip-card-bio">${escapeHTML(chapter.leadBio || 'Leading chapter initiatives and community projects.')}</p>
+                            ${chapter.instagram ? `
+                                <a href="${escapeHTML(chapter.instagram)}" target="_blank" rel="noopener noreferrer" class="instagram-btn" onclick="event.stopPropagation();">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="instagram-svg" style="vertical-align: middle; margin-right: 6px;"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                                    Follow Instagram
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
         `;
     }
 
@@ -447,7 +519,6 @@
         });
 
         const photos = chapter.photos && chapter.photos.length ? chapter.photos : ["images/logo.avif"];
-        const notActive = chapter.status !== "Active";
         detailRoot.innerHTML = `
             <div class="chapter-detail-grid">
                 <div>
@@ -461,9 +532,8 @@
                             <p>${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
                         </div>
                     </div>
+                    ${chapter.leadBio ? `<p class="mt-2" style="color: var(--ink-soft); font-style: italic;">${escapeHTML(chapter.leadBio)}</p>` : ""}
                     <p class="mt-2">${escapeHTML(chapter.description)}</p>
-                    <p class="mt-2"><strong>Coordinates:</strong> ${escapeHTML(chapter.coordinates.lat)}, ${escapeHTML(chapter.coordinates.lng)}</p>
-                    ${notActive ? `<p class="chapter-note mt-2">This ${escapeHTML(statusLabel(chapter.status))} is not counted as an active official chapter until it is formally approved.</p>` : ""}
                 </div>
                 <div class="chapter-photo-grid">
                     ${photos.map(function (photo, index) {
@@ -883,17 +953,16 @@ window.submitEmailForm = async function(event) {
     status.textContent = "";
 
     try {
-        const response = await fetch("https://api.resend.com/emails", {
+        const response = await fetch("https://formsubmit.co/ajax/bytesforbetterlives@gmail.com", {
             method: "POST",
             headers: {
-                "Authorization": "Bearer re_db7VDSCS_9nq5Zus2V7zzM8jx8MpBxTHU",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "Accept": "application/json"
             },
             body: JSON.stringify({
-                from: "Bytes for Better Lives <onboarding@resend.dev>",
-                to: "bytesforbetterlives@gmail.com",
-                subject: "New Chapter Interest Form Submission",
-                html: `<p><strong>From:</strong> ${email}</p><p><strong>Message:</strong></p><p>${message.replace(/\\n/g, '<br>')}</p>`
+                _subject: "New Chapter Interest Form Submission",
+                email: email,
+                message: message
             })
         });
 

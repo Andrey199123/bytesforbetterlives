@@ -16,23 +16,23 @@ window.BFBL_DATA = {
             title: "Co-President",
             photo: "images/our team/andrey vasilyev.avif",
             fallbackPhoto: "images/our team/andrey vasilyev.avif",
-            bio: "Bio placeholder: Andrey helps guide Bytes for Better Lives strategy, technology projects, and responsible chapter expansion.",
+            bio: "Andrey helps guide Bytes for Better Lives strategy, technology projects, and responsible chapter expansion.",
             contact: "Officer contact or profile link placeholder"
         },
         {
             name: "Jonathan Wu",
             title: "Co-President",
-            photo: "images/logo.avif",
-            fallbackPhoto: "images/logo.avif",
-            bio: "Bio placeholder: Jonathan supports program leadership, outreach partnerships, and service planning across senior and youth initiatives.",
+            photo: "images/team/jonathan-wu.jpg",
+            fallbackPhoto: "images/team/jonathan-wu.jpg",
+            bio: "Jonathan supports program leadership, outreach partnerships, and service planning across senior and youth initiatives.",
             contact: "Officer contact or profile link placeholder"
         },
         {
             name: "Joel Cardenas",
             title: "Vice President",
-            photo: "images/logo.avif",
-            fallbackPhoto: "images/logo.avif",
-            bio: "Bio placeholder: Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
+            photo: "images/team/joel-cardenas.png",
+            fallbackPhoto: "images/team/joel-cardenas.png",
+            bio: "Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
             contact: "Officer contact or profile link placeholder"
         }
     ],
@@ -47,6 +47,7 @@ window.BFBL_DATA = {
             leadName: "Executive Board",
             leadTitle: "Chapter Lead",
             leadPhoto: "images/logo.avif",
+            leadBio: "The founding executive board manages outreach, events, and partnerships across South Florida.",
             coordinates: { lat: 26.1224, lng: -80.1373 },
             description: "Original chapter focused on senior tech help, children's donations, and digital literacy outreach.",
             photos: [
@@ -63,6 +64,8 @@ window.BFBL_DATA = {
             leadName: "Cypress Bay",
             leadTitle: "Chapter Lead",
             leadPhoto: "images/logo.avif",
+            leadBio: "The Cypress Bay team brings BFBL service projects and digital literacy outreach to their local community.",
+            instagram: "https://instagram.com/bfbl_cypressbay",
             coordinates: { lat: 26.3017, lng: -80.2551 },
             description: "Local chapter expanding BFBL service projects and digital literacy outreach.",
             photos: [
@@ -78,6 +81,8 @@ window.BFBL_DATA = {
             leadName: "Russia",
             leadTitle: "Launching Chapter Lead",
             leadPhoto: "images/logo.avif",
+            leadBio: "Leading efforts to bring digital literacy and community service outreach to Russia.",
+            instagram: "https://www.instagram.com/bytesforbetterlives.russia",
             coordinates: { lat: 55.7558, lng: 37.6173 },
             description: "International chapter exploring digital literacy and community service outreach.",
             photos: [
@@ -92,6 +97,8 @@ window.BFBL_DATA = {
             leadName: "Turkey",
             leadTitle: "Launching Chapter Lead",
             leadPhoto: "images/logo.avif",
+            leadBio: "Building a local chapter focused on community service and digital literacy support in Turkey.",
+            instagram: "https://instagram.com/bfbl_turkiye",
             coordinates: { lat: 41.0082, lng: 28.9784 },
             description: "Launching chapter focused on local community service and digital literacy support.",
             photos: [

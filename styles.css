@@ -1620,3 +1620,209 @@ main {
 .w-100 {
     width: 100%;
 }
+
+/* Flip Cards for Expanding Chapters */
+.flip-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-xl);
+    margin-top: var(--space-xl);
+}
+
+.flip-card {
+    perspective: 1000px;
+    height: 440px;
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+    position: relative;
+    outline: none;
+}
+
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--line);
+}
+
+.flip-card:hover .flip-card-inner,
+.flip-card:focus-within .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+}
+
+.flip-card-image-container {
+    position: relative;
+    height: 220px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.flip-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.flip-card:hover .flip-card-image {
+    transform: scale(1.05);
+}
+
+.flip-card-image-container .status-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+    box-shadow: var(--shadow-sm);
+}
+
+.flip-card-front-content {
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.flip-card-front-content h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+    color: var(--dark);
+}
+
+.flip-card-location {
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.flip-card-desc {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+    flex-grow: 1;
+}
+
+.flip-hint {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: var(--gold);
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: auto;
+    animation: pulseHint 2s infinite ease-in-out;
+}
+
+@keyframes pulseHint {
+    0%, 100% { opacity: 0.85; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(3px); }
+}
+
+.flip-card-back {
+    transform: rotateY(180deg);
+    background: var(--surface-band);
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1.5px solid var(--gold-soft);
+}
+
+.flip-card-back-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--space-sm);
+}
+
+.flip-card-lead-photo {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold);
+    box-shadow: var(--shadow-sm);
+}
+
+.flip-card-lead-meta h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.15rem;
+    color: var(--dark);
+}
+
+.flip-card-lead-title {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    font-weight: 600;
+}
+
+.flip-card-back-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: space-between;
+}
+
+.flip-card-bio {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-bottom: var(--space-md);
+}
+
+.instagram-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.8rem var(--space-md);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    color: white !important;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    margin-top: auto;
+    box-shadow: var(--shadow-md);
+    border: none;
+}
+
+.instagram-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    opacity: 0.95;
+}
+
+.instagram-btn:active {
+    transform: translateY(0);
+}
+
