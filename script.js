@@ -4,7 +4,7 @@
         donateUrl: "https://www.gofundme.com/f/help-provide-ipads-to-local-schools",
         socialLinks: {
             instagram: "https://www.instagram.com/bytesforbetterlives?igsh=cmgzYzEwczV6YWI1",
-            linkedin: "https://www.linkedin.com/in/bytesforbetterlives-assist-393112371/"
+            linkedin: "https://www.linkedin.com/company/bytes-for-better-lives/about/"
         },
         officers: [],
         chapters: [],
@@ -160,9 +160,13 @@
                 <div class="footer-section">
                     <h3>Contact</h3>
                     <a href="mailto:${escapeHTML(contactEmail)}">${escapeHTML(contactEmail)}</a>
-                    <div class="social-links">
-                        <a class="social-link" href="${escapeHTML(data.socialLinks.instagram)}" target="_blank" rel="noopener">Instagram</a>
-                        <a class="social-link" href="${escapeHTML(data.socialLinks.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>
+                    <div class="social-links" style="display: flex; gap: 1rem; align-items: center;">
+                        <a class="social-link" href="${escapeHTML(data.socialLinks.instagram)}" target="_blank" rel="noopener" title="Instagram" style="width: 40px; height: 40px; padding: 0;">
+                            <img src="images/contact us logo/instagram logo.jpg" alt="Instagram" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                        </a>
+                        <a class="social-link" href="${escapeHTML(data.socialLinks.linkedin)}" target="_blank" rel="noopener" title="LinkedIn" style="width: 40px; height: 40px; padding: 0;">
+                            <img src="images/contact us logo/linkedin.jpeg" alt="LinkedIn" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                        </a>
                     </div>
                 </div>
             </div>

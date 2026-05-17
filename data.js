@@ -6,7 +6,7 @@ window.BFBL_DATA = {
     donateUrl: "https://www.gofundme.com/f/help-provide-ipads-to-local-schools",
     socialLinks: {
         instagram: "https://www.instagram.com/bytesforbetterlives?igsh=cmgzYzEwczV6YWI1",
-        linkedin: "https://www.linkedin.com/in/bytesforbetterlives-assist-393112371/"
+        linkedin: "https://www.linkedin.com/company/bytes-for-better-lives/about/"
     },
 
     // Edit officer data here. Replace /images/team/*.jpg with final portraits when ready.
