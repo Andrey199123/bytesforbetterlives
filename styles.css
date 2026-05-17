@@ -275,11 +275,12 @@ main {
     display: inline-flex;
     align-items: center;
     min-height: 40px;
-    padding: 0 var(--space-xs);
+    padding: 0 clamp(0.25rem, 0.6vw, 0.75rem);
     color: var(--ink-soft);
     font-weight: 700;
-    font-size: clamp(0.82rem, 0.82vw, 0.95rem);
+    font-size: clamp(0.92rem, 1.1vw, 1.08rem);
     border-radius: var(--radius-md);
+    transition: color 150ms ease, background-color 150ms ease;
 }
 
 .nav-link:hover,
@@ -293,17 +294,21 @@ main {
     align-items: center;
     justify-content: center;
     min-height: 42px;
-    padding: 0.62rem 1rem;
-    border-radius: var(--radius-lg);
-    background: var(--blue);
+    padding: 0.62rem 1.5rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--green), var(--blue));
     color: var(--paper);
     font-weight: 800;
-    box-shadow: var(--shadow-sm);
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    box-shadow: var(--shadow-md);
+    transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
 }
 
 .btn-donate:hover {
-    background: var(--blue-dark);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    filter: brightness(1.1);
 }
 
 .hamburger {
@@ -438,9 +443,9 @@ main {
     align-items: center;
     justify-content: center;
     min-height: 48px;
-    padding: 0.82rem 1.25rem;
+    padding: 0.82rem 1.75rem;
     border: 1px solid transparent;
-    border-radius: var(--radius-xl);
+    border-radius: 999px;
     font-weight: 800;
     line-height: 1;
     transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
