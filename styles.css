@@ -357,19 +357,10 @@ main {
     align-items: center;
     padding-block: clamp(4rem, 9vw, 7rem);
     background:
-        linear-gradient(90deg, color-mix(in oklch, var(--blue-dark) 86%, transparent), color-mix(in oklch, var(--green-dark) 44%, transparent)),
+        linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
         url("images/hero-bg.avif") center 34% / cover no-repeat;
     color: var(--paper);
     overflow: hidden;
-}
-
-.hero::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 0;
-    height: 34%;
-    background: linear-gradient(180deg, transparent, color-mix(in oklch, var(--blue-dark) 72%, transparent));
-    z-index: -1;
 }
 
 .hero-content {

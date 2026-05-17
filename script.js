@@ -43,6 +43,7 @@
         initRevealEffects();
         initBackToTop();
         initSmoothScroll();
+        initCounters();
     });
 
     function escapeHTML(value) {
@@ -189,11 +190,11 @@
         if (!root) return;
 
         const stats = [
-            { value: "$8.8K+", label: "Fundraised", note: "for technology access and outreach" },
-            { value: "1000+", label: "Donations Amassed", note: "games, devices, and supplies" },
-            { value: "600+", label: "Students Reached", note: "through education and drives" },
-            { value: "1500+", label: "Seniors Helped", note: "with tech help and safety lessons" },
-            { value: `${activeChapters().length}+`, label: "Active Chapters", note: "counted from chapter data" }
+            { raw: 8.8, prefix: "$", suffix: "K+", label: "Fundraised", note: "for technology access and outreach", decimals: 1 },
+            { raw: 1000, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
+            { raw: 600, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
+            { raw: 1500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
+            { raw: activeChapters().length, prefix: "", suffix: "+", label: "Active Chapters", note: "counted from chapter data", decimals: 0 }
         ];
 
         root.innerHTML = `
@@ -202,7 +203,7 @@
                     ${stats.map(function (stat) {
                         return `
                             <article class="stat-card">
-                                <div class="stat-number">${escapeHTML(stat.value)}</div>
+                                <div class="stat-number animated-counter" data-target="${stat.raw}" data-prefix="${stat.prefix}" data-suffix="${stat.suffix}" data-decimals="${stat.decimals}">0</div>
                                 <div class="stat-label">${escapeHTML(stat.label)}</div>
                                 <p class="stat-note">${escapeHTML(stat.note)}</p>
                             </article>
@@ -821,6 +822,49 @@
             if (event.key === "Escape") closeLightbox();
             if (event.key === "ArrowRight" && galleryItems.length > 1) nextImage();
             if (event.key === "ArrowLeft" && galleryItems.length > 1) prevImage();
+        });
+    }
+
+    function initCounters() {
+        if (!("IntersectionObserver" in window)) return;
+        const counters = document.querySelectorAll('.animated-counter');
+        if (!counters.length) return;
+
+        const observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                const el = entry.target;
+                if (el.dataset.animated) return;
+                el.dataset.animated = "true";
+                observer.unobserve(el);
+
+                const target = parseFloat(el.getAttribute('data-target')) || 0;
+                const prefix = el.getAttribute('data-prefix') || "";
+                const suffix = el.getAttribute('data-suffix') || "";
+                const decimals = parseInt(el.getAttribute('data-decimals'), 10) || 0;
+                const duration = 2000;
+                const startTime = performance.now();
+
+                function update(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    const current = target * easeOut;
+
+                    el.textContent = prefix + current.toFixed(decimals) + suffix;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(update);
+                    } else {
+                        el.textContent = prefix + target.toFixed(decimals) + suffix;
+                    }
+                }
+                requestAnimationFrame(update);
+            });
+        }, { threshold: 0.1 });
+
+        counters.forEach(function (counter) {
+            observer.observe(counter);
         });
     }
 })();
