@@ -1,0 +1,77 @@
+IMAGES FOLDER - INSTRUCTIONS
+============================
+
+This folder is where you should place all images for the website.
+
+RECOMMENDED IMAGES TO ADD:
+-------------------------
+
+1. TEAM PHOTOS:
+   - team-pranav.jpg (Pranav Rai - Co-Founder & President)
+   - team-aaron.jpg (Aaron Pinto - Co-Founder & President)
+   - team-alexey.jpg (Alexey Guydouk - VP of Fundraising)
+   - team-ethan.jpg (Ethan Chen - VP of Outreach)
+   - team-andrey.jpg (Andrey Vasilyev - VP of Operations)
+
+2. EVENT PHOTOS:
+   - event-board-game-drive.jpg
+   - event-lotus-house.jpg
+   - event-digital-safety.jpg
+   - event-tech-assistance.jpg
+   - event-his-house.jpg
+   - event-joe-dimaggio.jpg
+   - event-trivia-night.jpg
+   - event-workshops.jpg
+   - event-haiti.jpg
+
+3. PARTNER LOGOS:
+   - partner-american-heritage.png
+   - partner-broward-health.png
+   - partner-nicklaus.png
+   - partner-joe-dimaggio.png
+   - partner-his-house.png
+   - partner-lotus-house.png
+   - partner-palomino-gardens.png
+   - partner-house-of-vision.png
+
+4. HERO/BACKGROUND IMAGES:
+   - hero-bg.jpg (for hero section backgrounds)
+   - about-bg.jpg
+   - impact-bg.jpg
+
+5. ICONS/GRAPHICS:
+   - logo.png (Bytes for Better Lives logo)
+   - favicon.ico (browser tab icon)
+
+IMAGE SPECIFICATIONS:
+--------------------
+- Format: JPG for photos, PNG for logos with transparency
+- Team photos: 800x800px (square, centered headshots)
+- Event photos: 1200x800px (landscape orientation)
+- Partner logos: 400x200px (transparent background recommended)
+- Hero images: 1920x1080px (high resolution for large displays)
+
+UPDATING THE HTML:
+-----------------
+Once you add images, update the HTML files:
+
+1. For team photos in team.html:
+   Replace: <div class="team-photo">👨‍💼</div>
+   With: <img src="images/team-pranav.jpg" alt="Pranav Rai" class="team-photo">
+
+2. For card icons:
+   Replace: <div class="card-icon">🎲</div>
+   With: <img src="images/event-board-game.jpg" alt="Board Game Drive" class="card-icon">
+
+3. For partner logos in impact.html:
+   Add logo images to the partner boxes
+
+CURRENT STATUS:
+--------------
+The website currently uses emoji placeholders (👨‍💼, 🎲, etc.) which work fine
+but can be replaced with actual photos for a more professional look.
+
+NOTE:
+-----
+All images should be optimized for web use to ensure fast loading times.
+Recommended tools: TinyPNG, ImageOptim, or Photoshop's "Save for Web" feature.
