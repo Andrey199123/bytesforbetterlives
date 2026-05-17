@@ -44,7 +44,7 @@ window.BFBL_DATA = {
             name: "AHS Chapter",
             location: "South Florida, United States",
             status: "Active",
-            leadName: "Bytes for Better Lives Executive Board",
+            leadName: "Executive Board",
             leadTitle: "Chapter Lead",
             leadPhoto: "images/logo.avif",
             coordinates: { lat: 26.1224, lng: -80.1373 },
