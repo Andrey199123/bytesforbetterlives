@@ -40,6 +40,7 @@
     --radius-lg: 14px;
     --radius-xl: 16px;
     --radius-2xl: 22px;
+    --nav-height: 76px;
     --space-2xs: 4px;
     --space-xs: 8px;
     --space-sm: 12px;
@@ -222,7 +223,7 @@ main {
 .navbar {
     position: sticky;
     top: 0;
-    z-index: 1000;
+    z-index: 3000;
     background: color-mix(in oklch, var(--paper) 92%, transparent);
     border-bottom: 1px solid color-mix(in oklch, var(--line) 85%, transparent);
     backdrop-filter: blur(16px);
@@ -230,7 +231,7 @@ main {
 
 .nav-container {
     width: min(1400px, calc(100% - 32px));
-    min-height: 76px;
+    min-height: var(--nav-height);
     margin-inline: auto;
     display: flex;
     align-items: center;
@@ -1475,37 +1476,58 @@ main {
 
     .nav-menu {
         position: fixed;
-        top: 76px;
+        top: var(--nav-height);
         right: 0;
         bottom: 0;
         left: 0;
+        z-index: 2990;
         display: grid;
+        grid-auto-rows: min-content;
         align-content: start;
         justify-items: stretch;
         gap: var(--space-xs);
-        padding: var(--space-lg) var(--space-lg) var(--space-3xl);
-        background: var(--paper);
+        width: 100vw;
+        max-width: none;
+        height: calc(100vh - var(--nav-height));
+        height: calc(100dvh - var(--nav-height));
+        min-height: calc(100vh - var(--nav-height));
+        min-height: calc(100dvh - var(--nav-height));
+        padding: var(--space-md) max(var(--space-md), env(safe-area-inset-right)) calc(var(--space-3xl) + env(safe-area-inset-bottom)) max(var(--space-md), env(safe-area-inset-left));
+        background: color-mix(in oklch, var(--paper) 98%, var(--blue-soft));
         opacity: 0;
         pointer-events: none;
         visibility: hidden;
-        transition: opacity 180ms ease, visibility 180ms ease;
+        transform: translateY(-8px);
+        transition: opacity 180ms ease, visibility 180ms ease, transform 180ms ease;
         overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
         border-top: 1px solid var(--line);
+        box-shadow: 0 24px 60px color-mix(in oklch, var(--ink) 18%, transparent);
+        white-space: normal;
     }
 
     .nav-menu.active {
         opacity: 1;
         pointer-events: auto;
         visibility: visible;
+        transform: translateY(0);
+    }
+
+    .nav-menu li {
+        width: 100%;
+        min-width: 0;
     }
 
     .nav-link,
     .btn-donate {
+        display: flex;
         width: 100%;
         justify-content: flex-start;
-        min-height: 48px;
+        min-height: 52px;
         padding-inline: var(--space-md);
         font-size: 1.08rem;
+        white-space: normal;
     }
 }
 

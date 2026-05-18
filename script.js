@@ -231,7 +231,7 @@
             { raw: 1000, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
             { raw: 600, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
             { raw: 1500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
-            { raw: activeChapters().length, prefix: "", suffix: "+", label: "Active Chapters", note: "counted from chapter data", decimals: 0 }
+            { raw: 5, prefix: "", suffix: "+", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
         ];
 
         root.innerHTML = `

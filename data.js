@@ -102,10 +102,17 @@ window.BFBL_DATA = {
             name: "Russia Chapter",
             location: "Russia",
             status: "Launching",
-            leadName: "Russia",
-            leadTitle: "Launching Chapter Lead",
-            leadPhoto: "images/logo.avif",
-            leadBio: "Leading efforts to bring digital literacy and community service outreach to Russia.",
+            leadName: "Platon Panov",
+            leadTitle: "Chapter President",
+            leadPhoto: "images/team/platon-panov.jpg",
+            leadPeople: [
+                {
+                    name: "Platon Panov",
+                    title: "Chapter President",
+                    photo: "images/team/platon-panov.jpg"
+                }
+            ],
+            leadBio: "Platon leads the Russia Chapter's digital literacy and community service outreach.",
             instagram: "https://www.instagram.com/bytesforbetterlives.russia",
             coordinates: { lat: 55.7558, lng: 37.6173 },
             description: "International chapter exploring digital literacy and community service outreach.",
