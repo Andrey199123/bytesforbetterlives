@@ -119,7 +119,7 @@
 
     function chapterLeadPeopleText(chapter) {
         return chapterLeadPeople(chapter).map(function (person) {
-            return `${person.name}${person.title ? `, ${person.title}` : ""}`;
+            return person.name;
         }).join(" / ");
     }
 
@@ -323,7 +323,6 @@
                         ${chapterLeadAvatarMarkup(chapter, "chapter-lead-avatars-large")}
                         <div>
                             <h3>${escapeHTML(chapter.leadName)}</h3>
-                            <p class="leader-role">${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
                         </div>
                     </div>
                     <div class="chapter-officer-copy">
@@ -365,7 +364,6 @@
                         ${chapterLeadAvatarMarkup(chapter)}
                         <div>
                             <h3>${escapeHTML(chapter.leadName)}</h3>
-                            <p class="leader-role">${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
                         </div>
                     </div>
                     <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
@@ -498,7 +496,6 @@
                     ${chapterLeadAvatarMarkup(chapter)}
                     <div>
                         <strong>${escapeHTML(chapter.leadName)}</strong>
-                        <p>${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
                     </div>
                 </div>
                 ${chapter.leadBio ? `<p style="color: var(--ink-soft); font-style: italic; font-size: 0.9rem;">${escapeHTML(chapter.leadBio)}</p>` : ""}
@@ -537,7 +534,6 @@
                             ${chapterLeadAvatarMarkup(chapter, "chapter-lead-avatars-flip")}
                             <div class="flip-card-lead-meta">
                                 <h4>${escapeHTML(chapter.leadName)}</h4>
-                                <p class="flip-card-lead-title">${escapeHTML(chapter.leadTitle || 'Chapter Lead')}</p>
                             </div>
                         </div>
                         <div class="flip-card-back-content">
@@ -595,7 +591,6 @@
                         ${chapterLeadAvatarMarkup(chapter)}
                         <div>
                             <strong>${escapeHTML(chapter.leadName)}</strong>
-                            <p>${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
                         </div>
                     </div>
                     <p class="mt-2" style="color: var(--ink-soft); font-weight: 700;">${escapeHTML(chapterLeadPeopleText(chapter))}</p>
