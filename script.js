@@ -762,6 +762,20 @@
             if (!img.hasAttribute("loading")) img.setAttribute("loading", "lazy");
             if (img.dataset.fallbackReady) return;
             img.dataset.fallbackReady = "true";
+
+            function syncStoryCardAspect() {
+                const card = img.closest(".story-card");
+                if (!card || !img.closest(".story-front")) return;
+                if (!img.naturalWidth || !img.naturalHeight) return;
+                const ratio = `${img.naturalWidth} / ${img.naturalHeight}`;
+                card.style.aspectRatio = ratio;
+                const inner = card.querySelector(".story-card-inner");
+                if (inner) inner.style.aspectRatio = ratio;
+            }
+
+            img.addEventListener("load", syncStoryCardAspect, { once: true });
+            if (img.complete) syncStoryCardAspect();
+
             img.addEventListener("error", function () {
                 const current = img.getAttribute("src") || "";
                 const normalized = normalizeLegacyImagePath(current);
