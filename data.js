@@ -98,6 +98,28 @@ window.BFBL_DATA = {
             ]
         },
         {
+            id: "new-york",
+            name: "New York Chapter",
+            location: "New York, United States",
+            status: "Active",
+            leadName: "Troye Kim",
+            leadTitle: "Chapter President",
+            leadPhoto: "images/team/troye-kim.jpg",
+            leadPeople: [
+                {
+                    name: "Troye Kim",
+                    title: "Chapter President",
+                    photo: "images/team/troye-kim.jpg"
+                }
+            ],
+            leadBio: "Troye Kim leads the New York Chapter's outreach and digital literacy service as a student at Stuyvesant High School.",
+            coordinates: { lat: 40.7128, lng: -74.0060 },
+            description: "Launched chapter based in New York and led by a Stuyvesant High School student, expanding BFBL digital literacy and community service outreach.",
+            photos: [
+                "images/logo.avif"
+            ]
+        },
+        {
             id: "russia",
             name: "Russia Chapter",
             location: "Russia",
