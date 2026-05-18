@@ -87,6 +87,42 @@
         return `<img src="${escapeHTML(src || "images/logo.avif")}" alt="${escapeHTML(alt || "Bytes for Better Lives image")}"${className ? ` class="${escapeHTML(className)}"` : ""} data-fallback="${escapeHTML(fallback || "images/logo.avif")}" loading="lazy">`;
     }
 
+    function chapterLeadPeople(chapter) {
+        const people = Array.isArray(chapter.leadPeople)
+            ? chapter.leadPeople.filter(function (person) {
+                return person && person.name;
+            })
+            : [];
+
+        if (people.length) return people;
+
+        return [
+            {
+                name: chapter.leadName || "Chapter Lead",
+                title: chapter.leadTitle || "Chapter Lead",
+                photo: chapter.leadPhoto || "images/logo.avif"
+            }
+        ];
+    }
+
+    function chapterLeadAvatarMarkup(chapter, modifierClass) {
+        const people = chapterLeadPeople(chapter);
+        const label = people.length > 1 ? `${chapter.leadName} portraits` : `${people[0].name} portrait`;
+        return `
+            <div class="chapter-lead-avatars${modifierClass ? ` ${escapeHTML(modifierClass)}` : ""}" aria-label="${escapeHTML(label)}">
+                ${people.map(function (person) {
+                    return `<img class="chapter-lead-photo" src="${escapeHTML(person.photo || chapter.leadPhoto || "images/logo.avif")}" alt="${escapeHTML(person.name)} portrait" data-fallback="images/logo.avif" loading="lazy">`;
+                }).join("")}
+            </div>
+        `;
+    }
+
+    function chapterLeadPeopleText(chapter) {
+        return chapterLeadPeople(chapter).map(function (person) {
+            return `${person.name}${person.title ? `, ${person.title}` : ""}`;
+        }).join(" / ");
+    }
+
     function activeChapters() {
         return (data.chapters || []).filter(function (chapter) {
             return chapter.status === "Active";
@@ -181,6 +217,7 @@
         renderHomeStats();
         renderWhatWeDo();
         renderOfficerGrid("#executive-board-preview", data.officers || [], true);
+        renderHomeChapterOfficers();
         renderChapterPreview();
         renderGalleryPreview();
     }
@@ -275,6 +312,33 @@
         }).join("");
     }
 
+    function renderHomeChapterOfficers() {
+        const root = document.querySelector("#home-chapter-officers");
+        if (!root) return;
+
+        root.innerHTML = (data.chapters || []).map(function (chapter) {
+            return `
+                <article class="chapter-officer-item">
+                    <div class="chapter-officer-identity">
+                        ${chapterLeadAvatarMarkup(chapter, "chapter-lead-avatars-large")}
+                        <div>
+                            <h3>${escapeHTML(chapter.leadName)}</h3>
+                            <p class="leader-role">${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
+                        </div>
+                    </div>
+                    <div class="chapter-officer-copy">
+                        <div class="chapter-officer-heading">
+                            <strong>${escapeHTML(chapter.name)}</strong>
+                            <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
+                        </div>
+                        <p class="chapter-officer-people">${escapeHTML(chapterLeadPeopleText(chapter))}</p>
+                        <p class="chapter-officer-description">${escapeHTML(chapter.leadBio || chapter.description)}</p>
+                    </div>
+                </article>
+            `;
+        }).join("");
+    }
+
     function renderChapterPreview() {
         const root = document.querySelector("#chapters-preview-grid");
         if (!root) return;
@@ -298,7 +362,7 @@
             return `
                 <article class="leader-card">
                     <div class="chapter-lead">
-                        ${imageMarkup(chapter.leadPhoto, `${chapter.leadName} portrait`, "", "images/logo.avif")}
+                        ${chapterLeadAvatarMarkup(chapter)}
                         <div>
                             <h3>${escapeHTML(chapter.leadName)}</h3>
                             <p class="leader-role">${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
@@ -306,6 +370,7 @@
                     </div>
                     <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
                     <p><strong>${escapeHTML(chapter.name)}</strong> - ${escapeHTML(chapter.location)}</p>
+                    <p>${escapeHTML(chapterLeadPeopleText(chapter))}</p>
                     <p>${escapeHTML(chapter.description)}</p>
                 </article>
             `;
@@ -430,7 +495,7 @@
                     <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
                 </div>
                 <div class="chapter-lead">
-                    ${imageMarkup(chapter.leadPhoto, `${chapter.leadName} portrait`, "", "images/logo.avif")}
+                    ${chapterLeadAvatarMarkup(chapter)}
                     <div>
                         <strong>${escapeHTML(chapter.leadName)}</strong>
                         <p>${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
@@ -468,14 +533,15 @@
                     </div>
                     <!-- Back Side -->
                     <div class="flip-card-back">
-                        <div class="flip-card-back-header">
-                            <img src="${escapeHTML(chapter.leadPhoto || 'images/logo.avif')}" alt="${escapeHTML(chapter.leadName)}" class="flip-card-lead-photo" onerror="this.src='images/logo.avif'">
+                    <div class="flip-card-back-header">
+                            ${chapterLeadAvatarMarkup(chapter, "chapter-lead-avatars-flip")}
                             <div class="flip-card-lead-meta">
                                 <h4>${escapeHTML(chapter.leadName)}</h4>
                                 <p class="flip-card-lead-title">${escapeHTML(chapter.leadTitle || 'Chapter Lead')}</p>
                             </div>
                         </div>
                         <div class="flip-card-back-content">
+                            <p class="flip-card-lead-list">${escapeHTML(chapterLeadPeopleText(chapter))}</p>
                             <p class="flip-card-bio">${escapeHTML(chapter.leadBio || 'Leading chapter initiatives and community projects.')}</p>
                             ${chapter.instagram ? `
                                 <a href="${escapeHTML(chapter.instagram)}" target="_blank" rel="noopener noreferrer" class="instagram-btn" onclick="event.stopPropagation();">
@@ -526,12 +592,13 @@
                     <h2>${escapeHTML(chapter.name)}</h2>
                     <p class="lead-text">${escapeHTML(chapter.location)}</p>
                     <div class="chapter-lead mt-2">
-                        ${imageMarkup(chapter.leadPhoto, `${chapter.leadName} portrait`, "", "images/logo.avif")}
+                        ${chapterLeadAvatarMarkup(chapter)}
                         <div>
                             <strong>${escapeHTML(chapter.leadName)}</strong>
                             <p>${escapeHTML(chapter.leadTitle || "Chapter Lead")}</p>
                         </div>
                     </div>
+                    <p class="mt-2" style="color: var(--ink-soft); font-weight: 700;">${escapeHTML(chapterLeadPeopleText(chapter))}</p>
                     ${chapter.leadBio ? `<p class="mt-2" style="color: var(--ink-soft); font-style: italic;">${escapeHTML(chapter.leadBio)}</p>` : ""}
                     <p class="mt-2">${escapeHTML(chapter.description)}</p>
                 </div>
@@ -649,7 +716,7 @@
     }
 
     function initRevealEffects() {
-        const targets = document.querySelectorAll(".service-card, .officer-card, .chapter-card, .leader-card, .story-card, .card, .team-member, .feature-box");
+        const targets = document.querySelectorAll(".service-card, .officer-card, .chapter-officer-item, .chapter-card, .leader-card, .story-card, .card, .team-member, .feature-box");
         if (!("IntersectionObserver" in window)) return;
         const observer = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {

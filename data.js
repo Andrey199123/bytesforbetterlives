@@ -30,8 +30,8 @@ window.BFBL_DATA = {
         {
             name: "Joel Cardenas",
             title: "Vice President",
-            photo: "images/team/joel-cardenas.png",
-            fallbackPhoto: "images/team/joel-cardenas.png",
+            photo: "images/team/joel-cardenas.jpg",
+            fallbackPhoto: "images/team/joel-cardenas.jpg",
             bio: "Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
             contact: "Officer contact or profile link placeholder"
         }
@@ -45,8 +45,25 @@ window.BFBL_DATA = {
             location: "South Florida, United States",
             status: "Active",
             leadName: "Executive Board",
-            leadTitle: "Chapter Lead",
-            leadPhoto: "images/logo.avif",
+            leadTitle: "Executive Board",
+            leadPhoto: "images/team/andrey.jpg",
+            leadPeople: [
+                {
+                    name: "Andrey Vasilyev",
+                    title: "Co-President",
+                    photo: "images/our team/andrey vasilyev.avif"
+                },
+                {
+                    name: "Jonathan Wu",
+                    title: "Co-President",
+                    photo: "images/team/jonathan-wu.jpg"
+                },
+                {
+                    name: "Joel Cardenas",
+                    title: "Vice President",
+                    photo: "images/team/joel-cardenas.jpg"
+                }
+            ],
             leadBio: "The founding executive board manages outreach, events, and partnerships across South Florida.",
             coordinates: { lat: 26.1224, lng: -80.1373 },
             description: "Original chapter focused on senior tech help, children's donations, and digital literacy outreach.",
@@ -64,6 +81,13 @@ window.BFBL_DATA = {
             leadName: "Dhava Rajamanikandan",
             leadTitle: "Chapter President",
             leadPhoto: "images/team/dhava-rajamanikandan.jpg",
+            leadPeople: [
+                {
+                    name: "Dhava Rajamanikandan",
+                    title: "Chapter President",
+                    photo: "images/team/dhava-rajamanikandan.jpg"
+                }
+            ],
             leadBio: "Dhava leads the Cypress Bay Chapter's local service projects and digital literacy outreach.",
             instagram: "https://instagram.com/bfbl_cypressbay",
             coordinates: { lat: 26.3017, lng: -80.2551 },

@@ -892,6 +892,98 @@ main {
     background: var(--surface);
 }
 
+.chapter-lead-avatars {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.chapter-lead-avatars .chapter-lead-photo {
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--paper);
+    border-radius: 50%;
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    object-fit: cover;
+}
+
+.chapter-lead-avatars .chapter-lead-photo + .chapter-lead-photo {
+    margin-left: -12px;
+}
+
+.chapter-lead-avatars-large .chapter-lead-photo {
+    width: 58px;
+    height: 58px;
+}
+
+.chapter-lead-avatars-flip .chapter-lead-photo {
+    width: 56px;
+    height: 56px;
+    border-color: var(--gold-soft);
+}
+
+.chapter-officer-list {
+    display: grid;
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+}
+
+.chapter-officer-item {
+    display: grid;
+    grid-template-columns: minmax(250px, 0.65fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: color-mix(in oklch, var(--paper) 96%, var(--green-soft));
+    box-shadow: var(--shadow-sm);
+}
+
+.chapter-officer-identity {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.chapter-officer-identity h3 {
+    font-size: 1.18rem;
+}
+
+.chapter-officer-copy {
+    display: grid;
+    gap: var(--space-xs);
+}
+
+.chapter-officer-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.chapter-officer-heading strong {
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 1.08rem;
+}
+
+.chapter-officer-people,
+.chapter-officer-description {
+    margin: 0;
+}
+
+.chapter-officer-people {
+    color: var(--blue-dark);
+    font-weight: 800;
+}
+
+.chapter-officer-description {
+    color: var(--ink-soft);
+}
+
 .chapter-actions {
     margin-top: var(--space-xs);
 }
@@ -1421,6 +1513,7 @@ main {
     .impact-band .stats-grid,
     .officer-grid,
     .chapter-summary,
+    .chapter-officer-item,
     .split-section,
     .map-layout,
     .chapter-detail-grid,
@@ -1513,6 +1606,14 @@ main {
 
     .story-front img {
         height: 230px;
+    }
+
+    .chapter-officer-item {
+        align-items: start;
+    }
+
+    .chapter-officer-identity {
+        align-items: flex-start;
     }
 
     .lightbox-nav {
@@ -1782,6 +1883,13 @@ main {
     font-weight: 600;
 }
 
+.flip-card-lead-list {
+    margin: 0 0 var(--space-xs);
+    color: var(--blue-dark);
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
 .flip-card-back-content {
     display: flex;
     flex-direction: column;
@@ -1825,4 +1933,3 @@ main {
 .instagram-btn:active {
     transform: translateY(0);
 }
-
