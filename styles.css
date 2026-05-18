@@ -1486,8 +1486,9 @@ main {
         align-content: start;
         justify-items: stretch;
         gap: var(--space-xs);
-        width: min(76vw, 360px);
-        max-width: calc(100vw - 72px);
+        /* Keep the drawer intentionally narrow so the page remains visible. */
+        width: min(58vw, 300px);
+        max-width: calc(100vw - 160px);
         height: calc(100vh - var(--nav-height));
         height: calc(100dvh - var(--nav-height));
         min-height: calc(100vh - var(--nav-height));
