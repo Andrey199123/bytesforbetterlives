@@ -1086,8 +1086,8 @@ main {
 
 .story-front img {
     width: 100%;
-    height: 250px;
-    object-fit: cover;
+    height: 100%;
+    object-fit: contain;
     background: var(--surface);
 }
 
@@ -1490,30 +1490,30 @@ main {
         display: inline-flex;
     }
 
-    .nav-menu {
-        position: fixed;
-        top: var(--nav-height);
-        right: 0;
-        bottom: 0;
-        left: auto;
-        z-index: 2990;
-        display: grid;
-        grid-auto-rows: min-content;
-        align-content: start;
-        justify-items: stretch;
-        gap: var(--space-xs);
-        /* Keep the drawer intentionally narrow so the page remains visible. */
-        width: min(58vw, 300px);
-        max-width: calc(100vw - 160px);
-        height: calc(100vh - var(--nav-height));
-        height: calc(100dvh - var(--nav-height));
-        min-height: calc(100vh - var(--nav-height));
-        min-height: calc(100dvh - var(--nav-height));
-        padding: var(--space-md) max(var(--space-md), env(safe-area-inset-right)) calc(var(--space-3xl) + env(safe-area-inset-bottom)) var(--space-md);
-        background: color-mix(in oklch, var(--paper) 98%, var(--blue-soft));
-        opacity: 0;
-        pointer-events: none;
-        visibility: hidden;
+	    .nav-menu {
+	        position: fixed;
+	        top: var(--nav-height);
+	        right: 0;
+	        bottom: 0;
+	        left: auto;
+	        z-index: 2990;
+	        display: grid;
+	        grid-auto-rows: min-content;
+	        align-content: start;
+	        justify-items: end;
+	        gap: var(--space-xs);
+	        /* Size the drawer to its content so there's no empty band on the left. */
+	        width: fit-content;
+	        max-width: calc(100vw - 24px);
+	        height: calc(100vh - var(--nav-height));
+	        height: calc(100dvh - var(--nav-height));
+	        min-height: calc(100vh - var(--nav-height));
+	        min-height: calc(100dvh - var(--nav-height));
+	        padding: var(--space-md) max(var(--space-md), env(safe-area-inset-right)) calc(var(--space-3xl) + env(safe-area-inset-bottom)) var(--space-sm);
+	        background: color-mix(in oklch, var(--paper) 98%, var(--blue-soft));
+	        opacity: 0;
+	        pointer-events: none;
+	        visibility: hidden;
         transform: translateX(12px);
         transition: opacity 180ms ease, visibility 180ms ease, transform 180ms ease;
         overflow-y: auto;
@@ -1532,22 +1532,22 @@ main {
         transform: translateX(0);
     }
 
-    .nav-menu li {
-        width: 100%;
-        min-width: 0;
-    }
+	    .nav-menu li {
+	        width: auto;
+	        min-width: 0;
+	    }
 
-    .nav-link,
-    .btn-donate {
-        display: flex;
-        width: 100%;
-        justify-content: flex-start;
-        min-height: 52px;
-        padding-inline: var(--space-md);
-        font-size: 1.08rem;
-        white-space: normal;
-    }
-}
+	    .nav-link,
+	    .btn-donate {
+	        display: flex;
+	        width: auto;
+	        justify-content: flex-end;
+	        min-height: 52px;
+	        padding-inline: var(--space-md);
+	        font-size: 1.08rem;
+	        white-space: normal;
+	    }
+	}
 
 @media (max-width: 900px) {
     .impact-band .stats-grid,

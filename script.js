@@ -624,11 +624,6 @@
                     <div class="story-face story-front">
                         ${imageMarkup(story.image, story.alt || story.title, "", "images/logo.avif")}
                         <span class="story-overlay-label">Tap to view story</span>
-                        <div class="story-front-content">
-                            <span class="story-category">${escapeHTML(story.category)}</span>
-                            <h3>${escapeHTML(story.title)}</h3>
-                            <p>${escapeHTML(story.location)}</p>
-                        </div>
                     </div>
                     <div class="story-face story-back">
                         <span class="story-category">${escapeHTML(story.category)}</span>
