@@ -524,9 +524,23 @@ main {
 .service-card:hover,
 .officer-card:hover,
 .chapter-card:hover,
-.leader-card:hover,
-.story-card:hover .story-face {
+.leader-card:hover {
     transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
+}
+
+/* Story cards use 3D transforms for flipping. On iOS Safari, :hover can "stick" after a tap,
+   and any hover rule that sets `transform` on the faces will override the 3D flip transforms,
+   resulting in a blank/white card. Keep hover effects to shadow/border only. */
+@media (hover: hover) and (pointer: fine) {
+    .story-card:hover .story-face {
+        box-shadow: var(--shadow-md);
+        border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
+    }
+}
+
+.story-card:focus-within .story-face {
     box-shadow: var(--shadow-md);
     border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
 }
@@ -1035,10 +1049,10 @@ main {
     border: 0;
     background: transparent;
     color: inherit;
+    -webkit-perspective: 1200px;
     perspective: 1200px;
     text-align: left;
-    overflow: clip;
-    contain: layout paint;
+    overflow: visible;
     cursor: pointer;
 }
 
@@ -1046,6 +1060,7 @@ main {
     position: relative;
     width: 100%;
     min-height: 390px;
+    -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
     transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -1064,6 +1079,7 @@ main {
     border-radius: var(--radius-md);
     background: var(--paper);
     box-shadow: var(--shadow-sm);
+    -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
