@@ -1915,6 +1915,7 @@ main {
 }
 
 .flip-card {
+    -webkit-perspective: 1000px;
     perspective: 1000px;
     height: 440px;
     border-radius: var(--radius-xl);
@@ -1929,15 +1930,23 @@ main {
     height: 100%;
     text-align: left;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--line);
+    will-change: transform;
 }
 
-.flip-card:hover .flip-card-inner,
-.flip-card:focus-within .flip-card-inner {
+.flip-card.is-flipped .flip-card-inner {
     transform: rotateY(180deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .flip-card:hover .flip-card-inner,
+    .flip-card:focus-within .flip-card-inner {
+        transform: rotateY(180deg);
+    }
 }
 
 .flip-card-front,
@@ -1968,8 +1977,10 @@ main {
     transition: transform 0.5s ease;
 }
 
-.flip-card:hover .flip-card-image {
-    transform: scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+    .flip-card:hover .flip-card-image {
+        transform: scale(1.05);
+    }
 }
 
 .flip-card-image-container .status-badge {
@@ -2019,6 +2030,24 @@ main {
     font-weight: 600;
     margin-top: auto;
     animation: pulseHint 2s infinite ease-in-out;
+}
+
+.flip-hint-touch {
+    display: inline;
+}
+
+.flip-hint-hover {
+    display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .flip-hint-touch {
+        display: none;
+    }
+
+    .flip-hint-hover {
+        display: inline;
+    }
 }
 
 @keyframes pulseHint {

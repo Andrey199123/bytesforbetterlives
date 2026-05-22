@@ -41,6 +41,7 @@
         initCarousels();
         initLightbox();
         initStoryCards();
+        initFlipCards();
         initRevealEffects();
         initBackToTop();
         initSmoothScroll();
@@ -667,7 +668,7 @@
     function chapterFlipCardMarkup(chapter) {
         const photo = chapter.photos && chapter.photos[0] ? chapter.photos[0] : "images/logo.avif";
         return `
-            <div class="flip-card" role="button" tabindex="0" data-chapter-select="${escapeHTML(chapter.id)}">
+            <div class="flip-card" role="button" tabindex="0" aria-pressed="false" data-flip-card="${escapeHTML(chapter.id)}">
                 <div class="flip-card-inner">
                     <!-- Front Side -->
                     <div class="flip-card-front">
@@ -682,7 +683,8 @@
                             </p>
                             <p class="flip-card-desc">${escapeHTML(chapter.description)}</p>
                             <div class="flip-hint">
-                                <span>Hover to Reveal President</span>
+                                <span class="flip-hint-touch">Tap to Reveal President</span>
+                                <span class="flip-hint-hover">Hover to Reveal President</span>
                                 <svg class="flip-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-left: 6px;"><polyline points="15 18 9 12 15 6"></polyline></svg>
                             </div>
                         </div>
@@ -824,6 +826,41 @@
     }
 
     function toggleStoryCard(card) {
+        const flipped = card.classList.toggle("is-flipped");
+        card.setAttribute("aria-pressed", flipped ? "true" : "false");
+    }
+
+    function initFlipCards() {
+        // Touch-friendly flip behavior for chapter "expanding chapters" cards.
+        // These cards are informational; they should not scroll the page to the chapter detail view.
+        const clickFlip = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
+
+        if (clickFlip) {
+            document.addEventListener("click", function (event) {
+                const card = event.target.closest(".flip-card");
+                if (!card) return;
+                if (event.target.closest("a, button")) return;
+                toggleFlipCard(card);
+            });
+        }
+
+        document.addEventListener("keydown", function (event) {
+            const card = event.target.closest(".flip-card");
+            if (card && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault();
+                toggleFlipCard(card);
+                return;
+            }
+
+            if (event.key !== "Escape") return;
+            document.querySelectorAll(".flip-card.is-flipped").forEach(function (card) {
+                card.classList.remove("is-flipped");
+                card.setAttribute("aria-pressed", "false");
+            });
+        });
+    }
+
+    function toggleFlipCard(card) {
         const flipped = card.classList.toggle("is-flipped");
         card.setAttribute("aria-pressed", flipped ? "true" : "false");
     }
