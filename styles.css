@@ -218,6 +218,7 @@ main {
 .mb-1 { margin-bottom: 1rem; }
 .mb-2 { margin-bottom: 2rem; }
 .mb-3 { margin-bottom: 3rem; }
+.spacer-lg { height: var(--space-xl); }
 
 /* ===== NAVIGATION ===== */
 .navbar {
@@ -298,7 +299,7 @@ main {
     justify-content: center;
     min-height: 42px;
     padding: 0.62rem 1.5rem;
-    border-radius: 999px;
+    border-radius: var(--radius-md);
     background: var(--blue);
     color: var(--paper);
     font-weight: 800;
@@ -428,7 +429,7 @@ main {
     min-height: 40px;
     padding: 0.45rem 0.8rem;
     border: 1px solid color-mix(in oklch, var(--paper) 28%, transparent);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     color: var(--paper);
     background: color-mix(in oklch, var(--blue-dark) 42%, transparent);
     backdrop-filter: blur(12px);
@@ -443,7 +444,7 @@ main {
     min-height: 48px;
     padding: 0.82rem 1.75rem;
     border: 1px solid transparent;
-    border-radius: 999px;
+    border-radius: var(--radius-md);
     font-weight: 800;
     line-height: 1;
     transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
@@ -506,7 +507,9 @@ main {
 .officer-card,
 .chapter-card,
 .leader-card,
-.impact-card {
+.impact-card,
+.chapter-summary-card,
+.person-card {
     background: color-mix(in oklch, var(--paper) 96%, var(--blue-soft));
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
     border-radius: var(--radius-md);
@@ -665,12 +668,147 @@ main {
     gap: var(--space-lg);
 }
 
+.officer-grid-dense {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-md);
+}
+
 .officer-card,
 .leader-card {
     display: grid;
     gap: var(--space-md);
     padding: var(--space-xl);
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.officer-detail {
+    margin: 0;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.officer-bio {
+    margin: 0;
+}
+
+.officer-bio-compact {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+
+.leadership-main-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    gap: clamp(1.5rem, 5vw, 3.25rem);
+    align-items: start;
+    margin-top: var(--space-xl);
+}
+
+.subsection-header {
+    display: grid;
+    gap: 6px;
+    margin-bottom: var(--space-lg);
+}
+
+.subsection-title {
+    font-size: 1.35rem;
+}
+
+.subsection-description {
+    margin: 0;
+    color: var(--muted);
+}
+
+.chapter-summary-card {
+    padding: var(--space-xl);
+    display: grid;
+    gap: var(--space-sm);
+}
+
+.kicker-small {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 900;
+    font-size: 0.78rem;
+    color: color-mix(in oklch, var(--green-dark) 60%, var(--muted));
+}
+
+.chapter-location {
+    margin: 0;
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.chapter-lead-note {
+    margin: 0;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.people-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-md);
+    margin-top: var(--space-xl);
+}
+
+.person-card {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+}
+
+.person-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    flex: 0 0 auto;
+}
+
+.person-meta {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.person-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    align-items: baseline;
+}
+
+.person-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 0.18rem 0.52rem;
+    border-radius: var(--radius-md);
+    background: color-mix(in oklch, var(--blue-soft) 70%, var(--paper));
+    color: var(--blue-dark);
+    border: 1px solid color-mix(in oklch, var(--blue) 18%, var(--line));
+    font-weight: 900;
+    font-size: 0.82rem;
+}
+
+.person-role {
+    margin: 0;
+    color: var(--green-dark);
+    font-weight: 900;
+}
+
+.person-bio {
+    margin: 0;
+    color: var(--ink-soft);
 }
 
 .portrait-frame {
@@ -731,7 +869,7 @@ main {
     width: fit-content;
     min-height: 30px;
     padding: 0.24rem 0.62rem;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     font-size: 0.84rem;
     font-weight: 900;
 }
@@ -1124,7 +1262,7 @@ main {
     align-items: center;
     gap: var(--space-xs);
     padding: 0.4rem 0.58rem;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     background: color-mix(in oklch, var(--ink) 76%, transparent);
     color: var(--paper);
     font-size: 0.85rem;
@@ -1134,7 +1272,7 @@ main {
 .story-category {
     width: fit-content;
     padding: 0.24rem 0.58rem;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     background: var(--green-soft);
     color: var(--green-dark);
     font-weight: 900;
@@ -1466,7 +1604,7 @@ main {
     min-height: 40px;
     padding: 0.45rem 0.75rem;
     border: 1px solid color-mix(in oklch, var(--paper) 18%, transparent);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     font-weight: 800;
 }
 
@@ -1512,13 +1650,12 @@ main {
 	        bottom: 0;
 	        left: auto;
 	        z-index: 2990;
-	        display: grid;
-	        grid-auto-rows: min-content;
-	        align-content: start;
-	        justify-items: end;
+	        display: flex;
+	        flex-direction: column;
+	        align-items: flex-end;
 	        gap: var(--space-xs);
 	        /* Size the drawer to its content so there's no empty band on the left. */
-	        width: fit-content;
+	        width: max-content;
 	        max-width: calc(100vw - 24px);
 	        height: calc(100vh - var(--nav-height));
 	        height: calc(100dvh - var(--nav-height));
@@ -1570,6 +1707,7 @@ main {
     .chapter-summary,
     .chapter-officer-item,
     .split-section,
+    .leadership-main-grid,
     .map-layout,
     .chapter-detail-grid,
     .footer-content {

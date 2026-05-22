@@ -6,6 +6,7 @@
             instagram: "https://www.instagram.com/bytesforbetterlives?igsh=cmgzYzEwczV6YWI1",
             linkedin: "https://www.linkedin.com/company/bytes-for-better-lives/about/"
         },
+        founders: [],
         officers: [],
         chapters: [],
         gallery: []
@@ -216,8 +217,8 @@
     function renderHomePage() {
         renderHomeStats();
         renderWhatWeDo();
-        renderOfficerGrid("#executive-board-preview", data.officers || [], true);
-        renderHomeChapterOfficers();
+        // Homepage preview stays focused on the top leadership roles.
+        renderOfficerGrid("#executive-board-preview", (data.officers || []).slice(0, 3), true);
         renderChapterPreview();
         renderGalleryPreview();
     }
@@ -290,6 +291,10 @@
     }
 
     function officerCard(officer, compact) {
+        const detailLine = officer.detail ? `<p class="officer-detail">${escapeHTML(officer.detail)}</p>` : "";
+        const bioLine = officer.bio
+            ? `<p class="officer-bio${compact ? " officer-bio-compact" : ""}">${escapeHTML(officer.bio)}</p>`
+            : "";
         return `
             <article class="officer-card">
                 <div class="portrait-frame">
@@ -298,8 +303,9 @@
                 <div>
                     <h3>${escapeHTML(officer.name)}</h3>
                     <p class="officer-title">${escapeHTML(officer.title)}</p>
+                    ${detailLine}
                 </div>
-                <p>${escapeHTML(officer.bio)}</p>
+                ${bioLine}
             </article>
         `;
     }
@@ -352,27 +358,175 @@
     }
 
     function renderLeadershipPage() {
-        renderOfficerGrid("#executive-board-grid", data.officers || [], false);
+        const mainCard = document.querySelector("#main-chapter-card");
+        const mainOfficers = document.querySelector("#main-chapter-officers");
+        const chapterGrid = document.querySelector("#leadership-chapters-grid");
+        const allOfficers = document.querySelector("#all-officers-grid");
 
-        const chapterLeaders = document.querySelector("#chapter-leaders-grid");
-        if (!chapterLeaders) return;
+        // Backwards-compatible support for older leadership layouts.
+        if (!mainCard && !mainOfficers && !chapterGrid && !allOfficers) {
+            renderOfficerGrid("#executive-board-grid", data.officers || [], false);
 
-        chapterLeaders.innerHTML = (data.chapters || []).map(function (chapter) {
-            return `
-                <article class="leader-card">
-                    <div class="chapter-lead">
-                        ${chapterLeadAvatarMarkup(chapter)}
-                        <div>
-                            <h3>${escapeHTML(chapter.leadName)}</h3>
+            const chapterLeaders = document.querySelector("#chapter-leaders-grid");
+            if (!chapterLeaders) return;
+
+            chapterLeaders.innerHTML = (data.chapters || []).map(function (chapter) {
+                return `
+                    <article class="leader-card">
+                        <div class="chapter-lead">
+                            ${chapterLeadAvatarMarkup(chapter)}
+                            <div>
+                                <h3>${escapeHTML(chapter.leadName)}</h3>
+                            </div>
                         </div>
+                        <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
+                        <p><strong>${escapeHTML(chapter.name)}</strong> - ${escapeHTML(chapter.location)}</p>
+                        <p>${escapeHTML(chapterLeadPeopleText(chapter))}</p>
+                        <p>${escapeHTML(chapter.description)}</p>
+                    </article>
+                `;
+            }).join("");
+            return;
+        }
+
+        const mainChapter = (data.chapters || []).find(function (chapter) {
+            return chapter && chapter.id === "ahs";
+        });
+
+        if (mainCard && mainChapter) {
+            mainCard.innerHTML = mainChapterSummaryMarkup(mainChapter);
+        }
+
+        const foundersGrid = document.querySelector("#founders-grid");
+        if (foundersGrid) {
+            renderOfficerGrid("#founders-grid", data.founders || [], false);
+        }
+
+        if (mainOfficers) {
+            renderOfficerGrid("#main-chapter-officers", data.officers || [], false);
+        }
+
+        if (chapterGrid) {
+            chapterGrid.innerHTML = (data.chapters || [])
+                .filter(function (chapter) { return chapter && chapter.id !== "ahs"; })
+                .map(leadershipChapterCardMarkup)
+                .join("");
+        }
+
+        if (allOfficers) {
+            const directory = allOfficerDirectory();
+            allOfficers.innerHTML = directory.map(personCardMarkup).join("");
+        }
+    }
+
+    function mainChapterSummaryMarkup(chapter) {
+        return `
+            <article class="chapter-summary-card">
+                <div class="chapter-card-header">
+                    <div>
+                        <p class="kicker-small">Founding Chapter</p>
+                        <h3>${escapeHTML(chapter.name)}</h3>
+                        <p class="chapter-location">${escapeHTML(chapter.location)}</p>
                     </div>
                     <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
-                    <p><strong>${escapeHTML(chapter.name)}</strong> - ${escapeHTML(chapter.location)}</p>
-                    <p>${escapeHTML(chapterLeadPeopleText(chapter))}</p>
-                    <p>${escapeHTML(chapter.description)}</p>
-                </article>
-            `;
-        }).join("");
+                </div>
+                <div class="chapter-lead mt-1">
+                    ${chapterLeadAvatarMarkup(chapter)}
+                    <div>
+                        <strong>${escapeHTML(chapterLeadPeopleText(chapter))}</strong>
+                        <p class="chapter-lead-note">Executive board leadership</p>
+                    </div>
+                </div>
+                <p class="mt-1">${escapeHTML(chapter.description)}</p>
+                <div class="btn-row mt-2">
+                    <a href="chapters.html#${escapeHTML(chapter.id)}" class="btn btn-quiet">View Chapter</a>
+                    <a href="chapters.html#start-chapter" class="btn btn-secondary">Start a Chapter</a>
+                </div>
+            </article>
+        `;
+    }
+
+    function leadershipChapterCardMarkup(chapter) {
+        return `
+            <article class="chapter-card chapter-card-link">
+                <div class="chapter-card-header">
+                    <div>
+                        <h3>${escapeHTML(chapter.name)}</h3>
+                        <p>${escapeHTML(chapter.location)}</p>
+                    </div>
+                    <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
+                </div>
+                <div class="chapter-lead">
+                    ${chapterLeadAvatarMarkup(chapter)}
+                    <div>
+                        <strong>${escapeHTML(chapter.leadName)}</strong>
+                    </div>
+                </div>
+                <p>${escapeHTML(chapter.description)}</p>
+                <div class="btn-row mt-1">
+                    <a class="btn btn-quiet" href="chapters.html#${escapeHTML(chapter.id)}">View Chapter</a>
+                </div>
+            </article>
+        `;
+    }
+
+    function allOfficerDirectory() {
+        const people = [];
+
+        (data.officers || []).forEach(function (officer) {
+            if (!officer || !officer.name) return;
+            people.push({
+                key: `officer:${officer.name}`,
+                name: officer.name,
+                title: officer.title,
+                detail: officer.detail || "AHS Chapter",
+                photo: officer.photo,
+                fallbackPhoto: officer.fallbackPhoto || "images/logo.avif",
+                bio: officer.bio || ""
+            });
+        });
+
+        (data.chapters || [])
+            .filter(function (chapter) { return chapter && chapter.id !== "ahs"; })
+            .forEach(function (chapter) {
+                chapterLeadPeople(chapter).forEach(function (person) {
+                    if (!person || !person.name) return;
+                    people.push({
+                        key: `chapter:${chapter.id}:${person.name}`,
+                        name: person.name,
+                        title: chapter.name,
+                        detail: statusLabel(chapter.status),
+                        photo: person.photo || chapter.leadPhoto || "images/logo.avif",
+                        fallbackPhoto: "images/logo.avif",
+                        bio: chapter.leadBio || chapter.description || ""
+                    });
+                });
+            });
+
+        // De-dupe by name + title while preserving order.
+        const seen = new Set();
+        return people.filter(function (person) {
+            const id = `${person.name}::${person.title}`;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+        });
+    }
+
+    function personCardMarkup(person) {
+        return `
+            <article class="person-card">
+                ${imageMarkup(person.photo, `${person.name} portrait`, "person-avatar", person.fallbackPhoto)}
+                <div class="person-meta">
+                    <div class="person-header">
+                        <h3>${escapeHTML(person.name)}</h3>
+                        ${person.detail ? `<span class="person-pill">${escapeHTML(person.detail)}</span>` : ""}
+                    </div>
+                    <p class="person-role">${escapeHTML(person.title)}</p>
+                    ${person.bio ? `<p class="person-bio">${escapeHTML(person.bio)}</p>` : ""}
+                </div>
+            </article>
+        `;
     }
 
     function renderChaptersPage() {
@@ -466,7 +620,12 @@
         }
 
         bindChapterButtons(document, true);
-        const defaultChapter = activeChapters()[0] || (data.chapters || [])[0];
+        const hash = (window.location.hash || "").replace("#", "").trim();
+        const hashChapter = hash
+            ? (data.chapters || []).find(function (chapter) { return chapter && chapter.id === hash; })
+            : null;
+
+        const defaultChapter = hashChapter || activeChapters()[0] || (data.chapters || [])[0];
         if (defaultChapter) selectChapter(defaultChapter.id, false);
     }
 

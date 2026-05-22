@@ -9,13 +9,40 @@ window.BFBL_DATA = {
         linkedin: "https://www.linkedin.com/company/bytes-for-better-lives/about/"
     },
 
-    // Edit officer data here. Replace /images/team/*.jpg with final portraits when ready.
+    // Edit founder data here.
+    founders: [
+        {
+            name: "Aaron Pinto",
+            title: "Co-Founder",
+            photo: "images/team/aaron-pinto.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Aaron co-founded Bytes for Better Lives to bridge the digital divide through service, education, and donations.",
+            contact: ""
+        },
+        {
+            name: "Pranav Rai",
+            title: "Co-Founder",
+            photo: "images/team/pranav-rai.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Pranav co-founded Bytes for Better Lives to help seniors and children build practical technology skills and access.",
+            contact: ""
+        }
+    ],
+
+    // Edit officer data here.
+    // Notes:
+    // - The first few entries are featured on the homepage "Executive Board" preview.
+    // - Add `detail` for things like school + grade (kept optional so we don't show placeholder text on the live site).
+    // - You can swap portrait paths later without changing any page layout.
     officers: [
         {
             name: "Andrey Vasilyev",
             title: "Co-President",
             photo: "images/team/andrey.jpg",
             fallbackPhoto: "images/team/andrey.jpg",
+            detail: "",
             bio: "Andrey helps guide Bytes for Better Lives strategy, technology projects, and responsible chapter expansion.",
             contact: "Officer contact or profile link placeholder"
         },
@@ -24,16 +51,63 @@ window.BFBL_DATA = {
             title: "Co-President",
             photo: "images/team/jonathan.jpg",
             fallbackPhoto: "images/team/jonathan.jpg",
+            detail: "",
             bio: "Jonathan supports program leadership, outreach partnerships, and service planning across senior and youth initiatives.",
             contact: "Officer contact or profile link placeholder"
         },
         {
             name: "Joel Cardenas",
-            title: "Vice President",
+            title: "VP of Outreach",
             photo: "images/team/joel-cardenas.jpg",
             fallbackPhoto: "images/team/joel-cardenas.jpg",
+            detail: "",
             bio: "Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
             contact: "Officer contact or profile link placeholder"
+        },
+        {
+            name: "Daniel Zhao",
+            title: "VP of Activities",
+            photo: "images/team/daniel-zhao.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Daniel supports activity planning, volunteer coordination, and service event execution across BFBL programs.",
+            contact: ""
+        },
+        {
+            name: "Troy Qian",
+            title: "Secretary",
+            photo: "images/team/troy-qian.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Troy supports documentation, meeting notes, and consistent communication across officer and chapter operations.",
+            contact: ""
+        },
+        {
+            name: "Siddarth Gupta",
+            title: "Treasurer",
+            photo: "images/team/siddarth-gupta.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Siddarth supports fundraising tracking, donation logistics, and responsible resource planning for BFBL service work.",
+            contact: ""
+        },
+        {
+            name: "Lucas Calderon",
+            title: "Historian",
+            photo: "images/team/lucas-calderon.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Lucas supports photo documentation, event recaps, and storytelling that highlights measurable community impact.",
+            contact: ""
+        },
+        {
+            name: "Parth Bhalerao",
+            title: "ICC Rep",
+            photo: "images/team/parth-bhalerao.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Parth supports coordination with school leadership and ensures service events align with student organization standards.",
+            contact: ""
         }
     ],
 
@@ -60,7 +134,7 @@ window.BFBL_DATA = {
                 },
                 {
                     name: "Joel Cardenas",
-                    title: "Vice President",
+                    title: "VP of Outreach",
                     photo: "images/team/joel-cardenas.jpg"
                 }
             ],
