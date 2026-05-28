@@ -279,6 +279,29 @@ window.BFBL_DATA = {
             ]
         },
         {
+            id: "coral-springs",
+            pageHref: "chapter-coral-springs.html",
+            name: "Coral Springs Chapter",
+            location: "Coral Springs, Florida, United States",
+            status: "Launching",
+            leadName: "Baylee Effendi",
+            leadTitle: "Chapter President",
+            leadPhoto: "images/team/baylee-effendi.jpg",
+            leadPeople: [
+                {
+                    name: "Baylee Effendi",
+                    title: "Chapter President",
+                    photo: "images/team/baylee-effendi.jpg"
+                }
+            ],
+            leadBio: "Baylee leads the Coral Springs Chapter's outreach and service planning as a student at Coral Springs Charter High School.",
+            coordinates: { lat: 26.2712, lng: -80.2706 },
+            description: "Launching chapter expanding BFBL senior tech help, digital literacy education, and community outreach in Coral Springs.",
+            photos: [
+                "images/logo.avif"
+            ]
+        },
+        {
             id: "russia",
             pageHref: "chapter-russia.html",
             name: "Russia Chapter",

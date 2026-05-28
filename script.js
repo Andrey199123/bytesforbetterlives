@@ -32,7 +32,7 @@
         initNavDropdowns();
         renderFooter();
         renderHomePage();
-        renderLeadershipPage();
+
         renderChaptersPage();
         renderGalleryPage();
         renderInitiativesPage();
@@ -124,8 +124,10 @@
         return `${value} Chapter`;
     }
 
-    function imageMarkup(src, alt, className, fallback) {
-        return `<img src="${escapeHTML(src || "images/logo.avif")}" alt="${escapeHTML(alt || "Bytes for Better Lives image")}"${className ? ` class="${escapeHTML(className)}"` : ""} data-fallback="${escapeHTML(fallback || "images/logo.avif")}" loading="lazy" decoding="async">`;
+    function imageMarkup(src, alt, className, fallback, loading, fetchPriority) {
+        const loadMode = loading === "eager" ? "eager" : "lazy";
+        const priorityAttr = fetchPriority ? ` fetchpriority="${escapeHTML(fetchPriority)}"` : "";
+        return `<img src="${escapeHTML(src || "images/logo.avif")}" alt="${escapeHTML(alt || "Bytes for Better Lives image")}"${className ? ` class="${escapeHTML(className)}"` : ""} data-fallback="${escapeHTML(fallback || "images/logo.avif")}" loading="${loadMode}" decoding="async"${priorityAttr}>`;
     }
 
     function chapterLeadPeople(chapter) {
@@ -152,7 +154,7 @@
         return `
             <div class="chapter-lead-avatars${modifierClass ? ` ${escapeHTML(modifierClass)}` : ""}" aria-label="${escapeHTML(label)}">
                 ${people.map(function (person) {
-                    return `<img class="chapter-lead-photo" src="${escapeHTML(person.photo || chapter.leadPhoto || "images/logo.avif")}" alt="${escapeHTML(person.name)} portrait" data-fallback="images/logo.avif" loading="lazy">`;
+                    return `<img class="chapter-lead-photo" src="${escapeHTML(person.photo || chapter.leadPhoto || "images/logo.avif")}" alt="${escapeHTML(person.name)} portrait" data-fallback="images/logo.avif" loading="eager" decoding="async">`;
                 }).join("")}
             </div>
         `;
@@ -405,7 +407,7 @@
         return `
             <article class="officer-card">
                 <div class="portrait-frame">
-                    ${imageMarkup(officer.photo, `${officer.name} portrait`, "", officer.fallbackPhoto)}
+                    ${imageMarkup(officer.photo, `${officer.name} portrait`, "", officer.fallbackPhoto, "eager", "high")}
                 </div>
                 <div>
                     <h3>${escapeHTML(officer.name)}</h3>
@@ -821,7 +823,7 @@
     function personCardMarkup(person) {
         return `
             <article class="person-card">
-                ${imageMarkup(person.photo, `${person.name} portrait`, "person-avatar", person.fallbackPhoto)}
+                ${imageMarkup(person.photo, `${person.name} portrait`, "person-avatar", person.fallbackPhoto, "eager")}
                 <div class="person-meta">
                     <div class="person-header">
                         <h3>${escapeHTML(person.name)}</h3>
@@ -1003,7 +1005,7 @@
                         <div class="flip-card-front-content">
                             <h3>${escapeHTML(chapter.name)}</h3>
                             <p class="flip-card-location">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="location-icon" style="vertical-align: middle; margin-right: 4px; color: var(--gold);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHTML(chapter.location)}
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="location-icon" style="vertical-align: middle; margin-right: 4px; color: var(--green);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHTML(chapter.location)}
                             </p>
                             <p class="flip-card-desc">${escapeHTML(chapter.description)}</p>
                             <div class="flip-hint">
@@ -1139,17 +1141,22 @@
     function renderTeamPage() {
         const foundersRoot = document.querySelector("#team-founders-grid");
         const execRoot = document.querySelector("#team-executive-grid");
+        const clubRoot = document.querySelector("#team-club-officers-grid");
         const chapterRoot = document.querySelector("#team-chapter-leaders-grid");
         const volunteerRoot = document.querySelector("#team-volunteers-grid");
 
-        if (!foundersRoot && !execRoot && !chapterRoot && !volunteerRoot) return;
+        if (!foundersRoot && !execRoot && !clubRoot && !chapterRoot && !volunteerRoot) return;
 
         if (foundersRoot) {
             renderOfficerGrid("#team-founders-grid", data.founders || [], false);
         }
 
         if (execRoot) {
-            renderOfficerGrid("#team-executive-grid", data.officers || [], false);
+            renderOfficerGrid("#team-executive-grid", (data.officers || []).slice(0, 3), false);
+        }
+
+        if (clubRoot) {
+            renderOfficerGrid("#team-club-officers-grid", (data.officers || []).slice(3), false);
         }
 
         if (chapterRoot) {
@@ -1329,6 +1336,13 @@
         }, { threshold: 0.12, rootMargin: "0px 0px -60px 0px" });
 
         targets.forEach(function (target) {
+            const rect = target.getBoundingClientRect();
+            const alreadyVisible = rect.top < (window.innerHeight - 24) && rect.bottom > 24;
+            if (alreadyVisible) {
+                target.classList.add("reveal-in");
+                return;
+            }
+
             target.classList.add("reveal-ready");
             observer.observe(target);
         });
