@@ -48,6 +48,7 @@
         initBackToTop();
         initSmoothScroll();
         initCounters();
+        initMembersSlider();
 
         // Ensure flip-card backs never clip text after fonts/images settle (and on resize).
         scheduleFlipCardResize();
@@ -1466,6 +1467,44 @@
         counters.forEach(function (counter) {
             observer.observe(counter);
         });
+    }
+
+    function initMembersSlider() {
+        const slider = document.querySelector("[data-members-slider]");
+        if (!slider) return;
+
+        const viewport = slider.querySelector(".members-viewport");
+        const track = slider.querySelector(".members-track");
+        const prevButton = slider.querySelector(".members-arrow.prev");
+        const nextButton = slider.querySelector(".members-arrow.next");
+        if (!viewport || !track || !prevButton || !nextButton) return;
+
+        const chips = track.querySelectorAll(".members-chip, li");
+        const countEl = document.querySelector("[data-members-count]");
+        if (countEl) countEl.textContent = `(${chips.length})`;
+
+        function scrollStep(direction) {
+            const step = Math.max(220, Math.floor(viewport.clientWidth * 0.8));
+            viewport.scrollBy({ left: direction * step, behavior: "smooth" });
+        }
+
+        prevButton.addEventListener("click", function () { scrollStep(-1); });
+        nextButton.addEventListener("click", function () { scrollStep(1); });
+
+        let updateRaf = null;
+        function scheduleUpdateButtons() {
+            if (updateRaf) return;
+            updateRaf = window.requestAnimationFrame(function () {
+                updateRaf = null;
+                const maxScroll = viewport.scrollWidth - viewport.clientWidth;
+                prevButton.disabled = viewport.scrollLeft <= 1;
+                nextButton.disabled = viewport.scrollLeft >= maxScroll - 1;
+            });
+        }
+
+        scheduleUpdateButtons();
+        viewport.addEventListener("scroll", scheduleUpdateButtons, { passive: true });
+        window.addEventListener("resize", scheduleUpdateButtons);
     }
 })();
 

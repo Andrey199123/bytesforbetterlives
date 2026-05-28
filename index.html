@@ -77,33 +77,43 @@
     <div class="container">
         <div class="section-header">
             <p class="section-kicker">Members</p>
-            <h2 class="section-title">All Members</h2>
+            <h2 class="section-title">All Members <span class="members-count" data-members-count aria-live="polite"></span></h2>
             <p class="section-description">A concise roster of everyone in BFBL.</p>
         </div>
-        <ul class="members-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .75rem; list-style:none; padding:0; margin:0;" aria-label="Full member list">
-            <li>Alexey Guydouk</li>
-            <li>Pranav Rai</li>
-            <li>Aaron Pinto</li>
-            <li>Troy Qian</li>
-            <li>Ethan Chen</li>
-            <li>Parth Balerao</li>
-            <li>Andrey Vasilyev</li>
-            <li>Jonathan Wu</li>
-            <li>Joel Cardenas</li>
-            <li>Dhava Rajamanikandan</li>
-            <li>Elie Ciril</li>
-            <li>Daniel Zhao</li>
-            <li>Lucas Calderon</li>
-            <li>Anish Immadi</li>
-            <li>Siddarth Gupta</li>
-            <li>Mateo Calderon</li>
-            <li>Aniket Shukla</li>
-            <li>Zayn Charania</li>
-            <li>Ipek</li>
-            <li>Platon Panov</li>
-            <li>Troye Kim</li>
-            <li>Aashvik Garimella</li>
-        </ul>
+        <div class="members-slider" data-members-slider role="region" aria-label="Full member list">
+            <button class="members-arrow prev" type="button" aria-label="Scroll members left">
+                <span aria-hidden="true">‹</span>
+            </button>
+            <div class="members-viewport">
+                <ul class="members-track" aria-label="Member names">
+                    <li class="members-chip">Alexey Guydouk</li>
+                    <li class="members-chip">Pranav Rai</li>
+                    <li class="members-chip">Aaron Pinto</li>
+                    <li class="members-chip">Troy Qian</li>
+                    <li class="members-chip">Ethan Chen</li>
+                    <li class="members-chip">Parth Balerao</li>
+                    <li class="members-chip">Andrey Vasilyev</li>
+                    <li class="members-chip">Jonathan Wu</li>
+                    <li class="members-chip">Joel Cardenas</li>
+                    <li class="members-chip">Dhava Rajamanikandan</li>
+                    <li class="members-chip">Elie Ciril</li>
+                    <li class="members-chip">Daniel Zhao</li>
+                    <li class="members-chip">Lucas Calderon</li>
+                    <li class="members-chip">Anish Immadi</li>
+                    <li class="members-chip">Siddarth Gupta</li>
+                    <li class="members-chip">Mateo Calderon</li>
+                    <li class="members-chip">Aniket Shukla</li>
+                    <li class="members-chip">Zayn Charania</li>
+                    <li class="members-chip">Ipek</li>
+                    <li class="members-chip">Platon Panov</li>
+                    <li class="members-chip">Troye Kim</li>
+                    <li class="members-chip">Aashvik Garimella</li>
+                </ul>
+            </div>
+            <button class="members-arrow next" type="button" aria-label="Scroll members right">
+                <span aria-hidden="true">›</span>
+            </button>
+        </div>
     </div>
 </section>
 
