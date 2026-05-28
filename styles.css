@@ -225,7 +225,14 @@ main {
     position: sticky;
     top: 0;
     z-index: 3000;
-    background: color-mix(in oklch, var(--paper) 92%, transparent);
+    background-image: linear-gradient(
+            color-mix(in oklch, var(--paper) 75%, transparent),
+            color-mix(in oklch, var(--paper) 75%, transparent)
+        ),
+        url("images/IMG_7470.JPG");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     border-bottom: 1px solid color-mix(in oklch, var(--line) 85%, transparent);
     backdrop-filter: blur(16px);
 }
