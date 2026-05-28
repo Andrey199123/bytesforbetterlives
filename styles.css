@@ -395,7 +395,9 @@ main {
 .home-hero {
     min-height: clamp(520px, calc(100vh - 160px), 700px);
     align-items: center;
-    background-position: center 28%;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+        url("images/IMG_7470.JPG") center 28% / cover no-repeat;
     padding-block: clamp(2.5rem, 5vw, 4.5rem);
 }
 
