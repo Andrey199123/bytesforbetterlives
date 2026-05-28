@@ -1287,7 +1287,10 @@ main {
 .story-back {
     transform: rotateY(180deg);
     gap: var(--space-sm);
-    justify-content: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .story-back dl {
