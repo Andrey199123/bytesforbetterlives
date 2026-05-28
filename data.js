@@ -9,6 +9,33 @@ window.BFBL_DATA = {
         linkedin: "https://www.linkedin.com/company/bytes-for-better-lives/about/"
     },
 
+    // Featured fundraisers (links can be added later).
+    // Tip: Paste GoFundMe links into `url` fields below.
+    fundraisers: [
+        {
+            id: "cypress-bay-dhava",
+            title: "Cypress Bay Chapter Fundraiser",
+            by: "Dhava Rajamanikandan",
+            description: "Support the Cypress Bay Chapter's ongoing tech access and digital literacy work led by Dhava.",
+            chapterId: "cypress",
+            url: "",
+            image: "images/team/dhava-rajamanikandan.jpg",
+            alt: "Dhava Rajamanikandan portrait",
+            chapterHref: "chapter-cypress.html"
+        },
+        {
+            id: "peru-joel",
+            title: "Peru Fundraiser",
+            by: "Joel Cardenas",
+            description: "Support Joel's Peru fundraiser and the outreach work it enables.",
+            chapterId: "ahs",
+            url: "",
+            image: "images/team/joel-cardenas.jpg",
+            alt: "Joel Cardenas portrait",
+            chapterHref: "chapter-ahs.html"
+        }
+    ],
+
     // Edit founder data here.
     founders: [
         {
@@ -76,7 +103,8 @@ window.BFBL_DATA = {
         {
             name: "Troy Qian",
             title: "Secretary",
-            photo: "images/team/troy-qian.jpg",
+            // TODO: replace with Troy's portrait when available.
+            photo: "images/logo.avif",
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Troy supports documentation, meeting notes, and consistent communication across officer and chapter operations.",
@@ -85,7 +113,8 @@ window.BFBL_DATA = {
         {
             name: "Siddarth Gupta",
             title: "Treasurer",
-            photo: "images/team/siddarth-gupta.jpg",
+            // TODO: replace with Siddarth's portrait when available.
+            photo: "images/logo.avif",
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Siddarth supports fundraising tracking, donation logistics, and responsible resource planning for BFBL service work.",
@@ -94,7 +123,8 @@ window.BFBL_DATA = {
         {
             name: "Lucas Calderon",
             title: "Historian",
-            photo: "images/team/lucas-calderon.jpg",
+            // TODO: replace with Lucas's portrait when available.
+            photo: "images/logo.avif",
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Lucas supports photo documentation, event recaps, and storytelling that highlights measurable community impact.",
@@ -103,7 +133,8 @@ window.BFBL_DATA = {
         {
             name: "Parth Bhalerao",
             title: "ICC Rep",
-            photo: "images/team/parth-bhalerao.jpg",
+            // TODO: replace with Parth's portrait when available.
+            photo: "images/logo.avif",
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Parth supports coordination with school leadership and ensures service events align with student organization standards.",
@@ -111,10 +142,32 @@ window.BFBL_DATA = {
         }
     ],
 
+    // Edit volunteer data here.
+    // This is meant for students who volunteer and support BFBL events/initiatives (not officers).
+    volunteers: [
+        {
+            name: "Ethan Chen",
+            title: "Volunteer",
+            detail: "",
+            photo: "images/our team/ethan chen.avif",
+            fallbackPhoto: "images/logo.avif",
+            bio: ""
+        },
+        {
+            name: "Alexey Guydouk",
+            title: "Volunteer",
+            detail: "",
+            photo: "images/our team/alexey guydouk.avif",
+            fallbackPhoto: "images/logo.avif",
+            bio: ""
+        }
+    ],
+
     // Edit chapter data here. Use status exactly as "Active", "Launching", or "Prospective".
     chapters: [
         {
             id: "ahs",
+            pageHref: "chapter-ahs.html",
             name: "AHS Chapter",
             location: "South Florida, United States",
             status: "Active",
@@ -142,13 +195,14 @@ window.BFBL_DATA = {
             coordinates: { lat: 26.1224, lng: -80.1373 },
             description: "Original chapter focused on senior tech help, children's donations, and digital literacy outreach.",
             photos: [
-                "images/work with seniors/tech help 1.png",
+                "images/work with seniors/tech help 1.avif",
                 "images/past events/digital safety 2.avif",
                 "images/work with kids/ipad 1.jpeg"
             ]
         },
         {
             id: "cypress",
+            pageHref: "chapter-cypress.html",
             name: "Cypress Bay Chapter",
             location: "Florida, United States",
             status: "Active",
@@ -168,11 +222,12 @@ window.BFBL_DATA = {
             description: "Local chapter expanding BFBL service projects and digital literacy outreach.",
             photos: [
                 "images/past events/workshops 1.png",
-                "images/work with kids/trivia night 1.png"
+                "images/work with kids/trivia night 1.avif"
             ]
         },
         {
             id: "new-york",
+            pageHref: "chapter-new-york.html",
             name: "New York Chapter",
             location: "New York, United States",
             status: "Active",
@@ -194,7 +249,31 @@ window.BFBL_DATA = {
             ]
         },
         {
+            id: "gainesville",
+            pageHref: "chapter-gainesville.html",
+            name: "Gainesville Chapter",
+            location: "Gainesville, Florida, United States",
+            status: "Launching",
+            leadName: "Jamal Shaer",
+            leadTitle: "Chapter President",
+            leadPhoto: "images/logo.avif",
+            leadPeople: [
+                {
+                    name: "Jamal Shaer",
+                    title: "Chapter President",
+                    photo: "images/logo.avif"
+                }
+            ],
+            leadBio: "Jamal leads the Gainesville Chapter's outreach and service planning as a student at Buchholz High School.",
+            coordinates: { lat: 29.6516, lng: -82.3248 },
+            description: "Launching chapter expanding BFBL senior tech help, online safety education, and children's donation drives in Gainesville.",
+            photos: [
+                "images/logo.avif"
+            ]
+        },
+        {
             id: "russia",
+            pageHref: "chapter-russia.html",
             name: "Russia Chapter",
             location: "Russia",
             status: "Launching",
@@ -218,6 +297,7 @@ window.BFBL_DATA = {
         },
         {
             id: "turkiye",
+            pageHref: "chapter-turkiye.html",
             name: "Türkiye Chapter",
             location: "Türkiye",
             status: "Launching",
@@ -244,7 +324,7 @@ window.BFBL_DATA = {
             description: "Volunteers worked directly with senior residents on phones, iPads, laptops, video calls, email, photos, and accessibility settings.",
             relatedChapter: "AHS Chapter",
             category: "Senior Tech Help",
-            image: "images/work with seniors/tech help 1.png",
+            image: "images/work with seniors/tech help 1.avif",
             alt: "Student volunteer helping a senior resident with technology"
         },
         {
@@ -266,7 +346,7 @@ window.BFBL_DATA = {
             description: "The school community helped collect hundreds of board games that were prepared for children, families, and community partners.",
             relatedChapter: "AHS Chapter",
             category: "Children's Donations",
-            image: "images/past events/sep board game 1.png",
+            image: "images/past events/sep board game 1.avif",
             alt: "Board games collected during a school donation drive"
         },
         {
@@ -277,7 +357,7 @@ window.BFBL_DATA = {
             description: "Students combined digital safety, financial literacy, snacks, and donated games to create a warm educational outreach event.",
             relatedChapter: "AHS Chapter",
             category: "Digital Literacy Presentation",
-            image: "images/past events/lotus house.png",
+            image: "images/past events/lotus house.avif",
             alt: "Bytes for Better Lives outreach at Lotus House"
         },
         {
@@ -288,7 +368,7 @@ window.BFBL_DATA = {
             description: "BFBL donated board games to create screen-free activities that encourage connection, creativity, and joy for children.",
             relatedChapter: "AHS Chapter",
             category: "Children's Donations",
-            image: "images/past events/his house 1.png",
+            image: "images/past events/his house 1.avif",
             alt: "Board game donation at His House Children's Home"
         },
         {
@@ -299,7 +379,7 @@ window.BFBL_DATA = {
             description: "Students organized drives that brought board and card games to children staying at the hospital.",
             relatedChapter: "AHS Chapter",
             category: "Children's Donations",
-            image: "images/past events/joe 1.png",
+            image: "images/past events/joe 1.avif",
             alt: "Board games prepared for Joe DiMaggio Children's Hospital"
         },
         {
@@ -310,7 +390,7 @@ window.BFBL_DATA = {
             description: "A student-led fundraiser brought classmates together for team competition while supporting donation and outreach projects.",
             relatedChapter: "AHS Chapter",
             category: "Fundraising",
-            image: "images/work with kids/trivia night 1.png",
+            image: "images/work with kids/trivia night 1.avif",
             alt: "Students participating in a trivia night fundraiser"
         },
         {

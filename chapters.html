@@ -6,7 +6,6 @@
     <meta name="description" content="Explore active, launching, and prospective Bytes for Better Lives chapters around the world.">
     <title>Chapters | Bytes for Better Lives</title>
     <link rel="icon" type="image/avif" href="images/logo.avif">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -29,32 +28,7 @@
             <div class="hero-content">
                 <p class="eyebrow">Chapter Network</p>
                 <h1>Student-led service, expanding with care.</h1>
-                <p>Every chapter has a clear status so active chapters, launching teams, and prospective chapters are never confused.</p>
-            </div>
-        </section>
-
-        <section class="section compact">
-            <div class="container">
-                <div class="section-header">
-                    <p class="section-kicker">Overview</p>
-                    <h2 class="section-title">Chapter status at a glance</h2>
-                    <p class="section-description">Only chapters with status <strong>Active</strong> count as official active chapters. Launching and prospective chapters are shown separately while they build leadership, projects, and approval readiness.</p>
-                </div>
-                <div class="chapter-summary" id="chapter-summary" aria-label="Chapter counts and model"></div>
-            </div>
-        </section>
-
-        <section class="section surface-band">
-            <div class="wide-container">
-                <div class="section-header">
-                    <p class="section-kicker">Map</p>
-                    <h2 class="section-title">Chapters by location</h2>
-                    <p class="section-description">Pins are generated from the coordinates in the chapter data array. Select a pin or card to view chapter details.</p>
-                </div>
-                <div class="map-layout">
-                    <div id="leaflet-map" style="width: 100%; height: 450px; border-radius: var(--radius-xl); z-index: 1;"></div>
-                    <aside class="map-index" id="chapter-map-index" aria-label="Clickable chapter directory"></aside>
-                </div>
+                <p class="hero-subtitle">Each chapter has its own page with leadership and highlights. Chapters are labeled clearly while they launch and grow.</p>
             </div>
         </section>
 
@@ -62,21 +36,34 @@
             <div class="container">
                 <div class="section-header">
                     <p class="section-kicker">Directory</p>
-                    <h2 class="section-title">All chapters</h2>
-                    <p class="section-description">Each chapter card includes its location, status, president or lead, description, photos, and a chapter detail view.</p>
+                    <h2 class="section-title">Visit our chapters</h2>
+                    <p class="section-description">Tap a chapter to view leadership, fundraisers, and highlights.</p>
                 </div>
-                <div class="chapter-grid" id="chapter-grid" aria-label="All chapter cards"></div>
-                <section class="chapter-detail" id="chapter-detail" aria-live="polite" aria-label="Selected chapter details"></section>
+                <div class="chapter-grid" id="chapters-directory-grid" aria-label="All chapters"></div>
             </div>
         </section>
-        <section class="section">
+
+        <section class="section surface-band">
             <div class="container">
                 <div class="section-header">
-                    <p class="section-kicker">Expanding Chapters</p>
-                    <h2 class="section-title">Meet the teams behind our growing chapters</h2>
-                    <p class="section-description">Tap or hover over each card to learn about the chapter lead.</p>
+                    <p class="section-kicker">Status</p>
+                    <h2 class="section-title">Chapter status is always clear.</h2>
+                    <p class="section-description">Only chapters marked as <strong>Active</strong> count as official active chapters. Launching chapters are shown transparently while they build consistency and readiness.</p>
                 </div>
-                <div class="flip-card-grid" id="chapter-flip-grid"></div>
+                <div class="cards-grid" aria-label="Chapter status meanings">
+                    <article class="impact-card">
+                        <h3>Active</h3>
+                        <p>Established leadership and ongoing service programs.</p>
+                    </article>
+                    <article class="impact-card">
+                        <h3>Launching</h3>
+                        <p>Leadership is organizing projects and building consistency.</p>
+                    </article>
+                    <article class="impact-card">
+                        <h3>Prospective</h3>
+                        <p>Interest is confirmed; chapter plan and leadership are still being reviewed.</p>
+                    </article>
+                </div>
             </div>
         </section>
 
@@ -125,7 +112,6 @@
     </footer>
 
     <script src="data.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

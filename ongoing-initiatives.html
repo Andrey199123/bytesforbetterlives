@@ -3,132 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Our ongoing initiatives to create lasting impact in the community">
+    <meta name="description" content="Explore ongoing Bytes for Better Lives initiatives and featured fundraisers led by student volunteers and chapters.">
     <title>Ongoing Initiatives | Bytes for Better Lives</title>
+    <link rel="icon" type="image/avif" href="images/logo.avif">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="logo">
-                <img src="images/logo.avif" alt="Bytes for Better Lives Logo">
+                <img src="images/logo.avif" alt="Bytes for Better Lives logo">
             </a>
-            <div class="hamburger">
+            <button class="hamburger" type="button">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="work-with-seniors.html" class="nav-link">Work With Seniors</a></li>
-                <li><a href="work-with-kids.html" class="nav-link">Work With Kids</a></li>
-                <li><a href="donations.html" class="nav-link">Our Donations</a></li>
-                <li><a href="ongoing-initiatives.html" class="nav-link active">Ongoing Initiatives</a></li>
-                <li><a href="impact.html" class="nav-link">Our Impact</a></li>
-                <li><a href="team.html" class="nav-link">Meet the Team</a></li>
-                <li><a href="contact.html" class="nav-link">Contact Us</a></li>
-                <li><a href="https://www.gofundme.com/f/help-provide-ipads-to-local-schools" target="_blank" class="btn-donate">Donate</a></li>
-            </ul>
+            </button>
+            <ul class="nav-menu"></ul>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Ongoing Initiatives</h1>
-        </div>
-    </section>
-
-    <!-- Description Section -->
-    <section class="section" style="padding: 4rem 0; background: var(--brand-green-50);">
-        <div class="container" style="max-width: 900px; text-align: center;">
-            <p style="font-size: 1.25rem; color: var(--dark); line-height: 1.8; font-weight: 400;">We maintain long-term programs that create sustained impact through regular visits and continuous support. These recurring initiatives build lasting relationships and provide ongoing resources to communities we serve.</p>
-        </div>
-    </section>
-
-    <!-- Initiatives Section -->
-    <section class="section">
-        <div class="container">
-            <div class="cards-grid">
-                <div class="card">
-                    <div class="card-media" style="display: flex; align-items: center; justify-content: center; background: white;">
-                        <img src="images/ongoing initiatives/his house.png" alt="Educational Technologies" class="clickable-image" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Educational Technologies</h3>
-                        <p class="card-description">We are actively raising funds to donate iPads to His House Children's Home. Our volunteers teach weekly interactive programming lessons, ensuring children can follow along and engage with modern technology in a supportive learning environment.</p>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-media" style="display: flex; align-items: center; justify-content: center; background: white;">
-                        <img src="images/work with seniors/tech help 1.avif" alt="Recurring Senior Visits" class="clickable-image" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;">
-                    </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Recurring Senior Visits</h3>
-                        <p class="card-description">We return to senior communities each month to offer personalized tech help. Locations include places like Five Star Premier, with sessions coordinated around resident needs.</p>
-                    </div>
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">Ongoing Initiatives</p>
+                <h1>Projects that run all year.</h1>
+                <p class="hero-subtitle">BFBL maintains recurring service programs and fundraising efforts that keep technology access, safety education, and community support moving forward.</p>
+                <div class="hero-actions">
+                    <a href="contact.html" class="btn btn-primary">Volunteer</a>
+                    <a href="impact.html#focus-areas" class="btn btn-secondary">See Impact Areas</a>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Contact Section -->
-    <section class="section bg-light">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Contact Us</h2>
-                <p class="section-description">Please feel free to reach out to us at any time. We'll reply as soon as possible!</p>
+        <section class="section compact">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Featured</p>
+                    <h2 class="section-title">Current fundraisers</h2>
+                    <p class="section-description">Fundraiser links can be updated anytime in <strong>data.js</strong>. If a link is missing, the button will show as “Coming Soon”.</p>
+                </div>
+                <div class="cards-grid" id="fundraiser-grid" aria-label="Featured fundraisers"></div>
             </div>
-            <div class="text-center">
-                <p style="font-size: 1.25rem; color: var(--dark); margin-top: 2rem;">
-                    Email: <a href="mailto:bytesforbetterlives@gmail.com" style="color: var(--primary-color); font-weight: 600;">bytesforbetterlives@gmail.com</a>
-                </p>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
+        <section class="section surface-band">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Programs</p>
+                    <h2 class="section-title">Recurring initiatives</h2>
+                    <p class="section-description">These long-term programs are designed to build relationships, not one-off moments.</p>
+                </div>
+
+                <div class="cards-grid" aria-label="Recurring initiatives">
+                    <article class="card">
+                        <div class="card-media" style="display: flex; align-items: center; justify-content: center; background: var(--paper);">
+                            <img src="images/ongoing initiatives/his house.png" alt="Educational Technologies initiative" class="clickable-image" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;" loading="lazy" decoding="async" onerror="this.src='images/logo.avif'">
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-title">Educational Technologies</h3>
+                            <p class="card-description">We raise funds to donate iPads and support learning programs. Volunteers also teach interactive lessons so students can follow along and build confidence with technology.</p>
+                            <div class="btn-row">
+                                <a href="donations.html" class="btn btn-quiet">Related Donations</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="card">
+                        <div class="card-media" style="display: flex; align-items: center; justify-content: center; background: var(--paper);">
+                            <img src="images/work with seniors/tech help 1.avif" alt="Recurring Senior Visits initiative" class="clickable-image" style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;" loading="lazy" decoding="async" onerror="this.src='images/logo.avif'">
+                        </div>
+                        <div class="card-content">
+                            <h3 class="card-title">Recurring Senior Visits</h3>
+                            <p class="card-description">We return to senior communities to offer personalized tech help and practical online safety support aligned to resident needs.</p>
+                            <div class="btn-row">
+                                <a href="work-with-seniors.html" class="btn btn-quiet">Related Senior Work</a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="split-section">
+                    <div class="section-header">
+                        <p class="section-kicker">Get Involved</p>
+                        <h2 class="section-title">Join an initiative.</h2>
+                        <p class="section-description">Chapters and volunteers can help lead fundraisers, organize service days, and support recurring programs.</p>
+                    </div>
+                    <div class="impact-card">
+                        <h3>Want to help this month?</h3>
+                        <p>Send a quick message with your name, location, and what type of initiative you want to join.</p>
+                        <div class="btn-row mt-2">
+                            <a href="contact.html" class="btn btn-primary">Contact Us</a>
+                            <a href="chapters.html" class="btn btn-secondary">Explore Chapters</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Bytes for Better Lives</h3>
-                    <p>A student-run nonprofit based in South Florida empowering underserved individuals through education and equitable entertainment.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <a href="index.html">Home</a>
-                    <a href="team.html">Meet the Team</a>
-                    <a href="contact.html">Contact Us</a>
-                </div>
-                <div class="footer-section">
-                    <h3>Get Involved</h3>
-                    <a href="work-with-seniors.html">Work With Seniors</a>
-                    <a href="work-with-kids.html">Work With Kids</a>
-                    <a href="donations.html">Our Donations</a>
-                    <a href="https://www.gofundme.com/f/help-provide-ipads-to-local-schools" target="_blank">Donate</a>
-                </div>
-                <div class="footer-section">
-                    <img src="images/logo.avif" alt="Bytes for Better Lives" style="width: 80px; height: auto; margin-bottom: 1rem;">
-                    <h3>Contact</h3>
-                    <p>Email: bytesforbetterlives@gmail.com</p>
-                    <div class="social-links" style="display: flex; gap: 1rem; align-items: center; justify-content: center;">
-                        <a href="https://www.instagram.com/bytesforbetterlives?igsh=cmgzYzEwczV6YWI1" target="_blank" class="social-link" title="Instagram" style="width: 40px; height: 40px; padding: 0;">
-                            <img src="images/contact us logo/instagram logo.jpg" alt="Instagram" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                        </a>
-                        <a href="https://www.linkedin.com/company/bytes-for-better-lives/about/" target="_blank" class="social-link" title="LinkedIn" style="width: 40px; height: 40px; padding: 0;">
-                            <img src="images/contact us logo/linkedin.jpeg" alt="LinkedIn" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2025 Bytes for Better Lives. All rights reserved.</p>
-            </div>
-        </div>
+        <div class="container"></div>
     </footer>
 
+    <script src="data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Meet the executive board and chapter leaders of Bytes for Better Lives.">
-    <title>Leadership | Bytes for Better Lives</title>
+    <meta name="description" content="Meet the Bytes for Better Lives team: founders, executive board, chapter leadership, and volunteers.">
+    <title>Team | Bytes for Better Lives</title>
     <link rel="icon" type="image/avif" href="images/logo.avif">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -26,36 +26,44 @@
     <main>
         <section class="hero">
             <div class="hero-content">
-                <p class="eyebrow">Leadership</p>
-                <h1>Executive board and chapter leaders.</h1>
-                <p>BFBL is student-led, measurable, and built around accountable leadership across programs and chapters.</p>
+                <p class="eyebrow">Team</p>
+                <h1>Meet the students behind BFBL.</h1>
+                <p class="hero-subtitle">This page replaces the old Leadership page. It highlights founders, the executive board, chapter leadership, and volunteers.</p>
             </div>
         </section>
 
         <section class="section">
             <div class="container">
                 <div class="section-header">
-                    <p class="section-kicker">Main Chapter</p>
-                    <h2 class="section-title">Executive board and officer team</h2>
-                    <p class="section-description">The founding chapter leadership team coordinates BFBL service programs, partnerships, fundraising, and chapter standards.</p>
+                    <p class="section-kicker">Founders</p>
+                    <h2 class="section-title">How it started</h2>
+                    <p class="section-description">BFBL began with student leaders committed to bridging the digital divide through patient support, education, and donations.</p>
                 </div>
-                <div class="leadership-main-grid" aria-label="Main chapter leadership">
-                    <div>
-                        <div class="subsection-header">
-                            <h3 class="subsection-title">Founders</h3>
-                            <p class="subsection-description">Bytes for Better Lives was started by student leaders committed to bridging the digital divide.</p>
-                        </div>
-                        <div class="officer-grid officer-grid-dense" id="founders-grid" aria-label="Founders"></div>
-                        <div class="spacer-lg" aria-hidden="true"></div>
-                        <div id="main-chapter-card"></div>
-                    </div>
-                    <div>
-                        <div class="subsection-header">
-                            <h3 class="subsection-title">Officer roster</h3>
-                            <p class="subsection-description">Student officers help run service events, outreach, and operations year-round.</p>
-                        </div>
-                        <div class="officer-grid officer-grid-dense" id="main-chapter-officers" aria-label="Main chapter officers"></div>
-                    </div>
+                <div class="officer-grid officer-grid-dense" id="team-founders-grid" aria-label="Founders"></div>
+            </div>
+        </section>
+
+        <section class="section surface-band">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Executive Board</p>
+                    <h2 class="section-title">Leadership team</h2>
+                    <p class="section-description">The executive board coordinates BFBL programs, partnerships, fundraising, and chapter standards.</p>
+                </div>
+                <div class="officer-grid officer-grid-dense" id="team-executive-grid" aria-label="Executive board"></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Chapters</p>
+                    <h2 class="section-title">Chapter leadership</h2>
+                    <p class="section-description">Chapter presidents and leadership teams help bring senior tech help, education, and donation projects to new communities.</p>
+                </div>
+                <div class="people-grid" id="team-chapter-leaders-grid" aria-label="Chapter leaders"></div>
+                <div class="preview-actions mt-2">
+                    <a href="chapters.html" class="btn btn-primary">Explore Chapters</a>
                 </div>
             </div>
         </section>
@@ -63,25 +71,12 @@
         <section class="section surface-band">
             <div class="container">
                 <div class="section-header">
-                    <p class="section-kicker">Chapters</p>
-                    <h2 class="section-title">Chapter network</h2>
-                    <p class="section-description">Each chapter has a clear status so active chapters, launching teams, and prospective chapters are never confused.</p>
+                    <p class="section-kicker">Volunteers</p>
+                    <h2 class="section-title">Everyone who helps us show up.</h2>
+                    <p class="section-description">This section highlights the students who volunteer and support BFBL events and initiatives.</p>
                 </div>
-                <div class="chapter-grid" id="leadership-chapters-grid" aria-label="Chapters"></div>
-                <div class="preview-actions">
-                    <a href="chapters.html" class="btn btn-primary">View Full Chapters</a>
-                </div>
-            </div>
-        </section>
-
-        <section class="section">
-            <div class="container">
-                <div class="section-header">
-                    <p class="section-kicker">Officers</p>
-                    <h2 class="section-title">All officers and chapter presidents</h2>
-                    <p class="section-description">A complete directory of BFBL student leadership across the founding chapter and active or launching chapters.</p>
-                </div>
-                <div class="people-grid" id="all-officers-grid" aria-label="All officers"></div>
+                <p id="team-volunteers-empty" class="lead-text" style="display: none;">Volunteer roster coming soon.</p>
+                <div class="people-grid" id="team-volunteers-grid" aria-label="Volunteers"></div>
             </div>
         </section>
     </main>

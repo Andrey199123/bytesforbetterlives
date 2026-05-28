@@ -9,7 +9,9 @@
         founders: [],
         officers: [],
         chapters: [],
-        gallery: []
+        gallery: [],
+        fundraisers: [],
+        volunteers: []
     };
 
     const data = Object.assign({}, fallbackData, window.BFBL_DATA || {});
@@ -17,24 +19,50 @@
     const contactEmail = data.contactEmail || fallbackData.contactEmail;
 
     const navItems = [
-        { label: "Work With Seniors", href: "work-with-seniors.html" },
-        { label: "Work With Kids", href: "work-with-kids.html" },
-        { label: "Our Donations", href: "donations.html" },
+        { label: "Home", href: "index.html", match: ["", "index.html"] },
+        { label: "About", href: "about.html" },
+        {
+            label: "Impact",
+            href: "impact.html",
+            match: [
+                "impact.html",
+                "work-with-seniors.html",
+                "work-with-kids.html",
+                "donations.html",
+                "gallery.html",
+                "past-events.html"
+            ]
+        },
         { label: "Ongoing Initiatives", href: "ongoing-initiatives.html" },
-        { label: "Our Impact", href: "impact.html" },
-        { label: "Leadership", href: "leadership.html", match: ["leadership.html", "team.html"] },
-        { label: "Chapters", href: "chapters.html" },
-        { label: "Gallery", href: "gallery.html", match: ["gallery.html", "past-events.html"] },
+        { label: "Team", href: "team.html", match: ["team.html", "leadership.html"] },
+        {
+            label: "Chapters",
+            href: "chapters.html",
+            match: [
+                "chapters.html",
+                "chapter-ahs.html",
+                "chapter-cypress.html",
+                "chapter-new-york.html",
+                "chapter-gainesville.html",
+                "chapter-russia.html",
+                "chapter-turkiye.html"
+            ]
+        },
         { label: "Contact Us", href: "contact.html" }
     ];
 
     document.addEventListener("DOMContentLoaded", function () {
+        initVercelAnalytics();
         renderNavigation();
         renderFooter();
         renderHomePage();
         renderLeadershipPage();
         renderChaptersPage();
         renderGalleryPage();
+        renderInitiativesPage();
+        renderTeamPage();
+        renderChapterDirectoryPage();
+        renderChapterProfilePage();
         initMobileNavigation();
         initImageFallbacks();
         initCarousels();
@@ -45,7 +73,41 @@
         initBackToTop();
         initSmoothScroll();
         initCounters();
+
+        // Ensure flip-card backs never clip text after fonts/images settle (and on resize).
+        scheduleFlipCardResize();
+        window.addEventListener("load", scheduleFlipCardResize, { once: true });
+        window.addEventListener("resize", scheduleFlipCardResize);
     });
+
+    let flipCardResizeRaf = null;
+    function scheduleFlipCardResize() {
+        if (flipCardResizeRaf) return;
+        flipCardResizeRaf = window.requestAnimationFrame(function () {
+            flipCardResizeRaf = null;
+            resizeFlipCardsToFitBackContent(document);
+        });
+    }
+
+    function initVercelAnalytics() {
+        // Vercel Web Analytics (static HTML/JS).
+        // Safe on non-Vercel hosts: script will 404 and be ignored.
+        // Docs/community show an HTML snippet using `window.vaq` + the insights script.
+        if (window.__bfblVercelAnalytics) return;
+        window.__bfblVercelAnalytics = true;
+
+        window.va = window.va || function () {
+            (window.vaq = window.vaq || []).push(arguments);
+        };
+
+        const script = document.createElement("script");
+        script.defer = true;
+        script.src = "/_vercel/insights/script.js";
+        script.onerror = function () {
+            // Ignore (Netlify/GitHub Pages/etc).
+        };
+        document.head.appendChild(script);
+    }
 
     function escapeHTML(value) {
         return String(value ?? "").replace(/[&<>"']/g, function (char) {
@@ -85,7 +147,7 @@
     }
 
     function imageMarkup(src, alt, className, fallback) {
-        return `<img src="${escapeHTML(src || "images/logo.avif")}" alt="${escapeHTML(alt || "Bytes for Better Lives image")}"${className ? ` class="${escapeHTML(className)}"` : ""} data-fallback="${escapeHTML(fallback || "images/logo.avif")}" loading="lazy">`;
+        return `<img src="${escapeHTML(src || "images/logo.avif")}" alt="${escapeHTML(alt || "Bytes for Better Lives image")}"${className ? ` class="${escapeHTML(className)}"` : ""} data-fallback="${escapeHTML(fallback || "images/logo.avif")}" loading="lazy" decoding="async">`;
     }
 
     function chapterLeadPeople(chapter) {
@@ -159,18 +221,17 @@
 
         const quickLinks = [
             ["Home", "index.html"],
-            ["Leadership", "leadership.html"],
+            ["About", "about.html"],
+            ["Impact", "impact.html"],
+            ["Team", "team.html"],
             ["Chapters", "chapters.html"],
-            ["Gallery", "gallery.html"],
             ["Contact Us", "contact.html"]
         ];
 
         const programLinks = [
-            ["Work With Seniors", "work-with-seniors.html"],
-            ["Work With Kids", "work-with-kids.html"],
-            ["Our Donations", "donations.html"],
             ["Ongoing Initiatives", "ongoing-initiatives.html"],
-            ["Our Impact", "impact.html"]
+            ["Start a Chapter", "chapters.html#start-chapter"],
+            ["Volunteer", "contact.html"]
         ];
 
         footerContainer.innerHTML = `
@@ -347,8 +408,118 @@
     function renderChapterPreview() {
         const root = document.querySelector("#chapters-preview-grid");
         if (!root) return;
-        root.innerHTML = (data.chapters || []).slice(0, 3).map(chapterCardMarkup).join("");
-        bindChapterButtons(root, false);
+        root.innerHTML = (data.chapters || []).slice(0, 3).map(chapterDirectoryCardMarkup).join("");
+    }
+
+    function renderChapterDirectoryPage() {
+        const root = document.querySelector("#chapters-directory-grid");
+        if (!root) return;
+        root.innerHTML = (data.chapters || []).map(chapterDirectoryCardMarkup).join("");
+    }
+
+    function chapterDirectoryCardMarkup(chapter) {
+        const pageHref = chapter.pageHref || `chapter-${chapter.id}.html`;
+        const leadNames = chapterLeadPeopleText(chapter);
+        return `
+            <a class="chapter-card" href="${escapeHTML(pageHref)}" aria-label="View ${escapeHTML(chapter.name)}">
+                <div class="chapter-card-header">
+                    <div>
+                        <h3>${escapeHTML(chapter.name)}</h3>
+                        <p>${escapeHTML(chapter.location)}</p>
+                    </div>
+                    <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status))}</span>
+                </div>
+                <div class="chapter-lead">
+                    ${chapterLeadAvatarMarkup(chapter)}
+                    <div>
+                        <strong>${escapeHTML(chapter.leadName)}</strong>
+                    </div>
+                </div>
+                <p style="color: var(--ink-soft); font-weight: 700; margin: 0;">${escapeHTML(leadNames)}</p>
+                <p>${escapeHTML(chapter.description)}</p>
+                <span class="btn btn-quiet chapter-actions">View Chapter</span>
+            </a>
+        `;
+    }
+
+    function renderChapterProfilePage() {
+        const chapterId = (document.body && document.body.dataset ? document.body.dataset.chapterId : "") || "";
+        if (!chapterId) return;
+
+        const chapter = (data.chapters || []).find(function (item) {
+            return item && item.id === chapterId;
+        });
+
+        if (!chapter) {
+            const missing = document.querySelector("#chapter-not-found");
+            if (missing) missing.style.display = "block";
+            return;
+        }
+
+        const titleEl = document.querySelector("#chapter-page-title");
+        if (titleEl) titleEl.textContent = chapter.name;
+
+        const subtitleEl = document.querySelector("#chapter-page-subtitle");
+        if (subtitleEl) subtitleEl.textContent = `${chapter.location} \u2022 ${statusLabel(chapter.status)}`;
+
+        const descriptionEl = document.querySelector("#chapter-page-description");
+        if (descriptionEl) descriptionEl.textContent = chapter.leadBio || chapter.description || "";
+
+        const actionsEl = document.querySelector("#chapter-page-actions");
+        if (actionsEl) {
+            const links = [];
+            if (chapter.instagram) {
+                links.push(`<a href="${escapeHTML(chapter.instagram)}" target="_blank" rel="noopener" class="btn btn-primary">Chapter Instagram</a>`);
+            }
+            links.push(`<a href="chapters.html" class="btn btn-secondary">All Chapters</a>`);
+            links.push(`<a href="contact.html" class="btn btn-secondary">Volunteer</a>`);
+            actionsEl.innerHTML = links.join("");
+        }
+
+        const foundersGrid = document.querySelector("#chapter-founders-grid");
+        if (foundersGrid) {
+            renderOfficerGrid("#chapter-founders-grid", data.founders || [], false);
+        }
+
+        const execGrid = document.querySelector("#chapter-executive-grid");
+        if (execGrid) {
+            renderOfficerGrid("#chapter-executive-grid", data.officers || [], false);
+        }
+
+        const leadershipGrid = document.querySelector("#chapter-leadership-grid");
+        if (leadershipGrid) {
+            const leadership = chapterLeadPeople(chapter).map(function (person) {
+                return {
+                    key: `chapter:${chapter.id}:${person.name}`,
+                    name: person.name,
+                    title: person.title || chapter.leadTitle || "Chapter Leadership",
+                    detail: statusLabel(chapter.status),
+                    photo: person.photo || chapter.leadPhoto || "images/logo.avif",
+                    fallbackPhoto: "images/logo.avif",
+                    bio: ""
+                };
+            });
+            leadershipGrid.innerHTML = leadership.map(personCardMarkup).join("");
+        }
+
+        const fundraisersGrid = document.querySelector("#chapter-fundraisers-grid");
+        if (fundraisersGrid) {
+            const fundraisers = Array.isArray(data.fundraisers)
+                ? data.fundraisers.filter(function (item) { return item && item.chapterId === chapter.id; })
+                : [];
+
+            fundraisersGrid.innerHTML = fundraisers.map(fundraiserCardMarkup).join("");
+            const empty = document.querySelector("#chapter-fundraisers-empty");
+            if (empty) empty.style.display = fundraisers.length ? "none" : "block";
+        }
+
+        const photoGrid = document.querySelector("#chapter-photo-grid");
+        if (photoGrid) {
+            const photos = chapter.photos && chapter.photos.length ? chapter.photos : [];
+            photoGrid.innerHTML = photos.map(function (photo, index) {
+                return imageMarkup(photo, `${chapter.name} photo ${index + 1}`, "", "images/logo.avif");
+            }).join("");
+        }
     }
 
     function renderGalleryPreview() {
@@ -617,6 +788,7 @@
             flipGrid.innerHTML = (data.chapters || [])
                 .filter(function (chapter) { return chapter.id !== "ahs"; })
                 .map(chapterFlipCardMarkup).join("");
+            resizeFlipCardsToFitBackContent(flipGrid);
         }
 
         bindChapterButtons(document, true);
@@ -631,6 +803,25 @@
 
     function createWorldMapSvg() {
         return `<img src="images/world-map.svg" class="map-svg" alt="" aria-hidden="true" />`;
+    }
+
+    function resizeFlipCardsToFitBackContent(root) {
+        const scope = root || document;
+        const cards = scope.querySelectorAll(".flip-card");
+        if (!cards.length) return;
+
+        cards.forEach(function (card) {
+            const front = card.querySelector(".flip-card-front");
+            const back = card.querySelector(".flip-card-back");
+            if (!front || !back) return;
+
+            // Reset any previous inline height before measuring.
+            card.style.height = "";
+
+            const baseHeight = 440;
+            const nextHeight = Math.max(baseHeight, front.scrollHeight, back.scrollHeight);
+            card.style.height = `${nextHeight}px`;
+        });
     }
 
     function coordinatesToPercent(coords) {
@@ -775,6 +966,98 @@
         const root = document.querySelector("#gallery-grid");
         if (!root) return;
         root.innerHTML = (data.gallery || []).map(storyCardMarkup).join("");
+    }
+
+    function renderInitiativesPage() {
+        const fundraiserGrid = document.querySelector("#fundraiser-grid");
+        if (!fundraiserGrid) return;
+
+        const fundraisers = Array.isArray(data.fundraisers) ? data.fundraisers : [];
+        fundraiserGrid.innerHTML = fundraisers.map(fundraiserCardMarkup).join("");
+    }
+
+    function fundraiserCardMarkup(fundraiser) {
+        const url = (fundraiser && fundraiser.url ? String(fundraiser.url) : "").trim();
+        const hasUrl = url && url !== "#" && url.toLowerCase() !== "tbd";
+
+        const cta = hasUrl
+            ? `<a class="btn btn-primary" href="${escapeHTML(url)}" target="_blank" rel="noopener">Open GoFundMe</a>`
+            : `<span class="btn btn-secondary" aria-disabled="true" style="opacity: 0.7; cursor: not-allowed;">GoFundMe Link (Coming Soon)</span>`;
+
+        return `
+            <article class="card">
+                <div class="card-media" style="height: 320px;">
+                    ${imageMarkup(fundraiser.image, fundraiser.alt || fundraiser.title, "clickable-image", "images/logo.avif")}
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">${escapeHTML(fundraiser.title)}</h3>
+                    ${fundraiser.by ? `<p style="margin: 0; color: var(--ink-soft); font-weight: 800;">Led by ${escapeHTML(fundraiser.by)}</p>` : ""}
+                    ${fundraiser.description ? `<p class="card-description">${escapeHTML(fundraiser.description)}</p>` : ""}
+                    <div class="btn-row">
+                        ${cta}
+                        ${fundraiser.chapterHref ? `<a class="btn btn-quiet" href="${escapeHTML(fundraiser.chapterHref)}">View Chapter</a>` : ""}
+                    </div>
+                </div>
+            </article>
+        `;
+    }
+
+    function renderTeamPage() {
+        const foundersRoot = document.querySelector("#team-founders-grid");
+        const execRoot = document.querySelector("#team-executive-grid");
+        const chapterRoot = document.querySelector("#team-chapter-leaders-grid");
+        const volunteerRoot = document.querySelector("#team-volunteers-grid");
+
+        if (!foundersRoot && !execRoot && !chapterRoot && !volunteerRoot) return;
+
+        if (foundersRoot) {
+            renderOfficerGrid("#team-founders-grid", data.founders || [], false);
+        }
+
+        if (execRoot) {
+            renderOfficerGrid("#team-executive-grid", data.officers || [], false);
+        }
+
+        if (chapterRoot) {
+            const chapterLeads = [];
+            (data.chapters || [])
+                .filter(function (chapter) { return chapter && chapter.id !== "ahs"; })
+                .forEach(function (chapter) {
+                    chapterLeadPeople(chapter).forEach(function (person) {
+                        chapterLeads.push({
+                            key: `chapter:${chapter.id}:${person.name}`,
+                            name: person.name,
+                            title: chapter.name,
+                            detail: statusLabel(chapter.status),
+                            photo: person.photo || chapter.leadPhoto || "images/logo.avif",
+                            fallbackPhoto: "images/logo.avif",
+                            bio: chapter.leadBio || chapter.description || ""
+                        });
+                    });
+                });
+
+            chapterRoot.innerHTML = chapterLeads.map(personCardMarkup).join("");
+        }
+
+        if (volunteerRoot) {
+            const volunteers = Array.isArray(data.volunteers) ? data.volunteers : [];
+            volunteerRoot.innerHTML = volunteers.map(function (volunteer) {
+                return personCardMarkup({
+                    key: `volunteer:${volunteer.name}`,
+                    name: volunteer.name,
+                    title: volunteer.title || "Volunteer",
+                    detail: volunteer.detail || "",
+                    photo: volunteer.photo || "images/logo.avif",
+                    fallbackPhoto: volunteer.fallbackPhoto || "images/logo.avif",
+                    bio: volunteer.bio || ""
+                });
+            }).join("");
+
+            const emptyState = document.querySelector("#team-volunteers-empty");
+            if (emptyState) {
+                emptyState.style.display = volunteers.length ? "none" : "block";
+            }
+        }
     }
 
     function storyCardMarkup(story) {
