@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore the Türkiye Chapter of Bytes for Better Lives: leadership, fundraisers, and chapter highlights.">
+    <title>Türkiye Chapter | Bytes for Better Lives</title>
+    <link rel="icon" type="image/avif" href="images/logo.avif">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body data-chapter-id="turkiye">
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.avif" alt="Bytes for Better Lives logo">
+            </a>
+            <button class="hamburger" type="button">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu"></ul>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <p class="eyebrow">Chapter</p>
+                <h1 id="chapter-page-title">Türkiye Chapter</h1>
+                <p class="hero-subtitle" id="chapter-page-subtitle"></p>
+                <p class="hero-subtitle" id="chapter-page-description"></p>
+                <div class="hero-actions" id="chapter-page-actions"></div>
+            </div>
+        </section>
+
+        <section class="section compact">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Leadership</p>
+                    <h2 class="section-title">Meet the chapter team</h2>
+                    <p class="section-description">Student leaders coordinate local service programs and partnerships.</p>
+                </div>
+                <div class="people-grid" id="chapter-leadership-grid" aria-label="Chapter leadership"></div>
+            </div>
+        </section>
+
+        <section class="section surface-band">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Fundraisers</p>
+                    <h2 class="section-title">Support current initiatives</h2>
+                    <p class="section-description">Fundraiser links can be updated anytime in <strong>data.js</strong>.</p>
+                </div>
+                <p id="chapter-fundraisers-empty" class="lead-text" style="display: none;">No active fundraisers listed yet.</p>
+                <div class="cards-grid" id="chapter-fundraisers-grid" aria-label="Chapter fundraisers"></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Highlights</p>
+                    <h2 class="section-title">Chapter moments</h2>
+                    <p class="section-description">Photos from chapter events and community outreach.</p>
+                </div>
+                <div class="chapter-photo-grid" id="chapter-photo-grid" aria-label="Chapter photos"></div>
+            </div>
+        </section>
+
+        <section class="section surface-band">
+            <div class="container">
+                <div class="split-section">
+                    <div class="section-header">
+                        <p class="section-kicker">Get Involved</p>
+                        <h2 class="section-title">Volunteer with this chapter</h2>
+                        <p class="section-description">Want to help with a fundraiser, an outreach event, or a recurring program? Reach out and we’ll connect you to the right team.</p>
+                    </div>
+                    <div class="impact-card">
+                        <h3>Interested in helping?</h3>
+                        <p>Include your name, location, and availability so we can follow up quickly.</p>
+                        <div class="btn-row mt-2">
+                            <a href="contact.html" class="btn btn-primary">Contact Us</a>
+                            <a href="ongoing-initiatives.html" class="btn btn-secondary">Ongoing Initiatives</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container"></div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preservation Property Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-case {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #555;
+        }
+        .image-test {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .image-test img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+        }
+        .image-test img.error {
+            border-color: #f44336;
+        }
+        .image-test img.success {
+            border-color: #4CAF50;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.fail {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .status.pass {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .path-info {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .summary {
+            background: #e8f5e9;
+            border: 2px solid #4CAF50;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .summary h2 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+        .counter {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .counter.fail {
+            color: #c62828;
+        }
+        .counter.pass {
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <h1>✓ Preservation Property Tests: Correctly-Loading Images</h1>
+    
+    <div class="summary">
+        <h2>Test Purpose</h2>
+        <p><strong>Property 2: Preservation</strong> - Correctly-Loading Images Remain Unchanged</p>
+        <p><strong>Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5</strong></p>
+        <p>This test verifies that images with correct paths matching the file system structure continue to load successfully.</p>
+        <p><strong>Expected Outcome:</strong> All images should load successfully (confirms baseline behavior to preserve).</p>
+    </div>
+
+    <div id="results-summary" class="summary" style="display:none;">
+        <h2>Test Results</h2>
+        <div class="counter pass">Passed: <span id="pass-count">0</span></div>
+        <div class="counter fail">Failed: <span id="fail-count">0</span></div>
+        <p id="result-message"></p>
+    </div>
+
+    <div class="test-section">
+        <h2>Property 1: .avif Format Images (Requirement 3.2)</h2>
+        <p>Testing that .avif format images continue to load correctly.</p>
+        <div class="test-case">
+            <h3>Logo and Hero Background</h3>
+            <div class="image-test">
+                <img src="images/logo.avif" alt="Logo" data-path="images/logo.avif">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/logo.avif</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/hero-bg.avif" alt="Hero Background" data-path="images/hero-bg.avif">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/hero-bg.avif</div>
+                </div>
+            </div>
+        </div>
+        <div class="test-case">
+            <h3>Our Team .avif Images</h3>
+            <div class="image-test">
+                <img src="images/our team/andrey vasilyev.avif" alt="Andrey Vasilyev" data-path="images/our team/andrey vasilyev.avif">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/our team/andrey vasilyev.avif</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/our team/aaron pinto.avif" alt="Aaron Pinto" data-path="images/our team/aaron pinto.avif">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/our team/aaron pinto.avif</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Property 2: Correct Lowercase Paths with Literal Spaces (Requirement 3.3)</h2>
+        <p>Testing that images with correct lowercase paths and literal spaces continue to load.</p>
+        <div class="test-case">
+            <h3>Work with Seniors</h3>
+            <div class="image-test">
+                <img src="images/work with seniors/tech help 1.png" alt="Tech Help" data-path="images/work with seniors/tech help 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/work with seniors/tech help 1.png</div>
+                </div>
+            </div>
+        </div>
+        <div class="test-case">
+            <h3>Work with Kids</h3>
+            <div class="image-test">
+                <img src="images/work with kids/ipad 1.jpeg" alt="iPad" data-path="images/work with kids/ipad 1.jpeg">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/work with kids/ipad 1.jpeg</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/work with kids/trivia night 1.png" alt="Trivia Night" data-path="images/work with kids/trivia night 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/work with kids/trivia night 1.png</div>
+                </div>
+            </div>
+        </div>
+        <div class="test-case">
+            <h3>Past Events</h3>
+            <div class="image-test">
+                <img src="images/past events/workshops 1.png" alt="Workshops" data-path="images/past events/workshops 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/past events/workshops 1.png</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/past events/lotus house.png" alt="Lotus House" data-path="images/past events/lotus house.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/past events/lotus house.png</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/past events/his house 1.png" alt="His House" data-path="images/past events/his house 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/past events/his house 1.png</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/past events/joe 1.png" alt="Joe 1" data-path="images/past events/joe 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/past events/joe 1.png</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/past events/sep board game 1.png" alt="Sep Board Game" data-path="images/past events/sep board game 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/past events/sep board game 1.png</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Property 3: Correctly-Referenced Donations Images (Requirement 3.3)</h2>
+        <p>Testing that correctly-referenced images in the donations folder continue to load.</p>
+        <div class="test-case">
+            <h3>Christmas Haiti</h3>
+            <div class="image-test">
+                <img src="images/donations/christmas haiti 1.jpeg" alt="Christmas Haiti 1" data-path="images/donations/christmas haiti 1.jpeg">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/christmas haiti 1.jpeg</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/donations/christmas haiti 2.jpeg" alt="Christmas Haiti 2" data-path="images/donations/christmas haiti 2.jpeg">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/christmas haiti 2.jpeg</div>
+                </div>
+            </div>
+        </div>
+        <div class="test-case">
+            <h3>His House</h3>
+            <div class="image-test">
+                <img src="images/donations/his house 1.png" alt="His House 1" data-path="images/donations/his house 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/his house 1.png</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/donations/his house 2.png" alt="His House 2" data-path="images/donations/his house 2.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/his house 2.png</div>
+                </div>
+            </div>
+        </div>
+        <div class="test-case">
+            <h3>Joe DiMaggio</h3>
+            <div class="image-test">
+                <img src="images/donations/joe 1.png" alt="Joe 1" data-path="images/donations/joe 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/joe 1.png</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/donations/joe 2.png" alt="Joe 2" data-path="images/donations/joe 2.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/joe 2.png</div>
+                </div>
+            </div>
+        </div>
+        <div class="test-case">
+            <h3>Sep Board Game</h3>
+            <div class="image-test">
+                <img src="images/donations/sep board game 1.png" alt="Sep Board Game 1" data-path="images/donations/sep board game 1.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/sep board game 1.png</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/donations/sep board game 5.png" alt="Sep Board Game 5" data-path="images/donations/sep board game 5.png">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/sep board game 5.png</div>
+                </div>
+            </div>
+        </div>
+        <div class="test-case">
+            <h3>Nicklaus</h3>
+            <div class="image-test">
+                <img src="images/donations/nicklaus 1.jpg" alt="Nicklaus 1" data-path="images/donations/nicklaus 1.jpg">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/donations/nicklaus 1.jpg</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Property 4: Contact Us Logo Images (Requirement 3.3)</h2>
+        <p>Testing that correctly-referenced contact us logo images continue to load.</p>
+        <div class="test-case">
+            <h3>Social Media Logos</h3>
+            <div class="image-test">
+                <img src="images/contact us logo/instagram logo.jpg" alt="Instagram Logo" data-path="images/contact us logo/instagram logo.jpg">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/contact us logo/instagram logo.jpg</div>
+                </div>
+            </div>
+            <div class="image-test">
+                <img src="images/contact us logo/linkedin.jpeg" alt="LinkedIn Logo" data-path="images/contact us logo/linkedin.jpeg">
+                <div>
+                    <div class="status" data-status></div>
+                    <div class="path-info">images/contact us logo/linkedin.jpeg</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Track test results
+        let failCount = 0;
+        let passCount = 0;
+        const totalTests = document.querySelectorAll('.image-test img').length;
+
+        // Test each image
+        document.querySelectorAll('.image-test img').forEach(img => {
+            const statusDiv = img.parentElement.nextElementSibling.querySelector('[data-status]');
+            
+            img.addEventListener('load', () => {
+                img.classList.add('success');
+                statusDiv.textContent = '✓ LOADED';
+                statusDiv.classList.add('status', 'pass');
+                passCount++;
+                updateSummary();
+            });
+
+            img.addEventListener('error', () => {
+                img.classList.add('error');
+                statusDiv.textContent = '✗ FAILED TO LOAD';
+                statusDiv.classList.add('status', 'fail');
+                failCount++;
+                updateSummary();
+            });
+        });
+
+        function updateSummary() {
+            if (failCount + passCount === totalTests) {
+                const summaryDiv = document.getElementById('results-summary');
+                summaryDiv.style.display = 'block';
+                document.getElementById('fail-count').textContent = failCount;
+                document.getElementById('pass-count').textContent = passCount;
+                
+                const messageP = document.getElementById('result-message');
+                if (failCount === 0) {
+                    messageP.innerHTML = `<strong>✓ ALL PRESERVATION TESTS PASSED:</strong> All ${passCount} images loaded successfully.<br>` +
+                                       `<strong>This is the EXPECTED result</strong> - baseline behavior is confirmed!<br>` +
+                                       `These images must continue to load correctly after implementing the fix.`;
+                    messageP.style.color = '#2e7d32';
+                } else {
+                    messageP.innerHTML = `<strong>✗ PRESERVATION TESTS FAILED:</strong> ${failCount} images failed to load.<br>` +
+                                       `<strong>UNEXPECTED!</strong> All preservation tests should pass on unfixed code.<br>` +
+                                       `This may indicate missing files or incorrect test paths.`;
+                    messageP.style.color = '#c62828';
+                }
+            }
+        }
+
+        // Log results to console
+        setTimeout(() => {
+            console.log('='.repeat(80));
+            console.log('Preservation Property Tests Results');
+            console.log('='.repeat(80));
+            console.log(`Total Tests: ${totalTests}`);
+            console.log(`Passed: ${passCount}`);
+            console.log(`Failed: ${failCount}`);
+            console.log('');
+            if (failCount === 0) {
+                console.log('✓ ALL PRESERVATION TESTS PASSED');
+                console.log('  This is the EXPECTED result - baseline behavior is confirmed!');
+                console.log('');
+                console.log('Preservation guarantees:');
+                console.log(`  ✓ ${passCount} correctly-loading images verified`);
+                console.log('  ✓ .avif format images load correctly');
+                console.log('  ✓ Images with correct lowercase paths and literal spaces load correctly');
+                console.log('  ✓ All non-buggy image paths are preserved');
+            } else {
+                console.log('✗ PRESERVATION TESTS FAILED');
+                console.log('  UNEXPECTED! All preservation tests should pass.');
+                console.log(`  ${failCount} images failed to load`);
+            }
+            console.log('='.repeat(80));
+        }, 3000);
+    </script>
+</body>
+</html>

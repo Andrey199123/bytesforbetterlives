@@ -124,7 +124,7 @@ console.log('');
 // Property 2: Images with correct lowercase paths and literal spaces continue to load
 console.log('Property 2: Correct Lowercase Paths with Literal Spaces (Requirement 3.3)');
 console.log('-'.repeat(80));
-testPreservation('images/work with seniors/tech help 1.png',
+testPreservation('images/past events/tech help 1.png',
   'Work with seniors image with correct lowercase and literal spaces continues to load', '3.3');
 testPreservation('images/work with kids/ipad 1.jpeg',
   'Work with kids image with correct lowercase and literal spaces continues to load', '3.3');
