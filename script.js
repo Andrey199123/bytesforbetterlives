@@ -17,7 +17,6 @@
     const contactEmail = data.contactEmail || fallbackData.contactEmail;
 
     const navItems = [
-        { label: "Home", href: "index.html", match: ["", "index.html"] },
         { label: "Work With Seniors", href: "work-with-seniors.html" },
         { label: "Work With Kids", href: "work-with-kids.html" },
         { label: "Our Donations", href: "donations.html" },
