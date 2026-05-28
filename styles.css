@@ -310,7 +310,7 @@ main {
 
 .dropdown-menu {
     position: absolute;
-    top: calc(100% + 10px);
+    top: 100%;
     right: 0;
     left: auto;
     min-width: 240px;
