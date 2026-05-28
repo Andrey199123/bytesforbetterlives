@@ -177,6 +177,7 @@ window.BFBL_DATA = {
             name: "AHS Chapter",
             location: "South Florida, United States",
             status: "Active",
+            statusTag: "Executive",
             leadName: "Executive Board",
             leadTitle: "Executive Board",
             leadPhoto: "images/team/andrey.jpg",
