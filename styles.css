@@ -225,14 +225,7 @@ main {
     position: sticky;
     top: 0;
     z-index: 3000;
-    background-image: linear-gradient(
-            color-mix(in oklch, var(--paper) 75%, transparent),
-            color-mix(in oklch, var(--paper) 75%, transparent)
-        ),
-        url("images/IMG_7470.JPG");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background: color-mix(in oklch, var(--paper) 92%, transparent);
     border-bottom: 1px solid color-mix(in oklch, var(--line) 85%, transparent);
     backdrop-filter: blur(16px);
 }
@@ -404,6 +397,12 @@ main {
     align-items: center;
     background-position: center 28%;
     padding-block: clamp(2.5rem, 5vw, 4.5rem);
+}
+
+.chapter-hero {
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+        url("images/IMG_7470.JPG") center 34% / cover no-repeat;
 }
 
 .home-hero h1 {
