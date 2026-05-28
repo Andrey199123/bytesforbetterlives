@@ -19,11 +19,24 @@
     const contactEmail = data.contactEmail || fallbackData.contactEmail;
 
     const navItems = [
-        { label: "About", href: "about.html", match: ["about.html"] },
-        { label: "Impact", href: "impact.html", match: ["impact.html"] },
-        { label: "Ongoing Initiatives", href: "ongoing-initiatives.html", match: ["ongoing-initiatives.html"] },
-        { label: "Team", href: "team.html", match: ["team.html"] },
-        { label: "Chapters", href: "chapters.html", match: ["chapters.html"] }
+        { label: "Home", href: "index.html", match: ["", "index.html"] },
+        { label: "About", href: "about.html" },
+        { label: "Impact", href: "impact.html" },
+        { label: "Ongoing Initiatives", href: "ongoing-initiatives.html" },
+        { label: "Team", href: "team.html" },
+        {
+            label: "Chapters",
+            href: "chapters.html",
+            match: [
+                "chapters.html",
+                "chapter-ahs.html",
+                "chapter-cypress.html",
+                "chapter-new-york.html",
+                "chapter-gainesville.html",
+                "chapter-russia.html",
+                "chapter-turkiye.html"
+            ]
+        }
     ];
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -271,13 +284,12 @@
             ["Home", "index.html"],
             ["About", "about.html"],
             ["Impact", "impact.html"],
+            ["Ongoing Initiatives", "ongoing-initiatives.html"],
             ["Team", "team.html"],
-            ["Chapters", "chapters.html"],
-            ["Contact Us", "contact.html"]
+            ["Chapters", "chapters.html"]
         ];
 
         const programLinks = [
-            ["Ongoing Initiatives", "ongoing-initiatives.html"],
             ["Start a Chapter", "chapters.html#start-chapter"],
             ["Volunteer", "contact.html"]
         ];

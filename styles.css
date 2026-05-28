@@ -834,11 +834,18 @@ main {
     margin-top: var(--space-xl);
 }
 
+.people-grid > * {
+    min-width: 0;
+}
+
 .person-card {
     display: flex;
     align-items: flex-start;
     gap: var(--space-md);
     padding: var(--space-lg);
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .person-avatar {
@@ -853,6 +860,7 @@ main {
 
 .person-meta {
     min-width: 0;
+    flex: 1;
     display: grid;
     gap: 6px;
 }
@@ -862,6 +870,11 @@ main {
     flex-wrap: wrap;
     gap: var(--space-sm);
     align-items: baseline;
+}
+
+.person-header h3 {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .person-pill {
@@ -886,6 +899,8 @@ main {
 .person-bio {
     margin: 0;
     color: var(--ink-soft);
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .portrait-frame {
@@ -1093,11 +1108,21 @@ main {
     display: grid;
     gap: var(--space-md);
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     padding: var(--space-xl);
     text-align: left;
     color: var(--ink);
     cursor: pointer;
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    overflow-wrap: anywhere;
+}
+
+.chapter-card h3,
+.chapter-card p,
+.chapter-card strong {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .chapter-card-header {
@@ -1105,6 +1130,17 @@ main {
     justify-content: space-between;
     gap: var(--space-sm);
     align-items: flex-start;
+    min-width: 0;
+}
+
+.chapter-card-header > div:first-child {
+    min-width: 0;
+    flex: 1;
+}
+
+.chapter-lead > div {
+    min-width: 0;
+    flex: 1;
 }
 
 .chapter-lead {

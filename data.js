@@ -286,12 +286,12 @@ window.BFBL_DATA = {
             status: "Launching",
             leadName: "Baylee Effendi",
             leadTitle: "Chapter President",
-            leadPhoto: "images/team/baylee-effendi.jpg",
+            leadPhoto: "images/team/baylee-effendi.png",
             leadPeople: [
                 {
                     name: "Baylee Effendi",
                     title: "Chapter President",
-                    photo: "images/team/baylee-effendi.jpg"
+                    photo: "images/team/baylee-effendi.png"
                 }
             ],
             leadBio: "Baylee leads the Coral Springs Chapter's outreach and service planning as a student at Coral Springs Charter High School.",
