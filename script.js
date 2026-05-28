@@ -29,6 +29,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         initVercelAnalytics();
         renderNavigation();
+        initNavDropdowns();
         renderFooter();
         renderHomePage();
         renderLeadershipPage();
@@ -179,7 +180,30 @@
         const menus = document.querySelectorAll(".nav-menu");
         if (!menus.length) return;
 
+        function chaptersDropdownMarkup(item) {
+            const allChaptersLink = `<li><a href="${escapeHTML(item.href)}" class="dropdown-link${page === item.href ? " active" : ""}">All Chapters</a></li>`;
+            const chapterLinks = (data.chapters || []).map(function (chapter) {
+                const href = chapter.pageHref || `chapter-${chapter.id}.html`;
+                const isActive = page === href;
+                return `<li><a href="${escapeHTML(href)}" class="dropdown-link${isActive ? " active" : ""}">${escapeHTML(chapter.name)}</a></li>`;
+            }).join("");
+
+            const isActive = page === item.href || page.indexOf("chapter-") === 0;
+            return `
+                <li class="nav-item dropdown">
+                    <a href="${escapeHTML(item.href)}" class="nav-link dropdown-toggle${isActive ? " active" : ""}" aria-haspopup="true" aria-expanded="false">
+                        ${escapeHTML(item.label)} <span class="dropdown-caret" aria-hidden="true">▾</span>
+                    </a>
+                    <ul class="dropdown-menu" aria-label="Chapter pages">
+                        ${allChaptersLink}
+                        ${chapterLinks}
+                    </ul>
+                </li>
+            `;
+        }
+
         const items = navItems.map(function (item) {
+            if (item.label === "Chapters") return chaptersDropdownMarkup(item);
             const matches = item.match || [item.href];
             const isActive = matches.includes(page);
             return `<li><a href="${escapeHTML(item.href)}" class="nav-link${isActive ? " active" : ""}">${escapeHTML(item.label)}</a></li>`;
@@ -188,6 +212,51 @@
         const donateItem = `<li><a href="${escapeHTML(donateUrl)}" target="_blank" rel="noopener" class="btn-donate">Donate</a></li>`;
         menus.forEach(function (menu) {
             menu.innerHTML = items + donateItem;
+        });
+    }
+
+    function initNavDropdowns() {
+        const touchLike = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
+        const dropdowns = document.querySelectorAll(".nav-item.dropdown");
+        if (!dropdowns.length) return;
+
+        dropdowns.forEach(function (dropdown) {
+            const toggle = dropdown.querySelector(".dropdown-toggle");
+            if (!toggle) return;
+            if (toggle.dataset.dropdownBound) return;
+            toggle.dataset.dropdownBound = "true";
+
+            function setExpanded(isOpen) {
+                dropdown.classList.toggle("dropdown-open", isOpen);
+                toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            }
+
+            if (touchLike) {
+                toggle.addEventListener("click", function (event) {
+                    // On touch devices, first tap opens the menu (links are inside the dropdown).
+                    event.preventDefault();
+                    const isOpen = dropdown.classList.contains("dropdown-open");
+                    // Close others.
+                    dropdowns.forEach(function (other) {
+                        if (other !== dropdown) {
+                            const otherToggle = other.querySelector(".dropdown-toggle");
+                            other.classList.remove("dropdown-open");
+                            if (otherToggle) otherToggle.setAttribute("aria-expanded", "false");
+                        }
+                    });
+                    setExpanded(!isOpen);
+                });
+
+                document.addEventListener("click", function (event) {
+                    if (dropdown.contains(event.target)) return;
+                    setExpanded(false);
+                });
+            } else {
+                // Keep aria-expanded roughly in sync for keyboard/mouse.
+                dropdown.addEventListener("mouseenter", function () { setExpanded(true); });
+                dropdown.addEventListener("mouseleave", function () { setExpanded(false); });
+                toggle.addEventListener("focus", function () { setExpanded(true); });
+            }
         });
     }
 
