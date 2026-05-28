@@ -19,36 +19,11 @@
     const contactEmail = data.contactEmail || fallbackData.contactEmail;
 
     const navItems = [
-        { label: "Home", href: "index.html", match: ["", "index.html"] },
-        { label: "About", href: "about.html" },
-        {
-            label: "Impact",
-            href: "impact.html",
-            match: [
-                "impact.html",
-                "work-with-seniors.html",
-                "work-with-kids.html",
-                "donations.html",
-                "gallery.html",
-                "past-events.html"
-            ]
-        },
-        { label: "Ongoing Initiatives", href: "ongoing-initiatives.html" },
-        { label: "Team", href: "team.html", match: ["team.html", "leadership.html"] },
-        {
-            label: "Chapters",
-            href: "chapters.html",
-            match: [
-                "chapters.html",
-                "chapter-ahs.html",
-                "chapter-cypress.html",
-                "chapter-new-york.html",
-                "chapter-gainesville.html",
-                "chapter-russia.html",
-                "chapter-turkiye.html"
-            ]
-        },
-        { label: "Contact Us", href: "contact.html" }
+        { label: "About", href: "about.html", match: ["about.html"] },
+        { label: "Impact", href: "impact.html", match: ["impact.html"] },
+        { label: "Ongoing Initiatives", href: "ongoing-initiatives.html", match: ["ongoing-initiatives.html"] },
+        { label: "Team", href: "team.html", match: ["team.html"] },
+        { label: "Chapters", href: "chapters.html", match: ["chapters.html"] }
     ];
 
     document.addEventListener("DOMContentLoaded", function () {

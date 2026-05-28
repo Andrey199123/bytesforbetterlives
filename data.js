@@ -145,22 +145,28 @@ window.BFBL_DATA = {
     // Edit volunteer data here.
     // This is meant for students who volunteer and support BFBL events/initiatives (not officers).
     volunteers: [
-        {
-            name: "Ethan Chen",
-            title: "Volunteer",
-            detail: "",
-            photo: "images/our team/ethan chen.avif",
-            fallbackPhoto: "images/logo.avif",
-            bio: ""
-        },
-        {
-            name: "Alexey Guydouk",
-            title: "Volunteer",
-            detail: "",
-            photo: "images/our team/alexey guydouk.avif",
-            fallbackPhoto: "images/logo.avif",
-            bio: ""
-        }
+        { name: "Alexey Guydouk", title: "Volunteer", detail: "", photo: "images/our team/alexey guydouk.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Pranav Rai", title: "Co-Founder", detail: "", photo: "images/team/pranav-rai.jpg", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Aaron Pinto", title: "Co-Founder", detail: "", photo: "images/team/aaron-pinto.jpg", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Troy Qian", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Ethan Chen", title: "Volunteer", detail: "", photo: "images/our team/ethan chen.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Parth Balerao", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Andrey Vasilyev", title: "Co-President", detail: "", photo: "images/team/andrey.jpg", fallbackPhoto: "images/team/andrey.jpg", bio: "" },
+        { name: "Jonathan Wu", title: "Co-President", detail: "", photo: "images/team/jonathan.jpg", fallbackPhoto: "images/team/jonathan.jpg", bio: "" },
+        { name: "Joel Cardenas", title: "VP of Outreach", detail: "", photo: "images/team/joel-cardenas.jpg", fallbackPhoto: "images/team/joel-cardenas.jpg", bio: "" },
+        { name: "Dhava Rajamanikandan", title: "Chapter President", detail: "", photo: "images/team/dhava-rajamanikandan.jpg", fallbackPhoto: "images/team/dhava-rajamanikandan.jpg", bio: "" },
+        { name: "Elie Ciril", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Daniel Zhao", title: "VP of Activities", detail: "", photo: "images/team/daniel-zhao.jpg", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Lucas Calderon", title: "Historian", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Anish Immadi", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Siddarth Gupta", title: "Treasurer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Mateo Calderon", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Aniket Shukla", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Zayn Charania", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Ipek", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
+        { name: "Platon Panov", title: "Chapter President", detail: "", photo: "images/team/platon-panov.jpg", fallbackPhoto: "images/team/platon-panov.jpg", bio: "" },
+        { name: "Troye Kim", title: "Chapter President", detail: "", photo: "images/team/troye-kim.jpg", fallbackPhoto: "images/team/troye-kim.jpg", bio: "" },
+        { name: "Aashvik Garimella", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" }
     ],
 
     // Edit chapter data here. Use status exactly as "Active", "Launching", or "Prospective".
