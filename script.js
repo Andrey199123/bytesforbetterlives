@@ -492,6 +492,8 @@
         const chapterId = (document.body && document.body.dataset ? document.body.dataset.chapterId : "") || "";
         if (!chapterId) return;
 
+        ensureChapterProfileLayout();
+
         const chapter = (data.chapters || []).find(function (item) {
             return item && item.id === chapterId;
         });
@@ -565,6 +567,92 @@
             photoGrid.innerHTML = photos.map(function (photo, index) {
                 return imageMarkup(photo, `${chapter.name} photo ${index + 1}`, "", "images/logo.avif");
             }).join("");
+        }
+    }
+
+    function ensureChapterProfileLayout() {
+        // Chapter profile pages are intentionally lightweight shells.
+        // If the expected containers aren't present, inject the chapter layout so older pages still render.
+        if (document.querySelector("#chapter-page-title")) return;
+
+        const footer = document.querySelector(".footer");
+        const main = document.createElement("main");
+        main.innerHTML = `
+            <section class="hero">
+                <div class="hero-content">
+                    <p class="eyebrow">Chapter</p>
+                    <h1 id="chapter-page-title">Chapter</h1>
+                    <p class="hero-subtitle" id="chapter-page-subtitle"></p>
+                    <p class="hero-subtitle" id="chapter-page-description"></p>
+                    <div class="hero-actions" id="chapter-page-actions"></div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container">
+                    <div id="chapter-not-found" class="impact-card" style="display: none;">
+                        <h2>Chapter not found</h2>
+                        <p class="lead-text">We could not find this chapter. Please return to the chapters directory.</p>
+                        <div class="btn-row mt-2">
+                            <a href="chapters.html" class="btn btn-primary">All Chapters</a>
+                        </div>
+                    </div>
+
+                    <div class="section-header">
+                        <p class="section-kicker">Leadership</p>
+                        <h2 class="section-title">Chapter leadership</h2>
+                        <p class="section-description">Meet the students leading this chapter and organizing local service initiatives.</p>
+                    </div>
+                    <div class="people-grid" id="chapter-leadership-grid" aria-label="Chapter leadership"></div>
+                </div>
+            </section>
+
+            <section class="section surface-band">
+                <div class="container">
+                    <div class="section-header">
+                        <p class="section-kicker">Fundraisers</p>
+                        <h2 class="section-title">Support this chapter</h2>
+                        <p class="section-description">Chapter fundraisers help support donations, materials, and program expansion.</p>
+                    </div>
+                    <p id="chapter-fundraisers-empty" class="lead-text" style="display: none;">No fundraisers listed yet.</p>
+                    <div class="cards-grid" id="chapter-fundraisers-grid" aria-label="Chapter fundraisers"></div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container">
+                    <div class="section-header">
+                        <p class="section-kicker">Gallery</p>
+                        <h2 class="section-title">Chapter highlights</h2>
+                        <p class="section-description">A few moments from chapter events and community outreach.</p>
+                    </div>
+                    <div class="chapter-photo-grid" id="chapter-photo-grid" aria-label="Chapter photos"></div>
+                </div>
+            </section>
+
+            <section class="section surface-band">
+                <div class="container">
+                    <div class="section-header">
+                        <p class="section-kicker">Organization</p>
+                        <h2 class="section-title">Bytes for Better Lives leadership</h2>
+                        <p class="section-description">The broader BFBL leadership team helps chapters launch responsibly and operate with consistent standards.</p>
+                    </div>
+
+                    <h3 style="margin: 0;">Founders</h3>
+                    <div class="officer-grid officer-grid-dense mt-2" id="chapter-founders-grid" aria-label="Founders"></div>
+
+                    <div style="height: var(--space-xl);"></div>
+
+                    <h3 style="margin: 0;">Executive Board</h3>
+                    <div class="officer-grid officer-grid-dense mt-2" id="chapter-executive-grid" aria-label="Executive board"></div>
+                </div>
+            </section>
+        `;
+
+        if (footer && footer.parentNode) {
+            footer.parentNode.insertBefore(main, footer);
+        } else {
+            document.body.appendChild(main);
         }
     }
 

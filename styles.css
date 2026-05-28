@@ -679,6 +679,8 @@ main {
     gap: var(--space-xs);
     padding: clamp(1.25rem, 3vw, 2rem);
     min-height: 150px;
+    min-width: 0;
+    container-type: inline-size;
 }
 
 .stat-number {
@@ -687,6 +689,12 @@ main {
     font-size: clamp(2.2rem, 4.5vw, 3.35rem);
     line-height: 0.95;
     font-weight: 800;
+}
+
+@supports (font-size: 1cqi) {
+    .stat-card .stat-number {
+        font-size: clamp(1.8rem, min(4.5vw, 20cqi), 3.35rem);
+    }
 }
 
 .stat-label {
