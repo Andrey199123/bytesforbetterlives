@@ -137,6 +137,21 @@
         return `${value} Chapter`;
     }
 
+    function isExecutiveChapter(chapter) {
+        const tag = chapter && chapter.statusTag ? String(chapter.statusTag).trim() : "";
+        return tag.toLowerCase() === "executive";
+    }
+
+    function chapterStatusBadgeMarkup(chapter) {
+        if (!isExecutiveChapter(chapter)) return "";
+        const tag = String(chapter.statusTag).trim();
+        return `<span class="status-badge status-executive">${escapeHTML(tag)} Chapter</span>`;
+    }
+
+    function chapterStatusDetail(chapter) {
+        return isExecutiveChapter(chapter) ? statusLabel(chapter.status, chapter) : "";
+    }
+
     function imageMarkup(src, alt, className, fallback, loading, fetchPriority) {
         const loadMode = loading === "eager" ? "eager" : "lazy";
         const priorityAttr = fetchPriority ? ` fetchpriority="${escapeHTML(fetchPriority)}"` : "";
@@ -455,7 +470,7 @@
                     <div class="chapter-officer-copy">
                         <div class="chapter-officer-heading">
                             <strong>${escapeHTML(chapter.name)}</strong>
-                            <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                            ${chapterStatusBadgeMarkup(chapter)}
                         </div>
                         <p class="chapter-officer-people">${escapeHTML(chapterLeadPeopleText(chapter))}</p>
                         <p class="chapter-officer-description">${escapeHTML(chapter.leadBio || chapter.description)}</p>
@@ -487,7 +502,7 @@
                         <h3>${escapeHTML(chapter.name)}</h3>
                         <p>${escapeHTML(chapter.location)}</p>
                     </div>
-                    <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                    ${chapterStatusBadgeMarkup(chapter)}
                 </div>
                 <div class="chapter-lead">
                     ${chapterLeadAvatarMarkup(chapter)}
@@ -522,7 +537,12 @@
         if (titleEl) titleEl.textContent = chapter.name;
 
         const subtitleEl = document.querySelector("#chapter-page-subtitle");
-        if (subtitleEl) subtitleEl.textContent = `${chapter.location} \u2022 ${statusLabel(chapter.status, chapter)}`;
+        if (subtitleEl) {
+            const statusDetail = chapterStatusDetail(chapter);
+            subtitleEl.textContent = statusDetail
+                ? `${chapter.location} \u2022 ${statusDetail}`
+                : chapter.location;
+        }
 
         const descriptionEl = document.querySelector("#chapter-page-description");
         if (descriptionEl) descriptionEl.textContent = chapter.leadBio || chapter.description || "";
@@ -555,7 +575,7 @@
                     key: `chapter:${chapter.id}:${person.name}`,
                     name: person.name,
                     title: person.title || chapter.leadTitle || "Chapter Leadership",
-                    detail: statusLabel(chapter.status, chapter),
+                    detail: chapterStatusDetail(chapter),
                     photo: person.photo || chapter.leadPhoto || "images/logo.avif",
                     fallbackPhoto: "images/logo.avif",
                     bio: ""
@@ -698,7 +718,7 @@
                                 <h3>${escapeHTML(chapter.leadName)}</h3>
                             </div>
                         </div>
-                        <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                        ${chapterStatusBadgeMarkup(chapter)}
                         <p><strong>${escapeHTML(chapter.name)}</strong> - ${escapeHTML(chapter.location)}</p>
                         <p>${escapeHTML(chapterLeadPeopleText(chapter))}</p>
                         <p>${escapeHTML(chapter.description)}</p>
@@ -747,7 +767,7 @@
                         <h3>${escapeHTML(chapter.name)}</h3>
                         <p class="chapter-location">${escapeHTML(chapter.location)}</p>
                     </div>
-                    <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                    ${chapterStatusBadgeMarkup(chapter)}
                 </div>
                 <div class="chapter-lead mt-1">
                     ${chapterLeadAvatarMarkup(chapter)}
@@ -773,7 +793,7 @@
                         <h3>${escapeHTML(chapter.name)}</h3>
                         <p>${escapeHTML(chapter.location)}</p>
                     </div>
-                    <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                    ${chapterStatusBadgeMarkup(chapter)}
                 </div>
                 <div class="chapter-lead">
                     ${chapterLeadAvatarMarkup(chapter)}
@@ -814,7 +834,7 @@
                         key: `chapter:${chapter.id}:${person.name}`,
                         name: person.name,
                         title: chapter.name,
-                        detail: statusLabel(chapter.status, chapter),
+                        detail: chapterStatusDetail(chapter),
                         photo: person.photo || chapter.leadPhoto || "images/logo.avif",
                         fallbackPhoto: "images/logo.avif",
                         bio: chapter.leadBio || chapter.description || ""
@@ -901,7 +921,11 @@
             (data.chapters || []).forEach(function (chapter) {
                 if (!chapter.coordinates) return;
                 var marker = L.marker([chapter.coordinates.lat, chapter.coordinates.lng]).addTo(map);
-                marker.bindPopup("<strong>" + escapeHTML(chapter.name) + "</strong><br>" + escapeHTML(chapter.location) + "<br><em>" + escapeHTML(statusLabel(chapter.status, chapter)) + "</em>");
+                const popupStatus = chapterStatusDetail(chapter);
+                const popupStatusLine = popupStatus
+                    ? "<br><em>" + escapeHTML(popupStatus) + "</em>"
+                    : "";
+                marker.bindPopup("<strong>" + escapeHTML(chapter.name) + "</strong><br>" + escapeHTML(chapter.location) + popupStatusLine);
                 marker.on("click", function () {
                     selectChapter(chapter.id, true);
                 });
@@ -919,7 +943,7 @@
                             <button class="map-index-button" data-chapter-select="${escapeHTML(chapter.id)}">
                                 <strong>${escapeHTML(chapter.name)}</strong>
                                 <span>${escapeHTML(chapter.location)}</span>
-                                <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                                ${chapterStatusBadgeMarkup(chapter)}
                             </button>
                         `;
                     }).join("")}
@@ -988,7 +1012,7 @@
                         <h3>${escapeHTML(chapter.name)}</h3>
                         <p>${escapeHTML(chapter.location)}</p>
                     </div>
-                    <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                    ${chapterStatusBadgeMarkup(chapter)}
                 </div>
                 <div class="chapter-lead">
                     ${chapterLeadAvatarMarkup(chapter)}
@@ -1012,7 +1036,7 @@
                     <div class="flip-card-front">
                         <div class="flip-card-image-container">
                             <img src="${escapeHTML(photo)}" alt="${escapeHTML(chapter.name)}" class="flip-card-image" onerror="this.src='images/logo.avif'">
-                            <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                            ${chapterStatusBadgeMarkup(chapter)}
                         </div>
                         <div class="flip-card-front-content">
                             <h3>${escapeHTML(chapter.name)}</h3>
@@ -1083,7 +1107,7 @@
         detailRoot.innerHTML = `
             <div class="chapter-detail-grid">
                 <div>
-                    <span class="status-badge ${statusClass(chapter.status)}">${escapeHTML(statusLabel(chapter.status, chapter))}</span>
+                    ${chapterStatusBadgeMarkup(chapter)}
                     <h2>${escapeHTML(chapter.name)}</h2>
                     <p class="lead-text">${escapeHTML(chapter.location)}</p>
                     <div class="chapter-lead mt-2">
@@ -1181,7 +1205,7 @@
                             key: `chapter:${chapter.id}:${person.name}`,
                             name: person.name,
                             title: chapter.name,
-                            detail: statusLabel(chapter.status, chapter),
+                            detail: chapterStatusDetail(chapter),
                             photo: person.photo || chapter.leadPhoto || "images/logo.avif",
                             fallbackPhoto: "images/logo.avif",
                             bio: chapter.leadBio || chapter.description || ""

@@ -966,7 +966,8 @@ main {
     font-weight: 900;
 }
 
-.status-active {
+.status-active,
+.status-executive {
     background: var(--green-soft);
     color: var(--green-dark);
 }
@@ -1102,6 +1103,33 @@ main {
 
 .chapter-grid {
     margin-top: var(--space-xl);
+}
+
+#chapters-preview-grid .chapter-card {
+    padding: var(--space-lg);
+}
+
+#chapters-preview-grid .chapter-card h3 {
+    font-size: 1rem;
+    line-height: 1.2;
+}
+
+#chapters-preview-grid .chapter-card-header p,
+#chapters-preview-grid .chapter-card p,
+#chapters-preview-grid .chapter-card strong {
+    font-size: 0.86rem;
+    line-height: 1.35;
+}
+
+#chapters-preview-grid .chapter-lead-avatars .chapter-lead-photo {
+    width: 42px;
+    height: 42px;
+}
+
+#chapters-preview-grid .status-badge {
+    font-size: 0.72rem;
+    padding: 0.18rem 0.48rem;
+    white-space: nowrap;
 }
 
 .chapter-card {
