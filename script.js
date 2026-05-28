@@ -264,10 +264,10 @@
         if (!root) return;
 
         const stats = [
-            { raw: 8.8, prefix: "$", suffix: "K+", label: "Fundraised", note: "for technology access and outreach", decimals: 1 },
-            { raw: 1000, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
-            { raw: 600, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
-            { raw: 1500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
+            { raw: 8450, prefix: "$", suffix: "", label: "Fundraised", note: "for technology access and outreach", decimals: 0 },
+            { raw: 2350, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
+            { raw: 1500, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
+            { raw: 3500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
             { raw: 5, prefix: "", suffix: "+", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
         ];
 
@@ -1416,6 +1416,20 @@
         const counters = document.querySelectorAll('.animated-counter');
         if (!counters.length) return;
 
+        const formatCache = new Map();
+        function formatValue(value, decimals) {
+            const key = String(decimals);
+            let formatter = formatCache.get(key);
+            if (!formatter) {
+                formatter = new Intl.NumberFormat("en-US", {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                });
+                formatCache.set(key, formatter);
+            }
+            return formatter.format(value);
+        }
+
         const observer = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
                 if (!entry.isIntersecting) return;
@@ -1437,12 +1451,12 @@
                     const easeOut = 1 - Math.pow(1 - progress, 3);
                     const current = target * easeOut;
 
-                    el.textContent = prefix + current.toFixed(decimals) + suffix;
+                    el.textContent = prefix + formatValue(current, decimals) + suffix;
 
                     if (progress < 1) {
                         requestAnimationFrame(update);
                     } else {
-                        el.textContent = prefix + target.toFixed(decimals) + suffix;
+                        el.textContent = prefix + formatValue(target, decimals) + suffix;
                     }
                 }
                 requestAnimationFrame(update);
