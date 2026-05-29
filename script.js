@@ -19,7 +19,6 @@
     const contactEmail = data.contactEmail || fallbackData.contactEmail;
 
     const navItems = [
-        { label: "Home", href: "index.html", match: ["", "index.html"] },
         { label: "About", href: "about.html" },
         { label: "Impact", href: "impact.html" },
         { label: "Ongoing Initiatives", href: "ongoing-initiatives.html" },
@@ -612,7 +611,7 @@
         const footer = document.querySelector(".footer");
         const main = document.createElement("main");
         main.innerHTML = `
-            <section class="hero">
+            <section class="hero chapter-hero">
                 <div class="hero-content">
                     <p class="eyebrow">Chapter</p>
                     <h1 id="chapter-page-title">Chapter</h1>
