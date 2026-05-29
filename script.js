@@ -15,13 +15,55 @@
     };
 
     const data = Object.assign({}, fallbackData, window.BFBL_DATA || {});
-    const donateUrl = data.donateUrl || fallbackData.donateUrl;
-    const contactEmail = data.contactEmail || fallbackData.contactEmail;
+    let donateUrl = data.donateUrl || fallbackData.donateUrl;
+    let contactEmail = data.contactEmail || fallbackData.contactEmail;
+
+    // Founders are hardcoded here on purpose — they never change, so they are NOT stored in
+    // Firestore / data.people and are NOT editable in the admin. Edit this list to update them.
+    const FOUNDERS = [
+        {
+            name: "Aaron Pinto",
+            title: "Co-Founder",
+            photo: "images/team/aaron-pinto.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Aaron co-founded Bytes for Better Lives to bridge the digital divide through service, education, and donations.",
+            contact: "",
+            roles: ["founder"]
+        },
+        {
+            name: "Pranav Rai",
+            title: "Co-Founder",
+            photo: "images/team/pranav-rai.jpg",
+            fallbackPhoto: "images/logo.avif",
+            detail: "",
+            bio: "Pranav co-founded Bytes for Better Lives to help seniors and children build practical technology skills and access.",
+            contact: "",
+            roles: ["founder"]
+        }
+    ];
+
+    // Central member registry (data.people): derive the role-specific rosters so the rest of the
+    // app can keep using data.founders, data.officers, etc. Re-run whenever the data changes.
+    // Founders are always the hardcoded FOUNDERS list (never from data.people / Firestore).
+    function deriveRoles() {
+        data.founders = FOUNDERS;
+        if (!Array.isArray(data.people)) return;
+        const byRole = function (role) {
+            return data.people.filter(function (person) {
+                return person && Array.isArray(person.roles) && person.roles.indexOf(role) !== -1;
+            });
+        };
+        data.officers = byRole("leadership");
+        data.design = byRole("design");
+        data.volunteers = byRole("volunteer");
+    }
+    deriveRoles();
 
     const navItems = [
         { label: "About", href: "about.html" },
         { label: "Impact", href: "impact.html" },
-        { label: "Ongoing Initiatives", href: "ongoing-initiatives.html" },
+        { label: "Initiatives", href: "ongoing-initiatives.html" },
         { label: "Team", href: "team.html" },
         {
             label: "Chapters",
@@ -35,10 +77,23 @@
                 "chapter-russia.html",
                 "chapter-turkiye.html"
             ]
-        }
+        },
+        { label: "Gallery", href: "gallery.html" }
     ];
 
-    document.addEventListener("DOMContentLoaded", function () {
+    // Renders the standalone gallery page's photo grid from data.galleryImages (Firestore).
+    function renderGalleryImages() {
+        var root = document.querySelector(".photo-gallery-grid");
+        if (!root) return;
+        var imgs = data.galleryImages || [];
+        root.innerHTML = imgs.map(function (im) {
+            var src = typeof im === "string" ? im : (im && im.src) || "";
+            var alt = typeof im === "string" ? "" : (im && im.alt) || "";
+            return '<img class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '" loading="lazy" decoding="async" data-fallback="images/logo.avif">';
+        }).join("");
+    }
+
+    function initRender() {
         initVercelAnalytics();
         renderNavigation();
         initNavDropdowns();
@@ -47,6 +102,7 @@
 
         renderChaptersPage();
         renderGalleryPage();
+        renderGalleryImages();
         renderInitiativesPage();
         renderTeamPage();
         renderChapterDirectoryPage();
@@ -58,7 +114,6 @@
         initStoryCards();
         initFlipCards();
         initRevealEffects();
-        initBackToTop();
         initSmoothScroll();
         initCounters();
         initMembersSlider();
@@ -67,6 +122,21 @@
         scheduleFlipCardResize();
         window.addEventListener("load", scheduleFlipCardResize, { once: true });
         window.addEventListener("resize", scheduleFlipCardResize);
+    }
+
+    // Render once the live content (firebase-data.js, if present) has loaded — falling back to
+    // data.js if Firestore is empty/unreachable. Then re-sync data and derive roles before render.
+    document.addEventListener("DOMContentLoaded", function () {
+        var ready = (window.BFBL_DATA_READY && typeof window.BFBL_DATA_READY.then === "function")
+            ? window.BFBL_DATA_READY
+            : Promise.resolve();
+        ready.then(function () {
+            Object.assign(data, window.BFBL_DATA || {});
+            donateUrl = data.donateUrl || donateUrl;
+            contactEmail = data.contactEmail || contactEmail;
+            deriveRoles();
+            initRender();
+        });
     });
 
     let flipCardResizeRaf = null;
@@ -157,22 +227,69 @@
         return `<img src="${escapeHTML(src || "images/logo.avif")}" alt="${escapeHTML(alt || "Bytes for Better Lives image")}"${className ? ` class="${escapeHTML(className)}"` : ""} data-fallback="${escapeHTML(fallback || "images/logo.avif")}" loading="${loadMode}" decoding="async"${priorityAttr}>`;
     }
 
+    // Up to two initials from a name, e.g. "Aaron Pinto" -> "AP", "Ipek" -> "IP".
+    function personInitials(name) {
+        const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return "?";
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+
+    // A photo only "counts" if it's a real portrait — the logo placeholder means "no picture".
+    function hasRealPhoto(photo) {
+        return Boolean(photo) && !/logo\.avif(\?|#|$)/i.test(photo);
+    }
+
+    function initialsAvatarMarkup(name, className) {
+        return `<span class="avatar-initials${className ? ` ${escapeHTML(className)}` : ""}" role="img" aria-label="${escapeHTML(name || "Member")}">${escapeHTML(personInitials(name))}</span>`;
+    }
+
+    // Renders a person's portrait, or their initials on the brand green when no real photo exists.
+    // If a real photo fails to load, initImageFallbacks swaps it for the initials avatar.
+    function personPhotoMarkup(name, photo, className, loading, fetchPriority) {
+        if (!hasRealPhoto(photo)) return initialsAvatarMarkup(name, className);
+        const loadMode = loading === "eager" ? "eager" : "lazy";
+        const priorityAttr = fetchPriority ? ` fetchpriority="${escapeHTML(fetchPriority)}"` : "";
+        return `<img src="${escapeHTML(photo)}" alt="${escapeHTML(`${name || "Member"} portrait`)}"${className ? ` class="${escapeHTML(className)}"` : ""} data-name="${escapeHTML(name || "")}" data-initials-fallback="1" loading="${loadMode}" decoding="async"${priorityAttr}>`;
+    }
+
+    // Look up a person in the central registry (data.people) by name.
+    function personByName(name) {
+        if (!name) return null;
+        const key = String(name).trim().toLowerCase();
+        return (data.people || []).find(function (person) {
+            return person && String(person.name).trim().toLowerCase() === key;
+        }) || null;
+    }
+
+    // Resolve a chapter-lead reference against the registry so displayed details
+    // (photo, bio, canonical name) come from the single source of truth, with the
+    // chapter's own values as a fallback for anyone not yet in the registry.
+    function resolvePersonRef(ref, chapter) {
+        const registry = personByName(ref && ref.name) || {};
+        return {
+            name: (ref && ref.name) || registry.name || (chapter && chapter.leadName) || "Chapter Lead",
+            title: (ref && ref.title) || registry.title || (chapter && chapter.leadTitle) || "Chapter Lead",
+            photo: registry.photo || (ref && ref.photo) || (chapter && chapter.leadPhoto) || "images/logo.avif",
+            fallbackPhoto: registry.fallbackPhoto || "images/logo.avif",
+            bio: registry.bio || ""
+        };
+    }
+
     function chapterLeadPeople(chapter) {
-        const people = Array.isArray(chapter.leadPeople)
-            ? chapter.leadPeople.filter(function (person) {
-                return person && person.name;
-            })
+        const refs = Array.isArray(chapter.leadPeople)
+            ? chapter.leadPeople.filter(function (person) { return person && person.name; })
             : [];
 
-        if (people.length) return people;
+        if (refs.length) {
+            return refs.map(function (ref) { return resolvePersonRef(ref, chapter); });
+        }
 
-        return [
-            {
-                name: chapter.leadName || "Chapter Lead",
-                title: chapter.leadTitle || "Chapter Lead",
-                photo: chapter.leadPhoto || "images/logo.avif"
-            }
-        ];
+        return [resolvePersonRef({
+            name: chapter.leadName,
+            title: chapter.leadTitle,
+            photo: chapter.leadPhoto
+        }, chapter)];
     }
 
     function chapterLeadAvatarMarkup(chapter, modifierClass) {
@@ -181,7 +298,7 @@
         return `
             <div class="chapter-lead-avatars${modifierClass ? ` ${escapeHTML(modifierClass)}` : ""}" aria-label="${escapeHTML(label)}">
                 ${people.map(function (person) {
-                    return `<img class="chapter-lead-photo" src="${escapeHTML(person.photo || chapter.leadPhoto || "images/logo.avif")}" alt="${escapeHTML(person.name)} portrait" data-fallback="images/logo.avif" loading="eager" decoding="async">`;
+                    return personPhotoMarkup(person.name, person.photo || chapter.leadPhoto, "chapter-lead-photo", "eager");
                 }).join("")}
             </div>
         `;
@@ -298,9 +415,10 @@
             ["Home", "index.html"],
             ["About", "about.html"],
             ["Impact", "impact.html"],
-            ["Ongoing Initiatives", "ongoing-initiatives.html"],
+            ["Initiatives", "ongoing-initiatives.html"],
             ["Team", "team.html"],
-            ["Chapters", "chapters.html"]
+            ["Chapters", "chapters.html"],
+            ["Admin", "admin.html"]
         ];
 
         const programLinks = [
@@ -433,7 +551,7 @@
         return `
             <article class="officer-card">
                 <div class="portrait-frame">
-                    ${imageMarkup(officer.photo, `${officer.name} portrait`, "", officer.fallbackPhoto, "eager", "high")}
+                    ${personPhotoMarkup(officer.name, officer.photo, "", "eager", "high")}
                 </div>
                 <div>
                     <h3>${escapeHTML(officer.name)}</h3>
@@ -451,6 +569,27 @@
         root.innerHTML = (officers || []).map(function (officer) {
             return officerCard(officer, compact);
         }).join("");
+    }
+
+    function chapterNameById(id) {
+        const c = (data.chapters || []).find(function (ch) { return ch && ch.id === id; });
+        return c ? c.name : "";
+    }
+
+    // Public-facing display title. Executive-board members show their board title; everyone else
+    // shows "Title ⋅ Chapter Name" when they belong to a chapter.
+    function memberDisplayTitle(person) {
+        if (!person) return "";
+        if (person.execBoard) return person.execTitle || person.title || "";
+        const base = person.title || "";
+        const chName = person.chapter ? chapterNameById(person.chapter) : "";
+        if (base && chName) return base + " ⋅ " + chName;
+        return base || chName;
+    }
+
+    // Clone a registry person with its public display title applied (for renderOfficerGrid).
+    function withDisplayTitle(person) {
+        return Object.assign({}, person, { title: memberDisplayTitle(person) });
     }
 
     function renderHomeChapterOfficers() {
@@ -516,6 +655,72 @@
         `;
     }
 
+    // "Support this Chapter" CTA: use the chapter's own fundraiser link if it has one,
+    // otherwise fall back to the site-wide donate URL.
+    function chapterSupportUrl(chapter) {
+        const fundraisers = Array.isArray(data.fundraisers) ? data.fundraisers : [];
+        const chapterFundraiser = fundraisers.find(function (item) {
+            return item && item.chapterId === chapter.id && item.url && String(item.url).trim() && String(item.url).trim() !== "#";
+        });
+        return (chapterFundraiser && String(chapterFundraiser.url).trim()) || donateUrl;
+    }
+
+    // Human-readable label for a member category (role) id, from data.categories when available.
+    function categoryLabel(id) {
+        const cats = Array.isArray(data.categories) ? data.categories : [];
+        const found = cats.find(function (c) { return c && c.id === id; });
+        if (found) return found.label || found.id;
+        const defaults = { founder: "Founders", leadership: "Leadership", design: "Design", volunteer: "Volunteers" };
+        if (defaults[id]) return defaults[id];
+        return id ? id.charAt(0).toUpperCase() + id.slice(1) : "Members";
+    }
+
+    // Render members assigned to this chapter (person.chapter === chapter.id), grouped by their
+    // category (roles[0]), into #chapter-members.
+    function renderChapterMembersByCategory(chapter) {
+        const root = document.querySelector("#chapter-members");
+        if (!root) return;
+
+        const people = Array.isArray(data.people) ? data.people : [];
+        const members = people.filter(function (p) { return p && p.chapter === chapter.id; });
+
+        if (!members.length) {
+            root.innerHTML = `<p class="lead-text">Member roster coming soon.</p>`;
+            return;
+        }
+
+        const order = Array.isArray(data.categories)
+            ? data.categories.map(function (c) { return c && c.id; })
+            : [];
+        const groups = {};
+        members.forEach(function (p) {
+            const cat = (Array.isArray(p.roles) && p.roles[0]) ? p.roles[0] : "member";
+            (groups[cat] = groups[cat] || []).push(p);
+        });
+
+        const catIds = Object.keys(groups).sort(function (a, b) {
+            const ia = order.indexOf(a);
+            const ib = order.indexOf(b);
+            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+        });
+
+        root.innerHTML = catIds.map(function (cat) {
+            const cards = groups[cat].map(function (p) {
+                return officerCard({
+                    name: p.name,
+                    title: memberDisplayTitle(p),
+                    detail: p.detail || "",
+                    photo: p.photo || "images/logo.avif",
+                    bio: p.bio || ""
+                }, false);
+            }).join("");
+            return `
+                <h3 class="team-subsection-title">${escapeHTML(categoryLabel(cat))}</h3>
+                <div class="officer-grid officer-grid-dense mt-2">${cards}</div>
+            `;
+        }).join("");
+    }
+
     function renderChapterProfilePage() {
         const chapterId = (document.body && document.body.dataset ? document.body.dataset.chapterId : "") || "";
         if (!chapterId) return;
@@ -548,51 +753,10 @@
 
         const actionsEl = document.querySelector("#chapter-page-actions");
         if (actionsEl) {
-            const links = [];
-            if (chapter.instagram) {
-                links.push(`<a href="${escapeHTML(chapter.instagram)}" target="_blank" rel="noopener" class="btn btn-primary">Chapter Instagram</a>`);
-            }
-            links.push(`<a href="chapters.html" class="btn btn-secondary">All Chapters</a>`);
-            links.push(`<a href="contact.html" class="btn btn-secondary">Volunteer</a>`);
-            actionsEl.innerHTML = links.join("");
+            actionsEl.innerHTML = `<a href="${escapeHTML(chapterSupportUrl(chapter))}" target="_blank" rel="noopener" class="btn btn-primary">Support this Chapter</a>`;
         }
 
-        const foundersGrid = document.querySelector("#chapter-founders-grid");
-        if (foundersGrid) {
-            renderOfficerGrid("#chapter-founders-grid", data.founders || [], false);
-        }
-
-        const execGrid = document.querySelector("#chapter-executive-grid");
-        if (execGrid) {
-            renderOfficerGrid("#chapter-executive-grid", data.officers || [], false);
-        }
-
-        const leadershipGrid = document.querySelector("#chapter-leadership-grid");
-        if (leadershipGrid) {
-            const leadership = chapterLeadPeople(chapter).map(function (person) {
-                return {
-                    key: `chapter:${chapter.id}:${person.name}`,
-                    name: person.name,
-                    title: person.title || chapter.leadTitle || "Chapter Leadership",
-                    detail: chapterStatusDetail(chapter),
-                    photo: person.photo || chapter.leadPhoto || "images/logo.avif",
-                    fallbackPhoto: "images/logo.avif",
-                    bio: ""
-                };
-            });
-            leadershipGrid.innerHTML = leadership.map(personCardMarkup).join("");
-        }
-
-        const fundraisersGrid = document.querySelector("#chapter-fundraisers-grid");
-        if (fundraisersGrid) {
-            const fundraisers = Array.isArray(data.fundraisers)
-                ? data.fundraisers.filter(function (item) { return item && item.chapterId === chapter.id; })
-                : [];
-
-            fundraisersGrid.innerHTML = fundraisers.map(fundraiserCardMarkup).join("");
-            const empty = document.querySelector("#chapter-fundraisers-empty");
-            if (empty) empty.style.display = fundraisers.length ? "none" : "block";
-        }
+        renderChapterMembersByCategory(chapter);
 
         const photoGrid = document.querySelector("#chapter-photo-grid");
         if (photoGrid) {
@@ -632,27 +796,15 @@
                     </div>
 
                     <div class="section-header">
-                        <p class="section-kicker">Leadership</p>
-                        <h2 class="section-title">Chapter leadership</h2>
-                        <p class="section-description">Meet the students leading this chapter and organizing local service initiatives.</p>
+                        <p class="section-kicker">Members</p>
+                        <h2 class="section-title">Chapter members</h2>
+                        <p class="section-description">The students leading and volunteering with this chapter.</p>
                     </div>
-                    <div class="people-grid" id="chapter-leadership-grid" aria-label="Chapter leadership"></div>
+                    <div id="chapter-members"></div>
                 </div>
             </section>
 
             <section class="section surface-band">
-                <div class="container">
-                    <div class="section-header">
-                        <p class="section-kicker">Fundraisers</p>
-                        <h2 class="section-title">Support this chapter</h2>
-                        <p class="section-description">Chapter fundraisers help support donations, materials, and program expansion.</p>
-                    </div>
-                    <p id="chapter-fundraisers-empty" class="lead-text" style="display: none;">No fundraisers listed yet.</p>
-                    <div class="cards-grid" id="chapter-fundraisers-grid" aria-label="Chapter fundraisers"></div>
-                </div>
-            </section>
-
-            <section class="section">
                 <div class="container">
                     <div class="section-header">
                         <p class="section-kicker">Gallery</p>
@@ -660,24 +812,6 @@
                         <p class="section-description">A few moments from chapter events and community outreach.</p>
                     </div>
                     <div class="chapter-photo-grid" id="chapter-photo-grid" aria-label="Chapter photos"></div>
-                </div>
-            </section>
-
-            <section class="section surface-band">
-                <div class="container">
-                    <div class="section-header">
-                        <p class="section-kicker">Organization</p>
-                        <h2 class="section-title">Bytes for Better Lives leadership</h2>
-                        <p class="section-description">The broader BFBL leadership team helps chapters launch responsibly and operate with consistent standards.</p>
-                    </div>
-
-                    <h3 style="margin: 0;">Founders</h3>
-                    <div class="officer-grid officer-grid-dense mt-2" id="chapter-founders-grid" aria-label="Founders"></div>
-
-                    <div style="height: var(--space-xl);"></div>
-
-                    <h3 style="margin: 0;">Executive Board</h3>
-                    <div class="officer-grid officer-grid-dense mt-2" id="chapter-executive-grid" aria-label="Executive board"></div>
                 </div>
             </section>
         `;
@@ -816,7 +950,7 @@
             people.push({
                 key: `officer:${officer.name}`,
                 name: officer.name,
-                title: officer.title,
+                title: memberDisplayTitle(officer),
                 detail: officer.detail || "AHS Chapter",
                 photo: officer.photo,
                 fallbackPhoto: officer.fallbackPhoto || "images/logo.avif",
@@ -854,7 +988,7 @@
     function personCardMarkup(person) {
         return `
             <article class="person-card">
-                ${imageMarkup(person.photo, `${person.name} portrait`, "person-avatar", person.fallbackPhoto, "eager")}
+                ${personPhotoMarkup(person.name, person.photo, "person-avatar", "eager")}
                 <div class="person-meta">
                     <div class="person-header">
                         <h3>${escapeHTML(person.name)}</h3>
@@ -1176,6 +1310,7 @@
     function renderTeamPage() {
         const foundersRoot = document.querySelector("#team-founders-grid");
         const execRoot = document.querySelector("#team-executive-grid");
+        const designRoot = document.querySelector("#team-design-grid");
         const clubRoot = document.querySelector("#team-club-officers-grid");
         const chapterRoot = document.querySelector("#team-chapter-leaders-grid");
         const volunteerRoot = document.querySelector("#team-volunteers-grid");
@@ -1187,11 +1322,19 @@
         }
 
         if (execRoot) {
-            renderOfficerGrid("#team-executive-grid", (data.officers || []).slice(0, 3), false);
+            // Executive board: the first 3 leadership people plus the design team, in one row.
+            const execBoard = (data.officers || []).slice(0, 3).concat(data.design || []);
+            renderOfficerGrid("#team-executive-grid", execBoard.map(withDisplayTitle), false);
+        }
+
+        if (designRoot) {
+            // Design is now merged into the executive board grid above; leave any
+            // standalone design grid empty.
+            renderOfficerGrid("#team-design-grid", [], false);
         }
 
         if (clubRoot) {
-            renderOfficerGrid("#team-club-officers-grid", (data.officers || []).slice(3), false);
+            renderOfficerGrid("#team-club-officers-grid", (data.officers || []).slice(3).map(withDisplayTitle), false);
         }
 
         if (chapterRoot) {
@@ -1221,7 +1364,7 @@
                 return personCardMarkup({
                     key: `volunteer:${volunteer.name}`,
                     name: volunteer.name,
-                    title: volunteer.title || "Volunteer",
+                    title: memberDisplayTitle(volunteer) || "Volunteer",
                     detail: volunteer.detail || "",
                     photo: volunteer.photo || "images/logo.avif",
                     fallbackPhoto: volunteer.fallbackPhoto || "images/logo.avif",
@@ -1383,40 +1526,6 @@
         });
     }
 
-    function initBackToTop() {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "back-to-top";
-        button.setAttribute("aria-label", "Back to top");
-        button.textContent = "^";
-        button.style.cssText = [
-            "position:fixed",
-            "right:22px",
-            "bottom:22px",
-            "z-index:999",
-            "width:46px",
-            "height:46px",
-            "border-radius:50%",
-            "border:1px solid var(--line)",
-            "background:var(--blue)",
-            "color:var(--paper)",
-            "font-weight:900",
-            "box-shadow:var(--shadow-md)",
-            "display:none"
-        ].join(";");
-        document.body.appendChild(button);
-
-        window.addEventListener("scroll", function () {
-            button.style.display = window.pageYOffset > 520 ? "inline-flex" : "none";
-            button.style.alignItems = "center";
-            button.style.justifyContent = "center";
-        });
-
-        button.addEventListener("click", function () {
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        });
-    }
-
     function initImageFallbacks(root) {
         const scope = root || document;
         scope.querySelectorAll("img").forEach(function (img) {
@@ -1443,6 +1552,18 @@
                 if (!img.dataset.normalizedTried && normalized && normalized !== current) {
                     img.dataset.normalizedTried = "true";
                     img.src = normalized;
+                    return;
+                }
+
+                if (img.dataset.initialsFallback) {
+                    const span = document.createElement("span");
+                    const cls = img.getAttribute("class");
+                    span.className = cls ? `avatar-initials ${cls}` : "avatar-initials";
+                    span.setAttribute("role", "img");
+                    const name = img.dataset.name || "";
+                    span.setAttribute("aria-label", name || "Member");
+                    span.textContent = personInitials(name);
+                    if (img.parentNode) img.parentNode.replaceChild(span, img);
                     return;
                 }
 
@@ -1550,8 +1671,8 @@
             media.dataset.lightboxBound = "true";
             media.addEventListener("click", function (event) {
                 event.stopPropagation();
-                const carousel = media.closest(".carousel-container");
-                galleryItems = carousel ? Array.from(carousel.querySelectorAll(".clickable-image")) : [media];
+                const group = media.closest(".carousel-container, [data-lightbox-group]");
+                galleryItems = group ? Array.from(group.querySelectorAll(".clickable-image")) : [media];
                 currentIndex = Math.max(0, galleryItems.indexOf(media));
                 showLightbox();
             });
@@ -1685,6 +1806,13 @@
         const prevButton = slider.querySelector(".members-arrow.prev");
         const nextButton = slider.querySelector(".members-arrow.next");
         if (!viewport || !track || !prevButton || !nextButton) return;
+
+        // Populate the "All Members" list from the central registry (data.people) when empty.
+        if (!track.querySelector(".members-chip, li") && Array.isArray(data.people)) {
+            track.innerHTML = data.people.map(function (person) {
+                return `<li class="members-chip">${escapeHTML(person.name)}</li>`;
+            }).join("");
+        }
 
         const chips = track.querySelectorAll(".members-chip, li");
         const countEl = document.querySelector("[data-members-count]");

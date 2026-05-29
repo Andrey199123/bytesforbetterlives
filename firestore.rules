@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Bytes for Better Lives — Firestore security rules.
+// Paste into: Firebase console → Firestore Database → Rules.
+//
+// Model: the public website can READ all content; only signed-in admins can WRITE.
+// Add your admin email(s) to the list below (keep in sync with firebase.js ADMIN_EMAILS).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in [
+          "bytesforbetterlives@gmail.com",
+          "petr1264k@gmail.com",
+          "lakeqiao3805@gmail.com"
+        ];
+    }
+
+    // Site content (people, chapters, gallery, fundraisers, settings, ...)
+    match /{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

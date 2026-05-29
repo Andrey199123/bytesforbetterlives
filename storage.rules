@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// Bytes for Better Lives — Storage security rules.
+// Paste into: Firebase console → Storage → Rules.
+//
+// Model: uploaded images are publicly readable; only signed-in admins can upload/delete.
+// Keep the admin email list in sync with firebase.js and firestore.rules.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in [
+          "bytesforbetterlives@gmail.com",
+          "petr1264k@gmail.com",
+          "lakeqiao3805@gmail.com"
+        ];
+    }
+
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.size < 10 * 1024 * 1024            // max 10 MB
+        && request.resource.contentType.matches('image/.*');   // images only
+    }
+  }
+}
