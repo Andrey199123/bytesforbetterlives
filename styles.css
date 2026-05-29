@@ -468,6 +468,12 @@ main {
         url("images/IMG_7470.JPG") center 34% / cover no-repeat;
 }
 
+.hero-home-banner {
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+        url("images/IMG_7470.JPG") center 34% / cover no-repeat;
+}
+
 .home-hero h1 {
     max-width: 1040px;
     font-size: clamp(2.85rem, 4.85vw, 4.85rem);
