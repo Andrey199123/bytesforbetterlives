@@ -21,10 +21,10 @@
     --blue: oklch(49% 0.17 254);
     --blue-dark: oklch(36% 0.14 254);
     --blue-soft: oklch(93% 0.045 246);
-    /* Brand (signature) lime green pulled from the BFBL logo. */
-    --green: oklch(80% 0.189 137.5);
-    --green-dark: oklch(55% 0.16 137.5);
-    --green-soft: oklch(94% 0.06 137.5);
+    /* Brand (signature) color — SY Glacier Mint. */
+    --green: #B4D3AD;
+    --green-dark: #4F7A46;
+    --green-soft: #E8F1E4;
     --gold: oklch(74% 0.13 78);
     --gold-soft: oklch(93% 0.055 82);
     --danger-soft: oklch(93% 0.046 25);
@@ -191,11 +191,7 @@ main {
 
 .section-kicker,
 .eyebrow {
-    color: var(--green-dark);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-size: 0.82rem;
+    display: none;
 }
 
 .section-title {
@@ -361,8 +357,8 @@ main {
     min-height: 42px;
     padding: 0.62rem 1.5rem;
     border-radius: var(--radius-md);
-    background: var(--blue);
-    color: var(--paper);
+    background: var(--green);
+    color: var(--ink);
     font-weight: 800;
     font-size: 1rem;
     letter-spacing: 0.02em;
@@ -373,8 +369,8 @@ main {
 
 .btn-donate:hover {
     transform: translateY(-2px) scale(1.02);
-    background: var(--blue-dark);
-    border-color: var(--green);
+    background: color-mix(in oklch, var(--green) 86%, var(--green-dark));
+    border-color: var(--green-dark);
     box-shadow: 0 8px 20px color-mix(in oklch, var(--green) 42%, transparent);
 }
 
@@ -752,13 +748,14 @@ main {
 }
 
 .officer-grid-dense {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: var(--space-md);
 }
 
 .officer-card,
 .leader-card {
     display: grid;
+    align-content: start;
     gap: var(--space-md);
     padding: var(--space-xl);
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
@@ -1161,9 +1158,9 @@ main {
 
 .chapter-card-header {
     display: flex;
-    justify-content: space-between;
-    gap: var(--space-sm);
+    flex-direction: column;
     align-items: flex-start;
+    gap: var(--space-sm);
     min-width: 0;
 }
 
@@ -1221,6 +1218,86 @@ main {
     width: 56px;
     height: 56px;
     border-color: var(--green-soft);
+}
+
+/* Initials avatar — shown on the brand lime green when a person has no real photo. */
+.avatar-initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    background: var(--green);
+    color: var(--ink);
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    border-radius: 50%;
+    overflow: hidden;
+    flex: 0 0 auto;
+    font-size: 1.25rem;
+}
+
+/* Officer/board portraits sit inside a 108px round frame. */
+.portrait-frame .avatar-initials {
+    width: 100%;
+    height: 100%;
+    font-size: 2.3rem;
+}
+
+/* Person-card avatars are 64px (size comes from .person-avatar). */
+.person-avatar.avatar-initials {
+    font-size: 1.35rem;
+}
+
+/* Chapter-lead avatars keep their size/border but force the brand green. */
+.chapter-lead-avatars .chapter-lead-photo.avatar-initials {
+    background: var(--green);
+    color: var(--ink);
+    font-size: 1rem;
+}
+
+.chapter-lead-avatars-large .chapter-lead-photo.avatar-initials {
+    font-size: 1.2rem;
+}
+
+.chapter-lead-avatars-flip .chapter-lead-photo.avatar-initials {
+    font-size: 1.15rem;
+}
+
+/* Subsection heading within a team section (e.g. Leadership / Design under Executive Board). */
+.team-subsection-title {
+    margin: var(--space-lg) 0 var(--space-md);
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--green-dark);
+}
+
+.team-subsection-title:first-of-type {
+    margin-top: var(--space-md);
+}
+
+/* Standalone gallery page — grid of clickable photos that open the lightbox. */
+.photo-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-sm);
+}
+
+.photo-gallery-grid img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.photo-gallery-grid img:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
 }
 
 .chapter-officer-list {
@@ -1741,6 +1818,9 @@ main {
 .lightbox-nav {
     position: absolute;
     z-index: 10001;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: 1px solid color-mix(in oklch, var(--paper) 22%, transparent);
     background: color-mix(in oklch, var(--ink) 46%, transparent);
     color: var(--paper);

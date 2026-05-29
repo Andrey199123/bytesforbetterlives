@@ -1,0 +1,12 @@
+{
+  "name": "bytes-for-better-lives-tools",
+  "private": true,
+  "type": "module",
+  "description": "Local admin tooling for updating Firestore content. NOT part of the deployed static site.",
+  "dependencies": {
+    "firebase-admin": "^12.7.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.19.0"
+  }
+}

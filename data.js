@@ -36,34 +36,17 @@ window.BFBL_DATA = {
         }
     ],
 
-    // Edit founder data here.
-    founders: [
-        {
-            name: "Aaron Pinto",
-            title: "Co-Founder",
-            photo: "images/team/aaron-pinto.jpg",
-            fallbackPhoto: "images/logo.avif",
-            detail: "",
-            bio: "Aaron co-founded Bytes for Better Lives to bridge the digital divide through service, education, and donations.",
-            contact: ""
-        },
-        {
-            name: "Pranav Rai",
-            title: "Co-Founder",
-            photo: "images/team/pranav-rai.jpg",
-            fallbackPhoto: "images/logo.avif",
-            detail: "",
-            bio: "Pranav co-founded Bytes for Better Lives to help seniors and children build practical technology skills and access.",
-            contact: ""
-        }
-    ],
-
-    // Edit officer data here.
-    // Notes:
-    // - The first few entries are featured on the homepage "Executive Board" preview.
-    // - Add `detail` for things like school + grade (kept optional so we don't show placeholder text on the live site).
-    // - You can swap portrait paths later without changing any page layout.
-    officers: [
+    // ===== CENTRAL MEMBER REGISTRY =====
+    // Single source of truth for every member — define each person ONCE here.
+    // `roles` controls where they appear on the site:
+    //   "leadership" -> Team page Executive Board > "Leadership" subsection (first 3 also on homepage preview)
+    //   "design"     -> Team page Executive Board > "Design" subsection
+    //   "volunteer"  -> Team page "Volunteers" section
+    // Everyone listed here also appears in the homepage "All Members" list automatically.
+    // A person can hold more than one role, e.g. roles: ["leadership", "design"].
+    // NOTE: Founders are hardcoded in script.js (FOUNDERS) — they never change, so they are
+    // intentionally NOT in this registry, Firestore, or the admin. Do not re-add them here.
+    people: [
         {
             name: "Andrey Vasilyev",
             title: "Co-President",
@@ -71,7 +54,8 @@ window.BFBL_DATA = {
             fallbackPhoto: "images/team/andrey.jpg",
             detail: "",
             bio: "Andrey helps guide Bytes for Better Lives strategy, technology projects, and responsible chapter expansion.",
-            contact: "Officer contact or profile link placeholder"
+            contact: "Officer contact or profile link placeholder",
+            roles: ["leadership"]
         },
         {
             name: "Jonathan Wu",
@@ -80,7 +64,8 @@ window.BFBL_DATA = {
             fallbackPhoto: "images/team/jonathan.jpg",
             detail: "",
             bio: "Jonathan supports program leadership, outreach partnerships, and service planning across senior and youth initiatives.",
-            contact: "Officer contact or profile link placeholder"
+            contact: "Officer contact or profile link placeholder",
+            roles: ["leadership"]
         },
         {
             name: "Joel Cardenas",
@@ -89,7 +74,8 @@ window.BFBL_DATA = {
             fallbackPhoto: "images/team/joel-cardenas.jpg",
             detail: "",
             bio: "Joel helps coordinate volunteers, chapter operations, and community service projects for Bytes for Better Lives.",
-            contact: "Officer contact or profile link placeholder"
+            contact: "Officer contact or profile link placeholder",
+            roles: ["leadership"]
         },
         {
             name: "Daniel Zhao",
@@ -98,7 +84,8 @@ window.BFBL_DATA = {
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Daniel supports activity planning, volunteer coordination, and service event execution across BFBL programs.",
-            contact: ""
+            contact: "",
+            roles: ["leadership"]
         },
         {
             name: "Troy Qian",
@@ -108,7 +95,8 @@ window.BFBL_DATA = {
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Troy supports documentation, meeting notes, and consistent communication across officer and chapter operations.",
-            contact: ""
+            contact: "",
+            roles: ["leadership"]
         },
         {
             name: "Siddarth Gupta",
@@ -118,7 +106,8 @@ window.BFBL_DATA = {
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Siddarth supports fundraising tracking, donation logistics, and responsible resource planning for BFBL service work.",
-            contact: ""
+            contact: "",
+            roles: ["leadership"]
         },
         {
             name: "Lucas Calderon",
@@ -128,7 +117,8 @@ window.BFBL_DATA = {
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Lucas supports photo documentation, event recaps, and storytelling that highlights measurable community impact.",
-            contact: ""
+            contact: "",
+            roles: ["leadership"]
         },
         {
             name: "Parth Bhalerao",
@@ -138,35 +128,33 @@ window.BFBL_DATA = {
             fallbackPhoto: "images/logo.avif",
             detail: "",
             bio: "Parth supports coordination with school leadership and ensures service events align with student organization standards.",
-            contact: ""
-        }
-    ],
-
-    // Edit volunteer data here.
-    // This is meant for students who volunteer and support BFBL events/initiatives (not officers).
-    volunteers: [
-        { name: "Alexey Guydouk", title: "Volunteer", detail: "", photo: "images/our team/alexey guydouk.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Pranav Rai", title: "Co-Founder", detail: "", photo: "images/team/pranav-rai.jpg", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Aaron Pinto", title: "Co-Founder", detail: "", photo: "images/team/aaron-pinto.jpg", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Troy Qian", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Ethan Chen", title: "Volunteer", detail: "", photo: "images/our team/ethan chen.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Parth Balerao", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Andrey Vasilyev", title: "Co-President", detail: "", photo: "images/team/andrey.jpg", fallbackPhoto: "images/team/andrey.jpg", bio: "" },
-        { name: "Jonathan Wu", title: "Co-President", detail: "", photo: "images/team/jonathan.jpg", fallbackPhoto: "images/team/jonathan.jpg", bio: "" },
-        { name: "Joel Cardenas", title: "VP of Outreach", detail: "", photo: "images/team/joel-cardenas.jpg", fallbackPhoto: "images/team/joel-cardenas.jpg", bio: "" },
-        { name: "Dhava Rajamanikandan", title: "Chapter President", detail: "", photo: "images/team/dhava-rajamanikandan.jpg", fallbackPhoto: "images/team/dhava-rajamanikandan.jpg", bio: "" },
-        { name: "Elie Ciril", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Daniel Zhao", title: "VP of Activities", detail: "", photo: "images/team/daniel-zhao.jpg", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Lucas Calderon", title: "Historian", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Anish Immadi", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Siddarth Gupta", title: "Treasurer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Mateo Calderon", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Aniket Shukla", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Zayn Charania", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Ipek", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" },
-        { name: "Platon Panov", title: "Chapter President", detail: "", photo: "images/team/platon-panov.jpg", fallbackPhoto: "images/team/platon-panov.jpg", bio: "" },
-        { name: "Troye Kim", title: "Chapter President", detail: "", photo: "images/team/troye-kim.jpg", fallbackPhoto: "images/team/troye-kim.jpg", bio: "" },
-        { name: "Aashvik Garimella", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "" }
+            contact: "",
+            roles: ["leadership"]
+        },
+        {
+            name: "Petr Kirsanov",
+            title: "Creative Director",
+            photo: "images/team/petr-kirsanov.jpg",
+            fallbackPhoto: "images/team/petr-kirsanov.jpg",
+            detail: "",
+            bio: "Petr manages the Bytes for Better Lives website and the club's overall brand direction.",
+            contact: "Officer contact or profile link placeholder",
+            roles: ["design"]
+        },
+        { name: "Alexey Guydouk", title: "Volunteer", detail: "", photo: "images/our team/alexey guydouk.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Ethan Chen", title: "Volunteer", detail: "", photo: "images/our team/ethan chen.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Dhava Rajamanikandan", title: "Chapter President", detail: "", photo: "images/team/dhava-rajamanikandan.jpg", fallbackPhoto: "images/team/dhava-rajamanikandan.jpg", bio: "", roles: ["volunteer"] },
+        { name: "Elie Ciril", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Anish Immadi", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Mateo Calderon", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Aniket Shukla", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Zayn Charania", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Ipek", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Platon Panov", title: "Chapter President", detail: "", photo: "images/team/platon-panov.jpg", fallbackPhoto: "images/team/platon-panov.jpg", bio: "", roles: ["volunteer"] },
+        { name: "Troye Kim", title: "Chapter President", detail: "", photo: "images/team/troye-kim.jpg", fallbackPhoto: "images/team/troye-kim.jpg", bio: "", roles: ["volunteer"] },
+        { name: "Aashvik Garimella", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Baylee Effendi", title: "Chapter President", detail: "", photo: "images/team/baylee-effendi.png", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Jamal Shaer", title: "Chapter President", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] }
     ],
 
     // Edit chapter data here. Use status exactly as "Active", "Launching", or "Prospective".
@@ -328,8 +316,8 @@ window.BFBL_DATA = {
         {
             id: "turkiye",
             pageHref: "chapter-turkiye.html",
-            name: "Türkiye Chapter",
-            location: "Türkiye",
+            name: "Turkey Chapter",
+            location: "Turkey",
             status: "Launching",
             leadName: "Turkey",
             leadTitle: "Launching Chapter Lead",

@@ -1,0 +1,32 @@
+/* admin.css — shared styles for the per-tab admin pages (*-admin.html). */
+.admin-wrap { width: 100%; max-width: 1700px; margin: 0 auto; padding-inline: clamp(12px, 2vw, 28px); }
+.admin-head { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between; }
+.admin-head h1 { margin: 0; }
+.admin-actions { display: flex; gap: 1rem; align-items: center; }
+#autosave-status { font-weight: 700; color: var(--ink-soft); font-size: 0.9rem; }
+.admin-tabs { display: flex; gap: 0.25rem; border-bottom: 2px solid var(--line); margin: 1.5rem 0; flex-wrap: wrap; }
+.admin-tab { padding: 0.65rem 1.4rem; border: none; background: none; font-weight: 800; font-size: 1.05rem; color: var(--ink-soft); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; text-decoration: none; display: inline-block; }
+.admin-tab.active { color: var(--green-dark); border-bottom-color: var(--green); }
+.admin-section { display: none; }
+.admin-section.active { display: block; }
+.admin-toolbar { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.people-grid-admin { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+@media (max-width: 1024px) { .people-grid-admin { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .people-grid-admin { grid-template-columns: 1fr; } }
+.gallery-grid-admin { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.7rem; }
+.admin-card { display: grid; gap: 0.45rem; padding: 1rem; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--paper); }
+.admin-card label { font-weight: 700; font-size: 0.8rem; display: grid; gap: 0.2rem; color: var(--ink-soft); }
+.admin-card input, .admin-card select, .admin-card textarea { width: 100%; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; box-sizing: border-box; }
+.chapters-board { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; align-items: flex-start; }
+.chapter-col { flex: 0 0 250px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.chapter-col h4 { margin: 0; font-size: 1rem; }
+.tier-zone { border: 1px dashed var(--line); border-radius: 8px; padding: 0.45rem; min-height: 54px; display: flex; flex-direction: column; gap: 0.35rem; }
+.tier-zone.dragover { border-color: var(--green); background: color-mix(in oklch, var(--green) 14%, var(--paper)); }
+.tier-label { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: var(--ink-soft); letter-spacing: 0.04em; }
+.member-chip { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.45rem; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; cursor: grab; font-weight: 700; font-size: 0.82rem; }
+.member-chip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
+.member-chip.dragging { opacity: 0.45; }
+/* Official Google sign-in button (Google branding guidelines) */
+.gsi-button { display: inline-flex; align-items: center; gap: 12px; height: 44px; padding: 0 16px; background: #fff; color: #1f1f1f; border: 1px solid #747775; border-radius: 6px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.15px; cursor: pointer; transition: background-color .2s, box-shadow .2s; }
+.gsi-button:hover { background: #f7f8f8; box-shadow: 0 1px 2px rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); }
+.gsi-button:active { background: #f1f3f4; }
