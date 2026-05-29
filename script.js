@@ -75,7 +75,7 @@
                 "chapter-new-york.html",
                 "chapter-gainesville.html",
                 "chapter-russia.html",
-                "chapter-turkiye.html"
+                "chapter-turkey.html"
             ]
         },
         { label: "Gallery", href: "gallery.html" }
@@ -587,9 +587,20 @@
         return base || chName;
     }
 
-    // Clone a registry person with its public display title applied (for renderOfficerGrid).
+    // Public-facing bio. Board members show their separate executive bio (falling back to the
+    // regular bio if none); everyone else shows their regular bio.
+    function memberDisplayBio(person) {
+        if (!person) return "";
+        if (person.execBoard) return person.execBio || person.bio || "";
+        return person.bio || "";
+    }
+
+    // Clone a registry person with its public display title + bio applied (for renderOfficerGrid).
     function withDisplayTitle(person) {
-        return Object.assign({}, person, { title: memberDisplayTitle(person) });
+        return Object.assign({}, person, {
+            title: memberDisplayTitle(person),
+            bio: memberDisplayBio(person)
+        });
     }
 
     function renderHomeChapterOfficers() {
@@ -708,7 +719,9 @@
             const cards = groups[cat].map(function (p) {
                 return officerCard({
                     name: p.name,
-                    title: memberDisplayTitle(p),
+                    // On a chapter page, board members show their chapter position (regular title)
+                    // and regular bio — not their org executive title/bio.
+                    title: p.execBoard ? (p.title || "") : memberDisplayTitle(p),
                     detail: p.detail || "",
                     photo: p.photo || "images/logo.avif",
                     bio: p.bio || ""
@@ -954,7 +967,7 @@
                 detail: officer.detail || "AHS Chapter",
                 photo: officer.photo,
                 fallbackPhoto: officer.fallbackPhoto || "images/logo.avif",
-                bio: officer.bio || ""
+                bio: memberDisplayBio(officer)
             });
         });
 
@@ -1323,8 +1336,14 @@
 
         if (execRoot) {
             // Executive board: the first 3 leadership people plus the design team, in one row.
-            const execBoard = (data.officers || []).slice(0, 3).concat(data.design || []);
-            renderOfficerGrid("#team-executive-grid", execBoard.map(withDisplayTitle), false);
+            // This section always shows each member's executive bio (falling back to regular bio).
+            const execBoard = (data.officers || []).slice(0, 3).concat(data.design || []).map(function (p) {
+                return Object.assign({}, p, {
+                    title: memberDisplayTitle(p),
+                    bio: p.execBio || p.bio || ""
+                });
+            });
+            renderOfficerGrid("#team-executive-grid", execBoard, false);
         }
 
         if (designRoot) {
@@ -1368,7 +1387,7 @@
                     detail: volunteer.detail || "",
                     photo: volunteer.photo || "images/logo.avif",
                     fallbackPhoto: volunteer.fallbackPhoto || "images/logo.avif",
-                    bio: volunteer.bio || ""
+                    bio: memberDisplayBio(volunteer)
                 });
             }).join("");
 

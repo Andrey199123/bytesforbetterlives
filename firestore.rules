@@ -1,15 +1,18 @@
 rules_version = '2';
 
 // Bytes for Better Lives — Firestore security rules.
-// Paste into: Firebase console → Firestore Database → Rules.
+// Deploy: npx firebase deploy --only firestore:rules (firebase.json wires this file).
 //
-// Model: the public website can READ all content; only signed-in admins can WRITE.
-// Add your admin email(s) to the list below (keep in sync with firebase.js ADMIN_EMAILS).
+// Model:
+//   site/content        — shared content; FULL admins only can write (public can read).
+//   chapterContent/{id} — one doc per chapter (page + members); writable by full admins OR the
+//                         approved admin for THAT chapter (site/content.chapterAdmins[email] == id).
+// Keep the full-admin email list in sync with firebase.js ADMIN_EMAILS and storage.rules.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAdmin() {
+    function isFullAdmin() {
       return request.auth != null
         && request.auth.token.email in [
           "bytesforbetterlives@gmail.com",
@@ -18,10 +21,28 @@ service cloud.firestore {
         ];
     }
 
-    // Site content (people, chapters, gallery, fundraisers, settings, ...)
+    // email -> chapterId map lives in the (public-readable) shared doc.
+    function isChapterAdminFor(cid) {
+      return request.auth != null
+        && get(/databases/$(database)/documents/site/content).data.get('chapterAdmins', {}).get(request.auth.token.email, '') == cid;
+    }
+
+    // Shared site content — full admins only.
+    match /site/content {
+      allow read: if true;
+      allow write: if isFullAdmin();
+    }
+
+    // Per-chapter content — full admins, or the approved admin for that chapter.
+    match /chapterContent/{cid} {
+      allow read: if true;
+      allow write: if isFullAdmin() || isChapterAdminFor(cid);
+    }
+
+    // Everything else: public read, full-admin write.
     match /{document=**} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isFullAdmin();
     }
   }
 }

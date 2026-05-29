@@ -46,9 +46,12 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
     `leadership` people (the exec board) plus the `design` people, in a single row (no separate
     "Leadership"/"Design" subheadings). Remaining officers stay
     in the registry + homepage All Members but get no separate team section. Team section order:
-    Executive Board → Chapter leadership → Founders → Volunteers. Old "Club Officers" section removed.
-  - Members may also carry a `chapter` (chapter id) and `tier` (`top`/`officer`/`volunteer`) set via
-    the admin Chapters board. (Not yet shown on public chapter pages — assignment data only so far.)
+    Executive Board → Chapter leadership → Volunteers → **Legacy** (the Founders section, moved to
+    the bottom, titled "Legacy", no description). Old "Club Officers" section removed.
+  - Members carry a `chapter` (chapter id) and a category (`roles[0]`) set via the admin Chapters
+    board. **Public chapter pages list their members grouped by category** (`renderChapterMembersByCategory`,
+    headings from `categories`). `firebase-data.js` fetches `categories`/`titles` too, so the public
+    category labels/order match the admin. (The old `tier` field is retired.)
   - Chapter pages list *which* people lead each chapter in `chapters[].leadPeople` (by name), but
     each lead's displayed **photo, bio, and canonical name are resolved from `data.people`** via
     `resolvePersonRef()` / `personByName()` in `script.js`. So a person's profile lives only in the
@@ -86,14 +89,14 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
 
 ## Pages (current)
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
-`chapters.html`, `chapter-{ahs,coral-springs,cypress,gainesville,new-york,russia,turkiye}.html`,
+`chapters.html`, `chapter-{ahs,coral-springs,cypress,gainesville,new-york,russia,turkey}.html`,
 `contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery — a grid of all
 activity photos; clicking one opens the lightbox).
 
 Navbar order: About · Impact · Initiatives · Team · Chapters · Gallery (no "Home" tab). The
 "Initiatives" tab is `ongoing-initiatives.html` (display label renamed to "Initiatives"; filename kept).
 Chapter display names: AHS = "AHS Chapter" (still labelled the "Founding Chapter" eyebrow on the
-chapters directory summary card), `turkiye` = "Turkey Chapter" (ids unchanged).
+chapters directory summary card), `turkey` = "Turkey Chapter" (Instagram handle `bfbl_turkiye` kept).
 
 - **`impact.html` is consolidated**: it holds the former "work with seniors", "work with kids",
   "donations", "partners", and "gallery" content as in-page sections with anchors
@@ -147,25 +150,40 @@ Project: `project-686d62b7-14f5-43c7-acc`. Firestore + Auth + Storage + Hosting 
 Storage bucket is **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `firebase.js` — note
 it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
 
-**Live source of truth = Firestore** doc `site/content` (fields: `people`, `chapters`, `gallery`
-[gallery stories], `galleryImages` [the gallery-page photo grid], `categories` [member-category
-options], `titles` [member job-title options — array of strings], `fundraisers`, `contactEmail`,
-`donateUrl`, `socialLinks`). `data.js` is now just the
-**seed / offline fallback** — editing it alone does NOT change the live site. Goal: **nothing
-hardcoded** — all content comes from Firestore; `admin.html` edits it and auto-syncs.
+**Live source of truth = Firestore, now split across two collections (merged on read):**
+- **`site/content`** — SHARED content, FULL-admin write only: `categories`, `titles`, `galleryImages`,
+  `gallery` [stories], `fundraisers`, `contactEmail`, `donateUrl`, `socialLinks`, a **chapters
+  registry** (`[{id, pageHref}]`), unassigned `people`, and **`chapterAdmins`** (`email → chapterId`).
+- **`chapterContent/{chapterId}`** — ONE doc per chapter = `{ page: {…editable chapter detail +
+  photos…}, members: [that chapter's members] }`. Writable by full admins **or** that chapter's
+  approved admin (rules check `site/content.chapterAdmins`).
+- **Reads merge both**: `firebase-data.js` (public) and `admin.js` build `data.chapters` (registry ⊕
+  each `page`) and `data.people` (unassigned ⊕ every chapter's `members`). So the site is one
+  combined dataset; only WRITES are partitioned. `admin.js`'s `autosave()` routes: `"people"` →
+  `savePeople()` (partitions into the chapter docs), `"chapters"` → `saveChapters()` (page per doc +
+  registry + orphan-doc cleanup), everything else → `site/content`.
+
+`data.js` is the **seed / offline fallback** — editing it alone does NOT change the live site.
 
 - `gallery.html` is **de-hardcoded** — `script.js` `renderGalleryImages()` renders `.photo-gallery-grid`
   from `data.galleryImages`.
-- Public-side TODO: render dynamic Team sections for new `categories`, show member `chapter`/`tier`
-  assignments on chapter pages, and admin editors for **fundraisers** / **gallery stories** /
+- Public-side TODO: render dynamic Team sections for new `categories`, and admin editors for
+  **fundraisers** / **gallery stories** /
   **site settings** / full chapter-detail editing.
 
 - **Public read** — `firebase-data.js` (classic script on every page, before `script.js`) fetches
-  `site/content` via Firestore's public REST API, merges into `window.BFBL_DATA`, and sets
-  `window.BFBL_DATA_READY`. `script.js` awaits that, then re-syncs `data`, re-runs `deriveRoles()`,
-  and renders once. Falls back to `data.js` if Firestore is empty/unreachable (3s timeout).
-- **Auth** — Google sign-in. Admins: `bytesforbetterlives@gmail.com`, `petr1264k@gmail.com`
-  (in `firebase.js` `ADMIN_EMAILS` AND `firestore.rules`/`storage.rules` — keep all three in sync).
+  **`site/content` AND the `chapterContent` collection** via Firestore's public REST API, **merges**
+  them into `window.BFBL_DATA` (chapters = registry ⊕ page; people = unassigned ⊕ all chapter members),
+  and sets `window.BFBL_DATA_READY`. Falls back to `data.js` if Firestore is empty/unreachable (3s).
+- **Auth / roles** — Google sign-in. **Full ("executive") admins** edit everything: `ADMIN_EMAILS`
+  in `firebase.js` = `firestore.rules` `isFullAdmin()` list (keep in sync). **Chapter admins**:
+  `site/content.chapterAdmins` (`email → chapterId`, managed by full admins in the Structure tab) may
+  edit ONLY their `chapterContent/<id>` doc (page + members) — enforced by `firestore.rules`
+  `isChapterAdminFor()`. On login `admin.js` routes a chapter admin to **`chapter-admin.html`** (a
+  scoped editor: their chapter page + members only; `SCOPE_CID` gates all writes to their doc) and
+  routes full admins away from it. **`storage.rules`** = explicit admin email list only (Storage
+  rules can't read the chapterAdmins map), so a chapter admin can't upload FILES unless their email
+  is added to `storage.rules` — otherwise they set a member/chapter photo by path/URL.
 - **Admin = one page per tab** (`admin.js` SDK, shared `admin.css`): **`members-admin.html`**,
   `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `structure-admin.html`.
   Tabs are links between these pages (not in-page switching); `admin.html` is now just a redirect to
@@ -177,16 +195,27 @@ hardcoded** — all content comes from Firestore; `admin.html` edits it and auto
       (from `categories`), **Executive Board** checkbox (`person.execBoard`; when on, reveals a
       separate free-text **Executive Board title** input stored in `person.execTitle` — distinct
       from the regular `title`; it's a type-in, NOT the `titles` dropdown), bio, photo path + Storage
-      upload. No real photo → green **initials** avatar. `person.title` is chosen from the `titles`
-      dropdown; `person.execTitle` is free text. Uploads are guarded client-side
+      upload, plus a separate **Executive Board bio** (`person.execBio`, shown only when the box is
+      checked). No real photo → green **initials** avatar. `person.title` is chosen from the `titles`
+      dropdown; `person.execTitle`/`execBio` are free text. Board members render their `execTitle`
+      + `execBio` publicly via `memberDisplayTitle()` / `memberDisplayBio()`. Uploads are guarded client-side
       to <10 MB with an explicit image content-type (matches `storage.rules`; avoids the opaque
       `storage/unauthorized`).
-    - **Gallery** — upload (to Storage) / remove the gallery-page photos (`galleryImages`).
-    - **Chapters** — drag-and-drop board (column per chapter + Unassigned + **Executive Board**;
-      Leadership/Officer/Volunteer zones); dropping a member into a chapter sets their `chapter` +
-      `tier`. The **Executive Board** column is a **non-exclusive** flag (`person.execBoard = true`):
-      dropping there does NOT touch `chapter`/`tier`, so a member can be on the board *and* in a
-      chapter; remove via the ✕ on the chip. (`tier` key `top` is labelled "Leadership" in the UI.)
+    - **Gallery** — bulk upload the gallery-page photos (`galleryImages`) via a styled
+      **`.upload-dropzone`** (`#gallery-dropzone`) that is **click-to-choose AND drag-and-drop**
+      (`uploadGalleryFiles()`; many files at once, per-file >10 MB skip, live progress) / remove
+      photos. Thumbnails are clickable → a self-contained popup (`openAdminLightbox()`).
+      Member photo upload uses the same `.upload-dropzone` (`uploadMemberPhoto()`), not a raw file input.
+    - **Chapters** — drag-and-drop board (column per chapter + Unassigned + **Executive Board**).
+      Each chapter's sub-zones are the **member categories** (from the Structure tab / `categories`),
+      matching how the public chapter page groups members. Dropping a member into chapter X's
+      "<Category>" zone sets `person.chapter = X` **and** `person.roles = [categoryId]`. Each chip
+      shows the member's **role under their name as an editable control**: a **title dropdown**
+      (from the Structure `titles` list → sets `person.title`) or a **typed board-title field** on
+      Executive Board chips (→ `person.execTitle`); both save to Firestore. The **Executive Board** column is a
+      **non-exclusive** flag (`person.execBoard = true`) — dropping there doesn't touch
+      `chapter`/category, so a member can be on the board *and* in a chapter; ✕ removes them.
+      (The legacy `tier` field is retired.)
     - **Chapter Pages** — per-chapter card editor (`renderChapterPages()`): edit name, location,
       status, statusTag, Instagram URL, description, and **manage chapter-highlight photos**
       (upload to Storage `chapters/<id>/…` / remove → `chapter.photos`, the array the public
@@ -197,9 +226,16 @@ hardcoded** — all content comes from Firestore; `admin.html` edits it and auto
       stored directly on `person.title`, so renaming a title **propagates** to every member who had
       it; removing a title just drops it from the options (members keep their value). On load,
       `migrateTitles()` folds any free-text `person.title` not yet in `titles` into the options.
+      Also has a **Chapter admins** editor (`renderChapterAdmins()`): add/remove `email → chapter`
+      entries → `site/content.chapterAdmins`.
+    - **`chapter-admin.html`** (separate scoped page, not a tab) — where approved chapter admins land:
+      only their chapter's page editor + members (reuses `renderChapterPages`/`renderPeople` filtered
+      by `SCOPE_CID`; Chapter/Exec-Board controls hidden; saves only their `chapterContent` doc).
   Login is **Google sign-in** (official-branded button). Client checks `ADMIN_EMAILS`; rules enforce.
-- **Rules** — `firestore.rules` / `storage.rules`: public **read**, admin-only **write**. Published
-  in the console (re-publish there after editing the files; they don't auto-deploy).
+- **Rules** — `firestore.rules` / `storage.rules` (both wired into `firebase.json`): public **read**;
+  Firestore write = full admin (any doc) or chapter admin (their `chapterContent` doc); Storage write =
+  listed admin emails only (image <10 MB). **Deploy with `npx firebase deploy --only firestore:rules,storage`**
+  (no longer console-only). The CLI compiles them first, so a syntax error fails loudly.
 
 ### Updating content as Claude (no browser)
 Use the Admin SDK helper `tools/firestore.mjs` (key-less — uses gcloud Application Default
