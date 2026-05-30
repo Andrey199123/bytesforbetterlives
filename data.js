@@ -39,8 +39,8 @@ window.BFBL_DATA = {
     // ===== CENTRAL MEMBER REGISTRY =====
     // Single source of truth for every member — define each person ONCE here.
     // `roles` controls where they appear on the site:
-    //   "leadership" -> Team page Executive Board > "Leadership" subsection (first 3 also on homepage preview)
-    //   "design"     -> Team page Executive Board > "Design" subsection
+    //   "leadership" -> Team page Board of Directors > "Leadership" subsection (first 3 also on homepage preview)
+    //   "design"     -> Team page Board of Directors > "Design" subsection
     //   "volunteer"  -> Team page "Volunteers" section
     // Everyone listed here also appears in the homepage "All Members" list automatically.
     // A person can hold more than one role, e.g. roles: ["leadership", "design"].
@@ -166,8 +166,8 @@ window.BFBL_DATA = {
             location: "South Florida, United States",
             status: "Active",
             statusTag: "Executive",
-            leadName: "Executive Board",
-            leadTitle: "Executive Board",
+            leadName: "Board of Directors",
+            leadTitle: "Board of Directors",
             leadPhoto: "images/team/andrey.jpg",
             leadPeople: [
                 {
@@ -186,7 +186,7 @@ window.BFBL_DATA = {
                     photo: "images/team/joel-cardenas.jpg"
                 }
             ],
-            leadBio: "The founding executive board manages outreach, events, and partnerships across South Florida.",
+            leadBio: "The founding board of directors manages outreach, events, and partnerships across South Florida.",
             coordinates: { lat: 26.1224, lng: -80.1373 },
             description: "Original chapter focused on senior tech help, children's donations, and digital literacy outreach.",
             photos: [

@@ -57,6 +57,10 @@
         data.officers = byRole("leadership");
         data.design = byRole("design");
         data.volunteers = byRole("volunteer");
+        // Board of Directors = members explicitly flagged in the admin (person.execBoard), NOT a
+        // heuristic over leadership/design. This is the single source of truth for that section.
+        // (The field stays `execBoard` to match Firestore; only the display name is "Board of Directors".)
+        data.execBoard = data.people.filter(function (person) { return person && person.execBoard === true; });
     }
     deriveRoles();
 
@@ -484,8 +488,8 @@
     function renderHomePage() {
         renderHomeStats();
         renderWhatWeDo();
-        // Homepage preview stays focused on the top leadership roles.
-        renderOfficerGrid("#executive-board-preview", (data.officers || []).slice(0, 3), true);
+        // Homepage preview shows the board of directors (members flagged person.execBoard).
+        renderOfficerGrid("#executive-board-preview", (data.execBoard || []).map(withDisplayTitle), true);
         renderChapterPreview();
         renderGalleryPreview();
     }
@@ -733,9 +737,9 @@
             const cards = groups[cat].map(function (p) {
                 return officerCard({
                     name: p.name,
-                    // On a chapter page, board members show their chapter position (regular title)
-                    // and regular bio — not their org executive title/bio.
-                    title: p.execBoard ? (p.title || "") : memberDisplayTitle(p),
+                    // On a chapter page we're already in that chapter's context, so show the plain
+                    // title only — never "Title ⋅ Chapter Name" or the org executive title.
+                    title: p.title || "",
                     detail: p.detail || "",
                     photo: p.photo || "images/logo.avif",
                     bio: p.bio || ""
@@ -780,7 +784,36 @@
 
         const actionsEl = document.querySelector("#chapter-page-actions");
         if (actionsEl) {
-            actionsEl.innerHTML = `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener" class="btn btn-primary">Support this Chapter</a>`;
+            const actions = [
+                `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener" class="btn btn-primary">Support this Chapter</a>`
+            ];
+            if (chapter.joinUrl) {
+                actions.push(`<a href="${escapeHTML(safeUrl(chapter.joinUrl))}" target="_blank" rel="noopener" class="btn btn-primary">Get Involved</a>`);
+            }
+            if (chapter.instagram) {
+                actions.push(`<a href="${escapeHTML(safeUrl(chapter.instagram))}" target="_blank" rel="noopener noreferrer" class="btn btn-quiet">Instagram</a>`);
+            }
+            if (chapter.contactEmail) {
+                actions.push(`<a href="${escapeHTML(safeUrl("mailto:" + chapter.contactEmail))}" class="btn btn-quiet">Email the Chapter</a>`);
+            }
+            actionsEl.innerHTML = actions.join("");
+        }
+
+        // Per-chapter impact stats — only rendered when the chapter has any.
+        const statsSection = document.querySelector("#chapter-stats-section");
+        const statsEl = document.querySelector("#chapter-stats");
+        if (statsSection && statsEl) {
+            const stats = (Array.isArray(chapter.stats) ? chapter.stats : []).filter(function (s) {
+                return s && (s.value || s.label);
+            });
+            if (stats.length) {
+                statsEl.innerHTML = stats.map(function (s) {
+                    return `<div class="chapter-stat"><span class="chapter-stat-value">${escapeHTML(s.value || "")}</span><span class="chapter-stat-label">${escapeHTML(s.label || "")}</span></div>`;
+                }).join("");
+                statsSection.style.display = "";
+            } else {
+                statsSection.style.display = "none";
+            }
         }
 
         renderChapterMembersByCategory(chapter);
@@ -791,6 +824,21 @@
             photoGrid.innerHTML = photos.map(function (photo, index) {
                 return imageMarkup(photo, `${chapter.name} photo ${index + 1}`, "", "images/logo.avif");
             }).join("");
+        }
+
+        // Community partners — only rendered when the chapter lists any.
+        const partnersSection = document.querySelector("#chapter-partners-section");
+        const partnersEl = document.querySelector("#chapter-partners");
+        if (partnersSection && partnersEl) {
+            const partners = (Array.isArray(chapter.partners) ? chapter.partners : []).filter(Boolean);
+            if (partners.length) {
+                partnersEl.innerHTML = partners.map(function (p) {
+                    return `<div class="chapter-partner">${escapeHTML(p)}</div>`;
+                }).join("");
+                partnersSection.style.display = "";
+            } else {
+                partnersSection.style.display = "none";
+            }
         }
     }
 
@@ -809,6 +857,12 @@
                     <p class="hero-subtitle" id="chapter-page-subtitle"></p>
                     <p class="hero-subtitle" id="chapter-page-description"></p>
                     <div class="hero-actions" id="chapter-page-actions"></div>
+                </div>
+            </section>
+
+            <section class="section" id="chapter-stats-section" style="display: none;">
+                <div class="container">
+                    <div class="chapter-stats-row" id="chapter-stats" aria-label="Chapter impact"></div>
                 </div>
             </section>
 
@@ -839,6 +893,17 @@
                         <p class="section-description">A few moments from chapter events and community outreach.</p>
                     </div>
                     <div class="chapter-photo-grid" id="chapter-photo-grid" aria-label="Chapter photos"></div>
+                </div>
+            </section>
+
+            <section class="section" id="chapter-partners-section" style="display: none;">
+                <div class="container">
+                    <div class="section-header">
+                        <p class="section-kicker">Partners</p>
+                        <h2 class="section-title">Community partners</h2>
+                        <p class="section-description">Organizations this chapter works with to serve the community.</p>
+                    </div>
+                    <div class="chapter-partners-grid" id="chapter-partners" aria-label="Community partners"></div>
                 </div>
             </section>
         `;
@@ -933,7 +998,7 @@
                     ${chapterLeadAvatarMarkup(chapter)}
                     <div>
                         <strong>${escapeHTML(chapterLeadPeopleText(chapter))}</strong>
-                        <p class="chapter-lead-note">Executive board leadership</p>
+                        <p class="chapter-lead-note">Board of directors leadership</p>
                     </div>
                 </div>
                 <p class="mt-1">${escapeHTML(chapter.description)}</p>
@@ -1334,6 +1399,35 @@
         `;
     }
 
+    // One Team-page "Chapter leadership" block per chapter, listing ALL of that chapter's
+    // leadership-role members (person.chapter === id AND roles includes "leadership").
+    function chapterLeadershipBlockMarkup(chapter) {
+        const leaders = (data.people || []).filter(function (p) {
+            return p && p.chapter === chapter.id
+                && Array.isArray(p.roles) && p.roles.indexOf("leadership") !== -1;
+        });
+        if (!leaders.length) return "";
+        const peopleHtml = leaders.map(function (p) {
+            return `
+                <div class="chapter-leader">
+                    ${personPhotoMarkup(p.name, p.photo, "chapter-leader-photo")}
+                    <div class="chapter-leader-info">
+                        <strong>${escapeHTML(p.name)}</strong>
+                        <span>${escapeHTML(p.title || "Chapter Lead")}</span>
+                    </div>
+                </div>`;
+        }).join("");
+        const href = chapter.pageHref || ("chapter-" + chapter.id + ".html");
+        return `
+            <a class="chapter-leadership-card" href="${escapeHTML(safeUrl(href))}">
+                <div class="chapter-leadership-head">
+                    <h3>${escapeHTML(chapter.name)}</h3>
+                    ${chapter.location ? `<p>${escapeHTML(chapter.location)}</p>` : ""}
+                </div>
+                <div class="chapter-leadership-people">${peopleHtml}</div>
+            </a>`;
+    }
+
     function renderTeamPage() {
         const foundersRoot = document.querySelector("#team-founders-grid");
         const execRoot = document.querySelector("#team-executive-grid");
@@ -1349,9 +1443,9 @@
         }
 
         if (execRoot) {
-            // Executive board: the first 3 leadership people plus the design team, in one row.
+            // Board of Directors: ONLY members flagged person.execBoard in the admin.
             // This section always shows each member's executive bio (falling back to regular bio).
-            const execBoard = (data.officers || []).slice(0, 3).concat(data.design || []).map(function (p) {
+            const execBoard = (data.execBoard || []).map(function (p) {
                 return Object.assign({}, p, {
                     title: memberDisplayTitle(p),
                     bio: p.execBio || p.bio || ""
@@ -1361,7 +1455,7 @@
         }
 
         if (designRoot) {
-            // Design is now merged into the executive board grid above; leave any
+            // Design is now merged into the board of directors grid above; leave any
             // standalone design grid empty.
             renderOfficerGrid("#team-design-grid", [], false);
         }
@@ -1371,24 +1465,11 @@
         }
 
         if (chapterRoot) {
-            const chapterLeads = [];
-            (data.chapters || [])
-                .filter(function (chapter) { return chapter && chapter.id !== "ahs"; })
-                .forEach(function (chapter) {
-                    chapterLeadPeople(chapter).forEach(function (person) {
-                        chapterLeads.push({
-                            key: `chapter:${chapter.id}:${person.name}`,
-                            name: person.name,
-                            title: chapter.name,
-                            detail: chapterStatusDetail(chapter),
-                            photo: person.photo || chapter.leadPhoto || "images/logo.avif",
-                            fallbackPhoto: "images/logo.avif",
-                            bio: chapter.leadBio || chapter.description || ""
-                        });
-                    });
-                });
-
-            chapterRoot.innerHTML = chapterLeads.map(personCardMarkup).join("");
+            // One block per chapter (AHS included), each listing ALL of that chapter's leadership members.
+            chapterRoot.innerHTML = (data.chapters || [])
+                .filter(function (chapter) { return chapter; })
+                .map(chapterLeadershipBlockMarkup)
+                .join("");
         }
 
         if (volunteerRoot) {

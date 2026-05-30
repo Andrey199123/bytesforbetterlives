@@ -593,12 +593,11 @@ main {
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
+/* Hover lift is for CLICKABLE cards only (story/fundraiser cards, chapter directory links).
+   People/member cards (officer/legacy, leader, team-member) are informational — no hover highlight. */
 .card:hover,
-.team-member:hover,
 .service-card:hover,
-.officer-card:hover,
-.chapter-card:hover,
-.leader-card:hover {
+.chapter-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
     border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
@@ -1189,6 +1188,127 @@ main {
     background: var(--surface);
 }
 
+/* Team page "Chapter leadership" — one info block per chapter (informational, no hover lift). */
+.chapter-leadership-card {
+    background: color-mix(in oklch, var(--paper) 96%, var(--blue-soft));
+    border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+/* The whole block is a link to the chapter page — subtle affordance, no bouncy lift. */
+.chapter-leadership-card:hover {
+    border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
+    box-shadow: var(--shadow-md);
+}
+
+.chapter-leadership-head h3 {
+    margin: 0;
+}
+
+.chapter-leadership-head p {
+    margin: 2px 0 0;
+    color: var(--ink-soft);
+}
+
+.chapter-leadership-people {
+    display: grid;
+    gap: var(--space-md);
+}
+
+.chapter-leader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    min-width: 0;
+}
+
+.chapter-leader-photo {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    flex: 0 0 auto;
+    font-size: 1.05rem; /* sizes the initials-avatar fallback */
+}
+
+.chapter-leader-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.chapter-leader-info strong {
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.chapter-leader-info span {
+    color: var(--green-dark);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+/* Chapter page — per-chapter impact stats (only shown when the chapter has any). */
+.chapter-stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-md);
+}
+
+.chapter-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: var(--space-lg);
+    text-align: center;
+    background: color-mix(in oklch, var(--paper) 96%, var(--blue-soft));
+    border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.chapter-stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--green-dark);
+}
+
+.chapter-stat-label {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+}
+
+/* Chapter page — community partners (only shown when the chapter lists any). */
+.chapter-partners-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.chapter-partner {
+    padding: 0.6rem 1.1rem;
+    font-weight: 700;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--paper) 96%, var(--blue-soft));
+    border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
+    border-radius: 999px;
+}
+
 .chapter-lead-avatars {
     display: flex;
     align-items: center;
@@ -1265,7 +1385,7 @@ main {
     font-size: 1.15rem;
 }
 
-/* Subsection heading within a team section (e.g. Leadership / Design under Executive Board). */
+/* Subsection heading within a team section (e.g. Leadership / Design under Board of Directors). */
 .team-subsection-title {
     margin: var(--space-lg) 0 var(--space-md);
     font-size: 1.35rem;
@@ -1293,6 +1413,10 @@ main {
     border: 1px solid var(--line);
     cursor: pointer;
     transition: transform 200ms ease, box-shadow 200ms ease;
+    /* With 100+ photos, skip layout/paint/decode for off-screen tiles — big scroll-perf win.
+       contain-intrinsic-size reserves each tile's box so the scrollbar stays stable. */
+    content-visibility: auto;
+    contain-intrinsic-size: 320px 320px;
 }
 
 .photo-gallery-grid img:hover {

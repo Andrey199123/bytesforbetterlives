@@ -77,8 +77,15 @@
                 window.BFBL_DATA.chapters = mergedChapters;
 
                 // people = shared (unassigned) + every chapter doc's members.
+                // A member's chapter is defined by WHICH chapter doc they live in, so we re-stamp
+                // chapter = cd.id here. This neutralizes a chapter admin forging a member's `chapter`
+                // field to make it show on a DIFFERENT chapter's public page (display spoofing).
                 var sitePeople = Array.isArray(window.BFBL_DATA.people) ? window.BFBL_DATA.people.slice() : [];
-                chapterDocs.forEach(function (cd) { (cd.members || []).forEach(function (m) { sitePeople.push(m); }); });
+                chapterDocs.forEach(function (cd) {
+                    (cd.members || []).forEach(function (m) {
+                        sitePeople.push(Object.assign({}, m, { chapter: cd.id }));
+                    });
+                });
                 window.BFBL_DATA.people = sitePeople;
             }
         }).catch(function () { /* offline / blocked → keep data.js */ });

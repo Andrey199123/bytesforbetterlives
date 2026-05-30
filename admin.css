@@ -10,6 +10,13 @@
 .admin-section { display: none; }
 .admin-section.active { display: block; }
 .admin-toolbar { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+/* admin.html chapter-picker login landing */
+.admin-chapter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+.admin-chapter-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); text-decoration: none; color: var(--ink); transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.admin-chapter-card:hover { border-color: var(--green); box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.admin-chapter-card strong { font-size: 1.15rem; }
+.admin-chapter-loc { color: var(--ink-soft); font-size: 0.9rem; }
+.admin-chapter-cta { margin-top: 0.5rem; font-weight: 800; color: var(--green-dark); }
 .people-grid-admin { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 @media (max-width: 1024px) { .people-grid-admin { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .people-grid-admin { grid-template-columns: 1fr; } }
