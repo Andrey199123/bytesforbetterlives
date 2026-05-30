@@ -186,9 +186,30 @@ main {
     padding-block: clamp(3rem, 6vw, 4.5rem);
 }
 
-.section.bg-light,
-.surface-band {
+.section.bg-light {
     background: var(--surface);
+}
+/* Banded sections carry a gentle wash of the page accent (green/blue/gold) for per-page identity. */
+.surface-band {
+    background: color-mix(in oklch, var(--accent-soft) 45%, var(--paper));
+}
+/* Optional stronger / inverted bands for a single high-contrast CTA or quote per page. */
+.band--tint {
+    background: color-mix(in oklch, var(--accent-soft) 70%, var(--paper));
+}
+.band--ink {
+    background: var(--footer-bg);
+    color: var(--paper);
+}
+.band--ink .section-title,
+.band--ink .section-description,
+.band--ink p,
+.band--ink h2,
+.band--ink h3 {
+    color: var(--paper);
+}
+.band--ink .section-kicker {
+    color: var(--accent-soft);
 }
 
 .section-header {
@@ -458,7 +479,7 @@ main {
     align-items: center;
     padding-block: clamp(4rem, 9vw, 7rem);
     background:
-        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+        linear-gradient(100deg, color-mix(in oklch, var(--ink) 74%, var(--accent-dark)) 0%, color-mix(in oklch, var(--ink) 30%, transparent) 78%),
         url("images/hero-bg.avif") center 34% / cover no-repeat;
     color: var(--paper);
     overflow: hidden;
@@ -495,20 +516,20 @@ main {
     min-height: clamp(520px, calc(100vh - 160px), 700px);
     align-items: center;
     background:
-        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+        linear-gradient(100deg, color-mix(in oklch, var(--ink) 74%, var(--accent-dark)) 0%, color-mix(in oklch, var(--ink) 30%, transparent) 78%),
         url("images/IMG_7470.JPG") center 28% / cover no-repeat;
     padding-block: clamp(2.5rem, 5vw, 4.5rem);
 }
 
 .chapter-hero {
     background:
-        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+        linear-gradient(100deg, color-mix(in oklch, var(--ink) 74%, var(--accent-dark)) 0%, color-mix(in oklch, var(--ink) 30%, transparent) 78%),
         url("images/IMG_7470.JPG") center 34% / cover no-repeat;
 }
 
 .hero-home-banner {
     background:
-        linear-gradient(rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.55)),
+        linear-gradient(100deg, color-mix(in oklch, var(--ink) 74%, var(--accent-dark)) 0%, color-mix(in oklch, var(--ink) 30%, transparent) 78%),
         url("images/IMG_7470.JPG") center 34% / cover no-repeat;
 }
 
