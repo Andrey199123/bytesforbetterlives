@@ -314,12 +314,12 @@ window.BFBL_DATA = {
             ]
         },
         {
-            id: "turkiye",
-            pageHref: "chapter-turkiye.html",
+            id: "turkey",
+            pageHref: "chapter-turkey.html",
             name: "Turkey Chapter",
             location: "Turkey",
             status: "Launching",
-            leadName: "Turkey",
+            leadName: "Ipek",
             leadTitle: "Launching Chapter Lead",
             leadPhoto: "images/logo.avif",
             leadBio: "Building a local chapter focused on community service and digital literacy support in Turkey.",

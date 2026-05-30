@@ -1280,8 +1280,8 @@ main {
 /* Standalone gallery page — grid of clickable photos that open the lightbox. */
 .photo-gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--space-sm);
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-md);
 }
 
 .photo-gallery-grid img {

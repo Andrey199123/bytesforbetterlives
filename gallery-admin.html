@@ -60,7 +60,10 @@
                     <section class="admin-section active" id="section-gallery">
                         <div class="admin-toolbar">
                             <strong>Gallery photos (<span id="gallery-count">0</span>)</strong>
-                            <label class="btn btn-secondary" style="cursor:pointer;">+ Upload photos<input type="file" accept="image/*" multiple id="gallery-upload" style="display:none;"></label>
+                        </div>
+                        <div id="gallery-dropzone" class="upload-dropzone" style="margin-bottom:1.25rem;">
+                            <span>Drag &amp; drop photos here, or click to choose (multiple at once)</span>
+                            <input type="file" accept="image/*" multiple id="gallery-upload" style="display:none;">
                         </div>
                         <div class="gallery-grid-admin" id="gallery-editor"></div>
                     </section>

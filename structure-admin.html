@@ -84,6 +84,18 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div style="max-width:760px; margin-top:2rem;">
+                            <div class="admin-toolbar"><strong>Chapter admins</strong>
+                                <span style="color:var(--ink-soft);">An approved email may edit only its chapter (page + members).</span>
+                            </div>
+                            <div id="structure-chapter-admins" style="display:grid; gap:0.4rem;"></div>
+                            <div class="btn-row" style="margin-top:0.75rem;">
+                                <input id="new-chapter-admin-email" type="email" placeholder="admin@email.com" style="flex:1; padding:0.45rem 0.5rem; border:1px solid var(--line); border-radius:8px; font:inherit;">
+                                <select id="new-chapter-admin-chapter" style="padding:0.45rem 0.5rem; border:1px solid var(--line); border-radius:8px; font:inherit;"></select>
+                                <button class="btn btn-secondary" id="add-chapter-admin" type="button">+ Add</button>
+                            </div>
+                        </div>
                     </section>
                 </div>
             </div>

@@ -1,16 +1,28 @@
 rules_version = '2';
 
 // Bytes for Better Lives — Firestore security rules.
-// Paste into: Firebase console → Firestore Database → Rules.
+// Deploy: npx firebase deploy --only firestore:rules (firebase.json wires this file).
 //
-// Model: the public website can READ all content; only signed-in admins can WRITE.
-// Add your admin email(s) to the list below (keep in sync with firebase.js ADMIN_EMAILS).
+// Model:
+//   site/content        — shared content; FULL admins only can write (public can read).
+//   chapterContent/{id} — one doc per chapter (page + members); writable by full admins OR the
+//                         approved admin for THAT chapter (site/content.chapterAdmins[email] == id).
+// Keep the full-admin email list in sync with firebase.js ADMIN_EMAILS and storage.rules.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAdmin() {
+    // A real, verified Google identity — NOT just any token bearing an email claim.
+    // Without this, if Email/Password (or any provider where the client picks the email) is ever
+    // enabled, an attacker could self-register an admin's email (email_verified=false) and write.
+    function isVerified() {
       return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
+    function isFullAdmin() {
+      return isVerified()
         && request.auth.token.email in [
           "bytesforbetterlives@gmail.com",
           "petr1264k@gmail.com",
@@ -18,10 +30,36 @@ service cloud.firestore {
         ];
     }
 
-    // Site content (people, chapters, gallery, fundraisers, settings, ...)
-    match /{document=**} {
+    // email -> chapterId map lives in the (public-readable) shared doc.
+    // NOTE: get() here bypasses security rules, so the map can later be moved to an admin-only doc
+    // without breaking this check.
+    function isChapterAdminFor(cid) {
+      return isVerified()
+        && get(/databases/$(database)/documents/site/content).data.get('chapterAdmins', {}).get(request.auth.token.email, '') == cid;
+    }
+
+    // Shared site content — full admins only.
+    match /site/content {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isFullAdmin();
+    }
+
+    // Per-chapter content — full admins (unrestricted), or the approved admin for that chapter
+    // (constrained: only the {page, members} shape, with a bounded member count, so a semi-trusted
+    // chapter admin can't smuggle extra fields or inflate the doc).
+    match /chapterContent/{cid} {
+      allow read: if true;
+      allow write: if isFullAdmin()
+        || ( isChapterAdminFor(cid)
+             && request.resource.data.keys().hasOnly(['page', 'members'])
+             && request.resource.data.get('members', []).size() <= 200 );
+    }
+
+    // Everything else: DEFAULT-DENY reads (so any future collection is private until explicitly
+    // opened above), full-admin write only.
+    match /{document=**} {
+      allow read: if false;
+      allow write: if isFullAdmin();
     }
   }
 }

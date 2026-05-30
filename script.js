@@ -75,7 +75,7 @@
                 "chapter-new-york.html",
                 "chapter-gainesville.html",
                 "chapter-russia.html",
-                "chapter-turkiye.html"
+                "chapter-turkey.html"
             ]
         },
         { label: "Gallery", href: "gallery.html" }
@@ -178,6 +178,20 @@
                 "'": "&#39;"
             }[char];
         });
+    }
+
+    // Scheme allowlist for any data-driven value that becomes an href. escapeHTML alone does NOT
+    // stop a `javascript:`/`data:` URL (no special chars to escape), so route every such URL through
+    // this first: `href="${escapeHTML(safeUrl(x))}"`. Anything not http(s)/mailto becomes "#".
+    function safeUrl(value) {
+        var raw = String(value ?? "").trim();
+        if (!raw) return "#";
+        try {
+            var p = new URL(raw, window.location.href).protocol;
+            return (p === "http:" || p === "https:" || p === "mailto:") ? raw : "#";
+        } catch (e) {
+            return "#";
+        }
     }
 
     function currentPageName() {
@@ -328,17 +342,17 @@
         if (!menus.length) return;
 
         function chaptersDropdownMarkup(item) {
-            const allChaptersLink = `<li><a href="${escapeHTML(item.href)}" class="dropdown-link${page === item.href ? " active" : ""}">All Chapters</a></li>`;
+            const allChaptersLink = `<li><a href="${escapeHTML(safeUrl(item.href))}" class="dropdown-link${page === item.href ? " active" : ""}">All Chapters</a></li>`;
             const chapterLinks = (data.chapters || []).map(function (chapter) {
                 const href = chapter.pageHref || `chapter-${chapter.id}.html`;
                 const isActive = page === href;
-                return `<li><a href="${escapeHTML(href)}" class="dropdown-link${isActive ? " active" : ""}">${escapeHTML(chapter.name)}</a></li>`;
+                return `<li><a href="${escapeHTML(safeUrl(href))}" class="dropdown-link${isActive ? " active" : ""}">${escapeHTML(chapter.name)}</a></li>`;
             }).join("");
 
             const isActive = page === item.href || page.indexOf("chapter-") === 0;
             return `
                 <li class="nav-item dropdown">
-                    <a href="${escapeHTML(item.href)}" class="nav-link dropdown-toggle${isActive ? " active" : ""}" aria-haspopup="true" aria-expanded="false">
+                    <a href="${escapeHTML(safeUrl(item.href))}" class="nav-link dropdown-toggle${isActive ? " active" : ""}" aria-haspopup="true" aria-expanded="false">
                         ${escapeHTML(item.label)} <span class="dropdown-caret" aria-hidden="true">▾</span>
                     </a>
                     <ul class="dropdown-menu" aria-label="Chapter pages">
@@ -353,10 +367,10 @@
             if (item.label === "Chapters") return chaptersDropdownMarkup(item);
             const matches = item.match || [item.href];
             const isActive = matches.includes(page);
-            return `<li><a href="${escapeHTML(item.href)}" class="nav-link${isActive ? " active" : ""}">${escapeHTML(item.label)}</a></li>`;
+            return `<li><a href="${escapeHTML(safeUrl(item.href))}" class="nav-link${isActive ? " active" : ""}">${escapeHTML(item.label)}</a></li>`;
         }).join("");
 
-        const donateItem = `<li><a href="${escapeHTML(donateUrl)}" target="_blank" rel="noopener" class="btn-donate">Donate</a></li>`;
+        const donateItem = `<li><a href="${escapeHTML(safeUrl(donateUrl))}" target="_blank" rel="noopener" class="btn-donate">Donate</a></li>`;
         menus.forEach(function (menu) {
             menu.innerHTML = items + donateItem;
         });
@@ -446,16 +460,16 @@
                     ${programLinks.map(function (link) {
                         return `<a href="${link[1]}">${link[0]}</a>`;
                     }).join("")}
-                    <a href="${escapeHTML(donateUrl)}" target="_blank" rel="noopener">Donate</a>
+                    <a href="${escapeHTML(safeUrl(donateUrl))}" target="_blank" rel="noopener">Donate</a>
                 </div>
                 <div class="footer-section">
                     <h3>Contact</h3>
-                    <a href="mailto:${escapeHTML(contactEmail)}">${escapeHTML(contactEmail)}</a>
+                    <a href="${escapeHTML(safeUrl("mailto:" + contactEmail))}">${escapeHTML(contactEmail)}</a>
                     <div class="social-links" style="display: flex; gap: 1rem; align-items: center;">
-                        <a class="social-link" href="${escapeHTML(data.socialLinks.instagram)}" target="_blank" rel="noopener" title="Instagram" style="width: 40px; height: 40px; padding: 0;">
+                        <a class="social-link" href="${escapeHTML(safeUrl(data.socialLinks.instagram))}" target="_blank" rel="noopener" title="Instagram" style="width: 40px; height: 40px; padding: 0;">
                             <img src="images/contact us logo/instagram logo.jpg" alt="Instagram" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
                         </a>
-                        <a class="social-link" href="${escapeHTML(data.socialLinks.linkedin)}" target="_blank" rel="noopener" title="LinkedIn" style="width: 40px; height: 40px; padding: 0;">
+                        <a class="social-link" href="${escapeHTML(safeUrl(data.socialLinks.linkedin))}" target="_blank" rel="noopener" title="LinkedIn" style="width: 40px; height: 40px; padding: 0;">
                             <img src="images/contact us logo/linkedin.jpeg" alt="LinkedIn" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
                         </a>
                     </div>
@@ -587,9 +601,20 @@
         return base || chName;
     }
 
-    // Clone a registry person with its public display title applied (for renderOfficerGrid).
+    // Public-facing bio. Board members show their separate executive bio (falling back to the
+    // regular bio if none); everyone else shows their regular bio.
+    function memberDisplayBio(person) {
+        if (!person) return "";
+        if (person.execBoard) return person.execBio || person.bio || "";
+        return person.bio || "";
+    }
+
+    // Clone a registry person with its public display title + bio applied (for renderOfficerGrid).
     function withDisplayTitle(person) {
-        return Object.assign({}, person, { title: memberDisplayTitle(person) });
+        return Object.assign({}, person, {
+            title: memberDisplayTitle(person),
+            bio: memberDisplayBio(person)
+        });
     }
 
     function renderHomeChapterOfficers() {
@@ -634,7 +659,7 @@
         const pageHref = chapter.pageHref || `chapter-${chapter.id}.html`;
         const leadNames = chapterLeadPeopleText(chapter);
         return `
-            <a class="chapter-card" href="${escapeHTML(pageHref)}" aria-label="View ${escapeHTML(chapter.name)}">
+            <a class="chapter-card" href="${escapeHTML(safeUrl(pageHref))}" aria-label="View ${escapeHTML(chapter.name)}">
                 <div class="chapter-card-header">
                     <div>
                         <h3>${escapeHTML(chapter.name)}</h3>
@@ -708,7 +733,9 @@
             const cards = groups[cat].map(function (p) {
                 return officerCard({
                     name: p.name,
-                    title: memberDisplayTitle(p),
+                    // On a chapter page, board members show their chapter position (regular title)
+                    // and regular bio — not their org executive title/bio.
+                    title: p.execBoard ? (p.title || "") : memberDisplayTitle(p),
                     detail: p.detail || "",
                     photo: p.photo || "images/logo.avif",
                     bio: p.bio || ""
@@ -753,7 +780,7 @@
 
         const actionsEl = document.querySelector("#chapter-page-actions");
         if (actionsEl) {
-            actionsEl.innerHTML = `<a href="${escapeHTML(chapterSupportUrl(chapter))}" target="_blank" rel="noopener" class="btn btn-primary">Support this Chapter</a>`;
+            actionsEl.innerHTML = `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener" class="btn btn-primary">Support this Chapter</a>`;
         }
 
         renderChapterMembersByCategory(chapter);
@@ -954,7 +981,7 @@
                 detail: officer.detail || "AHS Chapter",
                 photo: officer.photo,
                 fallbackPhoto: officer.fallbackPhoto || "images/logo.avif",
-                bio: officer.bio || ""
+                bio: memberDisplayBio(officer)
             });
         });
 
@@ -1196,7 +1223,7 @@
                             <p class="flip-card-lead-list">${escapeHTML(chapterLeadPeopleText(chapter))}</p>
                             <p class="flip-card-bio">${escapeHTML(chapter.leadBio || 'Leading chapter initiatives and community projects.')}</p>
                             ${chapter.instagram ? `
-                                <a href="${escapeHTML(chapter.instagram)}" target="_blank" rel="noopener noreferrer" class="instagram-btn" onclick="event.stopPropagation();">
+                                <a href="${escapeHTML(safeUrl(chapter.instagram))}" target="_blank" rel="noopener noreferrer" class="instagram-btn" onclick="event.stopPropagation();">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="instagram-svg" style="vertical-align: middle; margin-right: 6px;"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
                                     Follow Instagram
                                 </a>
@@ -1286,7 +1313,7 @@
         const hasUrl = url && url !== "#" && url.toLowerCase() !== "tbd";
 
         const cta = hasUrl
-            ? `<a class="btn btn-primary" href="${escapeHTML(url)}" target="_blank" rel="noopener">Open GoFundMe</a>`
+            ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener">Open GoFundMe</a>`
             : `<span class="btn btn-secondary" aria-disabled="true" style="opacity: 0.7; cursor: not-allowed;">GoFundMe Link (Coming Soon)</span>`;
 
         return `
@@ -1300,7 +1327,7 @@
                     ${fundraiser.description ? `<p class="card-description">${escapeHTML(fundraiser.description)}</p>` : ""}
                     <div class="btn-row">
                         ${cta}
-                        ${fundraiser.chapterHref ? `<a class="btn btn-quiet" href="${escapeHTML(fundraiser.chapterHref)}">View Chapter</a>` : ""}
+                        ${fundraiser.chapterHref ? `<a class="btn btn-quiet" href="${escapeHTML(safeUrl(fundraiser.chapterHref))}">View Chapter</a>` : ""}
                     </div>
                 </div>
             </article>
@@ -1323,8 +1350,14 @@
 
         if (execRoot) {
             // Executive board: the first 3 leadership people plus the design team, in one row.
-            const execBoard = (data.officers || []).slice(0, 3).concat(data.design || []);
-            renderOfficerGrid("#team-executive-grid", execBoard.map(withDisplayTitle), false);
+            // This section always shows each member's executive bio (falling back to regular bio).
+            const execBoard = (data.officers || []).slice(0, 3).concat(data.design || []).map(function (p) {
+                return Object.assign({}, p, {
+                    title: memberDisplayTitle(p),
+                    bio: p.execBio || p.bio || ""
+                });
+            });
+            renderOfficerGrid("#team-executive-grid", execBoard, false);
         }
 
         if (designRoot) {
@@ -1368,7 +1401,7 @@
                     detail: volunteer.detail || "",
                     photo: volunteer.photo || "images/logo.avif",
                     fallbackPhoto: volunteer.fallbackPhoto || "images/logo.avif",
-                    bio: volunteer.bio || ""
+                    bio: memberDisplayBio(volunteer)
                 });
             }).join("");
 
@@ -1853,12 +1886,41 @@ window.closeEmailModal = function() {
     if (modal) modal.classList.remove("active");
 };
 
+const EMAIL_FORM_COOLDOWN_MS = 60 * 1000; // 1 message/min/browser — basic anti-spam throttle
+const EMAIL_MESSAGE_MAX = 4000;
+
 window.submitEmailForm = async function(event) {
     event.preventDefault();
     const btn = document.getElementById("submit-email-btn");
     const status = document.getElementById("email-status");
     const email = document.getElementById("sender-email").value;
     const message = document.getElementById("sender-message").value;
+    // Honeypot: a hidden field real users never see. Bots fill it → silently drop (pretend success).
+    const honeypotEl = document.getElementById("company-website");
+    if (honeypotEl && honeypotEl.value) {
+        status.style.color = "var(--green)";
+        status.textContent = "Email sent successfully! We will get back to you soon.";
+        document.getElementById("email-form").reset();
+        setTimeout(closeEmailModal, 3000);
+        return;
+    }
+
+    // Client-side rate limit (defense-in-depth; the real server-side limit should live at the relay).
+    try {
+        const last = Number(localStorage.getItem("bfblEmailFormLast") || 0);
+        const wait = EMAIL_FORM_COOLDOWN_MS - (Date.now() - last);
+        if (last && wait > 0) {
+            status.style.color = "var(--red)";
+            status.textContent = "Please wait " + Math.ceil(wait / 1000) + "s before sending another message.";
+            return;
+        }
+    } catch (e) { /* localStorage blocked — skip throttle */ }
+
+    if (message && message.length > EMAIL_MESSAGE_MAX) {
+        status.style.color = "var(--red)";
+        status.textContent = "Message is too long (max " + EMAIL_MESSAGE_MAX + " characters).";
+        return;
+    }
 
     btn.disabled = true;
     btn.textContent = "Sending...";
@@ -1873,12 +1935,15 @@ window.submitEmailForm = async function(event) {
             },
             body: JSON.stringify({
                 _subject: "New Chapter Interest Form Submission",
+                _template: "table",
+                _honey: honeypotEl ? honeypotEl.value : "", // server-side honeypot at FormSubmit
                 email: email,
-                message: message
+                message: (message || "").slice(0, EMAIL_MESSAGE_MAX)
             })
         });
 
         if (response.ok) {
+            try { localStorage.setItem("bfblEmailFormLast", String(Date.now())); } catch (e) { /* ignore */ }
             status.style.color = "var(--green)";
             status.textContent = "Email sent successfully! We will get back to you soon.";
             document.getElementById("email-form").reset();

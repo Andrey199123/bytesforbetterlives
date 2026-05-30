@@ -30,7 +30,7 @@ if (!firebaseReady) {
     showMessage("Firebase isn't configured yet — paste your firebaseConfig into firebase.js, then reload.", true);
 } else {
     const [{ onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut },
-           { doc, getDoc, setDoc },
+           { doc, getDoc, setDoc, getDocs, collection, deleteDoc },
            { ref, uploadBytes, getDownloadURL }] = await Promise.all([
         import(`${CDN}/firebase-auth.js`),
         import(`${CDN}/firebase-firestore.js`),
@@ -38,20 +38,29 @@ if (!firebaseReady) {
     ]);
 
     const contentRef = doc(db, "site", "content");
-    const TIERS = [["top", "Leadership"], ["officer", "Officer"], ["volunteer", "Volunteer"]];
-    let people = [];
+    const chapterRef = function (cid) { return doc(db, "chapterContent", cid); };
+
+    // Merged working state (render code is unchanged; only load + save are doc-aware).
+    let people = [];          // merged: site.people (unassigned) + every chapterContent[*].members
     let galleryImages = [];
-    let chapters = [];
+    let chapters = [];        // merged: site registry overlaid with chapterContent[*].page
     let categories = [];
     let titles = [];
+    let chapterAdmins = {};   // email -> chapterId (approved chapter admins)
+    let siteUnassigned = [];  // site.people (members with no chapter)
+    let chapterDocs = {};     // cid -> { page:{}, members:[] } (the chapterContent docs)
+    let chapterDocCids = [];  // chapter ids that have a chapterContent doc (for orphan cleanup)
+    // Chapter-admin scope: when set, this admin may ONLY read/write chapterContent/<SCOPE_CID>.
+    let SCOPE_CID = null;
+    const IS_CHAPTER_ADMIN_PAGE = !!document.getElementById("chapter-admin-root");
 
-    function isAdmin(user) {
-        if (!user) return false;
+    function isFullAdmin(email) {
+        if (!email) return false;
         if (!ADMIN_EMAILS.length) return true; // rules still enforce server-side
-        return ADMIN_EMAILS.indexOf(user.email) !== -1;
+        return ADMIN_EMAILS.indexOf(email) !== -1;
     }
 
-    // ---- Auto-save (debounced; no save button) ----
+    // ---- Auto-save (debounced; routed to the correct document) ----
     const saveTimers = {};
     function setStatus(text, isError) {
         const el = $("autosave-status");
@@ -59,17 +68,93 @@ if (!firebaseReady) {
         el.textContent = text;
         el.style.color = isError ? "#b00020" : "var(--ink-soft)";
     }
-    function autosave(field, value) {
+    function scheduleSave(key, writeFn) {
         setStatus("Saving…");
-        clearTimeout(saveTimers[field]);
-        saveTimers[field] = setTimeout(async function () {
-            try {
-                await setDoc(contentRef, { [field]: value, updatedAt: Date.now() }, { merge: true });
-                setStatus("All changes saved ✓");
-            } catch (err) {
-                setStatus("Save failed: " + (err.message || err), true);
-            }
+        clearTimeout(saveTimers[key]);
+        saveTimers[key] = setTimeout(async function () {
+            try { await writeFn(); setStatus("All changes saved ✓"); }
+            catch (err) { setStatus("Save failed: " + (err.message || err), true); }
         }, 600);
+    }
+    // Existing render code calls autosave("people"|"chapters"|<siteField>, value); route each.
+    function autosave(field, value) {
+        if (field === "people") return savePeople();
+        if (field === "chapters") return saveChapters();
+        // shared site fields (categories, titles, galleryImages, chapterAdmins, gallery, …)
+        scheduleSave("site:" + field, function () {
+            return setDoc(contentRef, { [field]: value, updatedAt: Date.now() }, { merge: true });
+        });
+    }
+
+    // Partition merged `people` back into the per-chapter docs (+ site.people for unassigned) and save.
+    function savePeople() {
+        const byChapter = {};
+        const unassigned = [];
+        people.forEach(function (p) {
+            if (p && p.chapter) (byChapter[p.chapter] = byChapter[p.chapter] || []).push(p);
+            else unassigned.push(p);
+        });
+        if (SCOPE_CID) {
+            // Chapter admin: may ONLY write their own chapter doc's members.
+            ensureChapterDoc(SCOPE_CID).members = byChapter[SCOPE_CID] || [];
+            return scheduleSave("chapter:" + SCOPE_CID + ":members", function () {
+                return setDoc(chapterRef(SCOPE_CID), { members: chapterDocs[SCOPE_CID].members }, { merge: true });
+            });
+        }
+        // Full admin: write unassigned to site, and each chapter's members to its doc.
+        siteUnassigned = unassigned;
+        scheduleSave("site:people", function () {
+            return setDoc(contentRef, { people: siteUnassigned, updatedAt: Date.now() }, { merge: true });
+        });
+        const cids = {};
+        Object.keys(byChapter).forEach(function (c) { cids[c] = true; });
+        chapterDocCids.forEach(function (c) { cids[c] = true; });
+        Object.keys(cids).forEach(function (cid) {
+            ensureChapterDoc(cid).members = byChapter[cid] || [];
+            scheduleSave("chapter:" + cid + ":members", function () {
+                return setDoc(chapterRef(cid), { members: chapterDocs[cid].members }, { merge: true });
+            });
+        });
+    }
+
+    // Write each chapter's editable page to its doc + the registry to site; delete orphan chapter docs.
+    function saveChapters() {
+        if (SCOPE_CID) {
+            const c = chapters.find(function (x) { return x && x.id === SCOPE_CID; });
+            if (!c) return;
+            ensureChapterDoc(SCOPE_CID).page = chapterPageFields(c);
+            return scheduleSave("chapter:" + SCOPE_CID + ":page", function () {
+                return setDoc(chapterRef(SCOPE_CID), { page: chapterDocs[SCOPE_CID].page }, { merge: true });
+            });
+        }
+        const registry = chapters.map(function (c) { return { id: c.id, pageHref: c.pageHref || ("chapter-" + c.id + ".html") }; });
+        scheduleSave("site:chapters", function () {
+            return setDoc(contentRef, { chapters: registry, updatedAt: Date.now() }, { merge: true });
+        });
+        const liveIds = {};
+        chapters.forEach(function (c) {
+            liveIds[c.id] = true;
+            ensureChapterDoc(c.id).page = chapterPageFields(c);
+            scheduleSave("chapter:" + c.id + ":page", function () {
+                return setDoc(chapterRef(c.id), { page: chapterDocs[c.id].page }, { merge: true });
+            });
+        });
+        // Remove chapterContent docs for chapters that no longer exist.
+        chapterDocCids.filter(function (cid) { return !liveIds[cid]; }).forEach(function (cid) {
+            delete chapterDocs[cid];
+            scheduleSave("chapter:" + cid + ":delete", function () { return deleteDoc(chapterRef(cid)); });
+        });
+        chapterDocCids = Object.keys(chapterDocs);
+    }
+
+    function ensureChapterDoc(cid) {
+        if (!chapterDocs[cid]) { chapterDocs[cid] = { page: {}, members: [] }; chapterDocCids = Object.keys(chapterDocs); }
+        return chapterDocs[cid];
+    }
+    function chapterPageFields(c) {
+        const page = Object.assign({}, c);
+        delete page.id; // id stays in the registry
+        return page;
     }
 
     // ---- Upload helpers ----
@@ -86,26 +171,69 @@ if (!firebaseReady) {
     }
     function uploadMeta(file) { return { contentType: file.type || "image/jpeg" }; }
 
+    // Raster images only — must mirror the allowlist in storage.rules. SVG is intentionally excluded
+    // because it can carry active script (stored-XSS risk if ever opened directly from Storage).
+    const RASTER_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/avif"];
+    function isRasterImage(file) {
+        const t = (file && file.type || "").toLowerCase();
+        if (!t) return /\.(png|jpe?g|gif|webp|avif)$/i.test((file && file.name) || ""); // some browsers leave type blank
+        return RASTER_IMAGE_TYPES.indexOf(t) !== -1;
+    }
+    function notRasterImage(file) {
+        if (!isRasterImage(file)) {
+            setStatus('Upload failed: "' + (file && file.name) + '" must be a PNG, JPEG, GIF, WebP, or AVIF image (SVG and other formats are not allowed).', true);
+            return true;
+        }
+        return false;
+    }
+
     // ---- Auth ----
-    onAuthStateChanged(auth, function (user) {
-        if (user && isAdmin(user)) {
+    function showSignedOut() {
+        messageEl.style.display = "none";
+        loginBox.style.display = "block";
+        panel.style.display = "none";
+        actions.style.display = "none";
+    }
+    onAuthStateChanged(auth, async function (user) {
+        if (!user) { showSignedOut(); return; }
+
+        if (isFullAdmin(user.email)) {
+            // Full ("executive") admin — edits everything.
+            // On the chapter-admin-only page, send them to the full admin home.
+            if (IS_CHAPTER_ADMIN_PAGE) { location.replace("members-admin.html"); return; }
             messageEl.style.display = "none";
             loginBox.style.display = "none";
             panel.style.display = "block";
             actions.style.display = "flex";
             $("admin-who").textContent = user.email;
             loadContent();
-        } else if (user) {
-            showMessage("Account " + user.email + " is not an admin.", true);
-            loginBox.style.display = "block";
-            panel.style.display = "none";
-            actions.style.display = "none";
-        } else {
-            messageEl.style.display = "none";
-            loginBox.style.display = "block";
-            panel.style.display = "none";
-            actions.style.display = "none";
+            return;
         }
+
+        // Not a full admin → maybe an approved CHAPTER admin. Read the (public) map to find out.
+        let cid = "";
+        try {
+            const snap = await getDoc(contentRef);
+            const map = (snap.exists() && snap.data().chapterAdmins) || {};
+            cid = map[user.email] || "";
+        } catch (e) { /* fall through to no-access */ }
+
+        if (cid) {
+            SCOPE_CID = cid;
+            if (!IS_CHAPTER_ADMIN_PAGE) { location.replace("chapter-admin.html"); return; }
+            messageEl.style.display = "none";
+            loginBox.style.display = "none";
+            panel.style.display = "block";
+            actions.style.display = "flex";
+            $("admin-who").textContent = user.email + " · chapter admin";
+            loadContent();
+            return;
+        }
+
+        showMessage("Account " + user.email + " is not an admin.", true);
+        loginBox.style.display = "block";
+        panel.style.display = "none";
+        actions.style.display = "none";
     });
 
     on("google-signin", "click", async function () {
@@ -122,32 +250,107 @@ if (!firebaseReady) {
     // Tabs are now per-page links (members-admin.html, gallery-admin.html, …); each page loads this
     // script and renders only the section it contains (every render*() guards for its own element).
 
-    // ---- Load live content from Firestore ----
+    // ---- Load live content from Firestore (site/content + per-chapter docs, merged) ----
     async function loadContent() {
+        let d = {};
         try {
             const snap = await getDoc(contentRef);
-            const d = snap.exists() ? snap.data() : {};
-            people = Array.isArray(d.people) ? d.people : ((window.BFBL_DATA && window.BFBL_DATA.people) || []);
-            galleryImages = Array.isArray(d.galleryImages) ? d.galleryImages : ((window.BFBL_DATA && window.BFBL_DATA.galleryImages) || []);
-            chapters = Array.isArray(d.chapters) ? d.chapters : ((window.BFBL_DATA && window.BFBL_DATA.chapters) || []);
-            categories = (Array.isArray(d.categories) && d.categories.length) ? d.categories : DEFAULT_CATEGORIES.slice();
-            titles = Array.isArray(d.titles) ? d.titles.slice() : [];
-            if (window.BFBL_DATA) { window.BFBL_DATA.chapters = chapters; window.BFBL_DATA.categories = categories; }
+            d = snap.exists() ? snap.data() : {};
+            chapterDocs = {};
+            const cc = await getDocs(collection(db, "chapterContent"));
+            cc.forEach(function (docSnap) {
+                const data = docSnap.data() || {};
+                chapterDocs[docSnap.id] = { page: data.page || {}, members: Array.isArray(data.members) ? data.members : [] };
+            });
         } catch (err) {
-            people = (window.BFBL_DATA && window.BFBL_DATA.people) || [];
-            galleryImages = (window.BFBL_DATA && window.BFBL_DATA.galleryImages) || [];
-            chapters = (window.BFBL_DATA && window.BFBL_DATA.chapters) || [];
-            categories = DEFAULT_CATEGORIES.slice();
-            titles = [];
             setStatus("Could not read Firestore: " + (err.message || err), true);
         }
+        chapterDocCids = Object.keys(chapterDocs);
+
+        galleryImages = Array.isArray(d.galleryImages) ? d.galleryImages : [];
+        categories = (Array.isArray(d.categories) && d.categories.length) ? d.categories : DEFAULT_CATEGORIES.slice();
+        titles = Array.isArray(d.titles) ? d.titles.slice() : [];
+        chapterAdmins = (d.chapterAdmins && typeof d.chapterAdmins === "object") ? d.chapterAdmins : {};
+        siteUnassigned = Array.isArray(d.people) ? d.people : [];
+
+        // Merge chapters: registry overlaid with each chapter doc's page.
+        const registry = Array.isArray(d.chapters) ? d.chapters : [];
+        chapters = registry.map(function (c) {
+            const cd = chapterDocs[c.id];
+            return cd && cd.page ? Object.assign({}, c, cd.page) : Object.assign({}, c);
+        });
+
+        // Merge people: site unassigned + every chapter doc's members.
+        people = siteUnassigned.slice();
+        Object.keys(chapterDocs).forEach(function (cid) {
+            (chapterDocs[cid].members || []).forEach(function (m) { people.push(m); });
+        });
+
+        // Chapter-admin scope: keep only their chapter + its members in the working view.
+        if (SCOPE_CID) {
+            chapters = chapters.filter(function (c) { return c && c.id === SCOPE_CID; });
+            people = people.filter(function (p) { return p && p.chapter === SCOPE_CID; });
+        }
+
+        if (window.BFBL_DATA) {
+            window.BFBL_DATA.chapters = chapters;
+            window.BFBL_DATA.categories = categories;
+            window.BFBL_DATA.titles = titles;
+        }
+
         migrateTitles();
         renderPeople();
         renderGallery();
         renderChaptersBoard();
         renderChapterPages();
         renderStructure();
+        renderChapterAdmins();
+        renderScopedHeader();
     }
+
+    function renderScopedHeader() {
+        const el = $("chapter-admin-title");
+        if (!el) return;
+        const c = chapters[0];
+        el.textContent = c ? ("Editing: " + (c.name || SCOPE_CID)) : "Chapter";
+    }
+
+    // Full-admin only: manage the approved chapter-admin list (email -> chapterId).
+    function renderChapterAdmins() {
+        const root = $("structure-chapter-admins");
+        if (!root) return;
+        const sel = $("new-chapter-admin-chapter");
+        if (sel) sel.innerHTML = chapters.map(function (c) {
+            return '<option value="' + escapeAttr(c.id) + '">' + escapeHtml(c.name || c.id) + '</option>';
+        }).join("");
+        const emails = Object.keys(chapterAdmins);
+        root.innerHTML = emails.length ? emails.map(function (email) {
+            const cid = chapterAdmins[email];
+            const ch = chapters.find(function (c) { return c && c.id === cid; });
+            return '<div style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.6rem; border:1px solid var(--line); border-radius:8px;">'
+                + '<span style="flex:1; overflow-wrap:anywhere; font-weight:700;">' + escapeHtml(email) + ' → ' + escapeHtml(ch ? (ch.name || cid) : cid) + '</span>'
+                + '<button class="btn btn-secondary" type="button" data-ca-remove="' + escapeAttr(email) + '" style="padding:0.15rem 0.55rem;">Remove</button></div>';
+        }).join("") : '<p style="color:var(--ink-soft); margin:0;">No chapter admins yet.</p>';
+        root.querySelectorAll("[data-ca-remove]").forEach(function (b) {
+            b.addEventListener("click", function () {
+                delete chapterAdmins[b.dataset.caRemove];
+                renderChapterAdmins();
+                autosave("chapterAdmins", chapterAdmins);
+            });
+        });
+    }
+
+    on("add-chapter-admin", "click", function () {
+        const emailInput = $("new-chapter-admin-email");
+        const chapterSel = $("new-chapter-admin-chapter");
+        const email = ((emailInput && emailInput.value) || "").trim().toLowerCase();
+        const cid = (chapterSel && chapterSel.value) || "";
+        if (!email || !cid) return;
+        chapterAdmins[email] = cid;
+        if (emailInput) emailInput.value = "";
+        renderChapterAdmins();
+        autosave("chapterAdmins", chapterAdmins);
+    });
 
     // Converting the member "Title" into a dropdown must not drop anyone's existing written title:
     // fold every distinct free-text title currently on a member into the `titles` options list.
@@ -158,7 +361,7 @@ if (!firebaseReady) {
             if (t && titles.indexOf(t) === -1) { titles.push(t); changed = true; }
         });
         if (window.BFBL_DATA) window.BFBL_DATA.titles = titles;
-        if (changed) autosave("titles", titles);
+        if (changed && !SCOPE_CID) autosave("titles", titles); // chapter admins can't edit the shared list
     }
 
     // ---- Members ----
@@ -180,14 +383,18 @@ if (!firebaseReady) {
                 <label>Name <input data-field="name" data-i="${index}" value="${escapeAttr(person.name || "")}"></label>
                 <label>Title <select data-field="title" data-i="${index}">${titleOptions(person.title)}</select></label>
                 <label>Category <select data-field="roles" data-i="${index}">${categoryOptions((person.roles || [])[0])}</select></label>
-                <label>Chapter <select data-field="chapter" data-i="${index}">${chapterOptions(person.chapter)}</select></label>
-                <label style="display:flex; flex-direction:row; align-items:center; gap:0.45rem; color:var(--ink);">
+                ${SCOPE_CID ? "" : `<label>Chapter <select data-field="chapter" data-i="${index}">${chapterOptions(person.chapter)}</select></label>`}
+                ${SCOPE_CID ? "" : `<label style="display:flex; flex-direction:row; align-items:center; gap:0.45rem; color:var(--ink);">
                     <input type="checkbox" data-execcheck="${index}" ${person.execBoard ? "checked" : ""} style="width:auto; margin:0;"> Executive Board
-                </label>
-                ${person.execBoard ? `<label>Executive Board title <input data-field="execTitle" data-i="${index}" value="${escapeAttr(person.execTitle || "")}"></label>` : ""}
+                </label>`}
+                ${(!SCOPE_CID && person.execBoard) ? `<label>Executive Board title <input data-field="execTitle" data-i="${index}" value="${escapeAttr(person.execTitle || "")}"></label>` : ""}
+                ${(!SCOPE_CID && person.execBoard) ? `<label>Executive Board bio <textarea data-field="execBio" data-i="${index}" rows="2">${escapeHtml(person.execBio || "")}</textarea></label>` : ""}
                 <label>Bio <textarea data-field="bio" data-i="${index}" rows="2">${escapeHtml(person.bio || "")}</textarea></label>
                 <label>Photo path <input data-field="photo" data-i="${index}" value="${escapeAttr(person.photo || "")}"></label>
-                <label>Upload photo <input type="file" accept="image/*" data-upload="${index}"></label>
+                <div class="upload-dropzone upload-dropzone-sm" data-photozone="${index}">
+                    <span>Drop or click to upload photo</span>
+                    <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-upload="${index}" style="display:none;">
+                </div>
             `;
             editor.appendChild(card);
         });
@@ -225,28 +432,50 @@ if (!firebaseReady) {
             });
         });
         editor.querySelectorAll("[data-upload]").forEach(function (input) {
-            input.addEventListener("change", async function () {
-                const i = Number(input.dataset.upload);
-                const file = input.files && input.files[0];
-                if (!file) return;
-                if (tooBig(file)) { input.value = ""; return; }
-                setStatus("Uploading photo…");
-                try {
-                    const safe = (people[i].name || "member").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-                    const storageRef = ref(storage, "people/" + safe + "-" + Date.now() + "-" + file.name);
-                    await uploadBytes(storageRef, file, uploadMeta(file));
-                    people[i].photo = await getDownloadURL(storageRef);
-                    renderPeople();
-                    autosave("people", people);
-                } catch (err) {
-                    setStatus("Upload failed: " + (err.message || err), true);
-                }
+            input.addEventListener("change", function () {
+                uploadMemberPhoto(Number(input.dataset.upload), input.files && input.files[0]);
+                input.value = "";
+            });
+        });
+        // Clickable + drag-and-drop photo dropzone per member.
+        editor.querySelectorAll("[data-photozone]").forEach(function (zone) {
+            const input = zone.querySelector("input[type=file]");
+            zone.addEventListener("click", function (e) {
+                if (e.target.tagName === "INPUT") return;
+                if (input) input.click();
+            });
+            zone.addEventListener("dragover", function (e) { e.preventDefault(); zone.classList.add("dragover"); });
+            zone.addEventListener("dragleave", function () { zone.classList.remove("dragover"); });
+            zone.addEventListener("drop", function (e) {
+                e.preventDefault();
+                zone.classList.remove("dragover");
+                const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                uploadMemberPhoto(Number(zone.dataset.photozone), f);
             });
         });
     }
 
+    async function uploadMemberPhoto(i, file) {
+        if (!people[i] || !file) return;
+        if (tooBig(file)) return;
+        if (notRasterImage(file)) return;
+        setStatus("Uploading photo…");
+        try {
+            const safe = (people[i].name || "member").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            const storageRef = ref(storage, "people/" + safe + "-" + Date.now() + "-" + file.name);
+            await uploadBytes(storageRef, file, uploadMeta(file));
+            people[i].photo = await getDownloadURL(storageRef);
+            renderPeople();
+            autosave("people", people);
+        } catch (err) {
+            setStatus("Upload failed: " + (err.message || err), true);
+        }
+    }
+
     on("add-person", "click", function () {
-        people.push({ name: "", title: "", photo: "", fallbackPhoto: "images/logo.avif", detail: "", bio: "", roles: ["volunteer"] });
+        const m = { name: "", title: "", photo: "", fallbackPhoto: "images/logo.avif", detail: "", bio: "", roles: ["volunteer"] };
+        if (SCOPE_CID) m.chapter = SCOPE_CID; // chapter admins add members into their own chapter
+        people.push(m);
         renderPeople();
         autosave("people", people);
     });
@@ -263,7 +492,7 @@ if (!firebaseReady) {
             const cell = document.createElement("div");
             cell.style.cssText = "position:relative; border:1px solid var(--line); border-radius:var(--radius-md); overflow:hidden;";
             cell.innerHTML = `
-                <img src="${escapeAttr(src)}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface);" onerror="this.src='images/logo.avif'">
+                <img src="${escapeAttr(src)}" data-zoom="${escapeAttr(src)}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" onerror="this.src='images/logo.avif'">
                 <button class="btn btn-secondary" type="button" data-gremove="${index}" style="position:absolute; top:4px; right:4px; padding:0.1rem 0.5rem; font-size:0.85rem;">✕</button>
             `;
             editor.appendChild(cell);
@@ -275,39 +504,102 @@ if (!firebaseReady) {
                 autosave("galleryImages", galleryImages);
             });
         });
+        editor.querySelectorAll("[data-zoom]").forEach(function (img) {
+            img.addEventListener("click", function () { openAdminLightbox(img.getAttribute("data-zoom")); });
+        });
+    }
+
+    // Bulk gallery upload (shared by the "+ Upload photos" button and the drag-and-drop zone).
+    // Many photos at once; oversized files are skipped individually (the rest still upload), with
+    // a live "Uploading i of N…" counter.
+    async function uploadGalleryFiles(fileList) {
+        const all = Array.from(fileList || []).filter(function (f) { return f && isRasterImage(f); });
+        if (!all.length) return;
+
+        const ok = all.filter(function (f) { return f.size < MAX_UPLOAD_BYTES; });
+        const skipped = all.length - ok.length;
+        if (!ok.length) {
+            setStatus("All " + all.length + " file(s) exceed the 10 MB limit — nothing uploaded.", true);
+            return;
+        }
+
+        let done = 0, failed = 0;
+        for (let i = 0; i < ok.length; i++) {
+            const file = ok[i];
+            setStatus("Uploading " + (i + 1) + " of " + ok.length + "…");
+            try {
+                const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+                const storageRef = ref(storage, "gallery/" + Date.now() + "-" + i + "-" + safe);
+                await uploadBytes(storageRef, file, uploadMeta(file));
+                galleryImages.push({ src: await getDownloadURL(storageRef), alt: file.name.replace(/\.[^.]+$/, "") });
+                done++;
+                renderGallery();                       // show thumbnails as they land
+                autosave("galleryImages", galleryImages); // debounced — persists once at the end
+            } catch (err) {
+                failed++;
+            }
+        }
+
+        let msg = "Uploaded " + done + " photo(s)";
+        if (skipped) msg += " · skipped " + skipped + " over 10 MB";
+        if (failed) msg += " · " + failed + " failed";
+        setStatus(msg + (failed ? "" : " ✓"), failed > 0);
     }
 
     on("gallery-upload", "change", async function () {
-        const files = Array.from(this.files || []);
-        if (!files.length) return;
-        if (files.some(tooBig)) { this.value = ""; return; }
-        setStatus("Uploading " + files.length + " photo(s)…");
-        try {
-            for (const file of files) {
-                const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
-                const storageRef = ref(storage, "gallery/" + Date.now() + "-" + safe);
-                await uploadBytes(storageRef, file, uploadMeta(file));
-                galleryImages.push({ src: await getDownloadURL(storageRef), alt: file.name.replace(/\.[^.]+$/, "") });
-            }
-            this.value = "";
-            renderGallery();
-            autosave("galleryImages", galleryImages);
-        } catch (err) {
-            setStatus("Upload failed: " + (err.message || err), true);
-        }
+        await uploadGalleryFiles(this.files);
+        this.value = "";
     });
 
+    // Click-to-choose + drag-and-drop on the gallery dropzone.
+    const galleryDropzone = $("gallery-dropzone");
+    if (galleryDropzone) {
+        galleryDropzone.addEventListener("click", function (e) {
+            if (e.target.tagName === "INPUT") return; // avoid recursive click from the hidden input
+            const inp = $("gallery-upload");
+            if (inp) inp.click();
+        });
+        ["dragenter", "dragover"].forEach(function (ev) {
+            galleryDropzone.addEventListener(ev, function (e) {
+                e.preventDefault(); e.stopPropagation();
+                galleryDropzone.classList.add("dragover");
+            });
+        });
+        ["dragleave", "dragend"].forEach(function (ev) {
+            galleryDropzone.addEventListener(ev, function (e) {
+                e.preventDefault(); e.stopPropagation();
+                galleryDropzone.classList.remove("dragover");
+            });
+        });
+        galleryDropzone.addEventListener("drop", async function (e) {
+            e.preventDefault(); e.stopPropagation();
+            galleryDropzone.classList.remove("dragover");
+            await uploadGalleryFiles(e.dataTransfer && e.dataTransfer.files);
+        });
+    }
+
     // ---- Chapters board (drag & drop) ----
-    function zoneMarkup(chapterId, tierKey, tierLabel) {
+    // Unassigned column: members with no chapter (any category).
+    function unassignedZoneMarkup() {
         const chips = [];
         people.forEach(function (p, i) {
-            const pc = p.chapter || "";
-            const pt = p.tier || "volunteer";
-            const match = chapterId === "" ? (pc === "") : (pc === chapterId && pt === tierKey);
-            if (match) chips.push(memberChip(p, i));
+            if (!(p.chapter || "")) chips.push(memberChip(p, i));
         });
-        return '<div class="tier-zone" data-chapter="' + escapeAttr(chapterId) + '" data-tier="' + escapeAttr(tierKey) + '">'
-            + (tierLabel ? '<div class="tier-label">' + escapeHtml(tierLabel) + '</div>' : '')
+        return '<div class="tier-zone" data-chapter="">' + chips.join("") + '</div>';
+    }
+
+    // A chapter's sub-zones are the member CATEGORIES from the Structure tab. Dropping a member
+    // into chapter X's "<Category>" zone sets person.chapter = X and person.roles = [categoryId],
+    // which is exactly how the public chapter page groups members (by category).
+    function chapterCategoryZoneMarkup(chapterId, catId, catLabel) {
+        const chips = [];
+        people.forEach(function (p, i) {
+            if ((p.chapter || "") !== chapterId) return;
+            const pcat = (Array.isArray(p.roles) && p.roles[0]) ? p.roles[0] : "";
+            if (pcat === catId) chips.push(memberChip(p, i));
+        });
+        return '<div class="tier-zone" data-chapter="' + escapeAttr(chapterId) + '" data-cat="' + escapeAttr(catId) + '">'
+            + '<div class="tier-label">' + escapeHtml(catLabel) + '</div>'
             + chips.join("") + '</div>';
     }
 
@@ -326,10 +618,11 @@ if (!firebaseReady) {
     function renderChaptersBoard() {
         const board = $("chapters-board");
         if (!board) return;
-        let html = '<div class="chapter-col"><h4>Unassigned</h4>' + zoneMarkup("", "", "No chapter") + '</div>';
+        const cats = (Array.isArray(categories) && categories.length) ? categories : [];
+        let html = '<div class="chapter-col"><h4>Unassigned</h4>' + unassignedZoneMarkup() + '</div>';
         html += '<div class="chapter-col"><h4>Executive Board</h4>' + execZoneMarkup() + '</div>';
         chapters.forEach(function (c) {
-            const zones = TIERS.map(function (t) { return zoneMarkup(c.id, t[0], t[1]); }).join("");
+            const zones = cats.map(function (cat) { return chapterCategoryZoneMarkup(c.id, cat.id, cat.label || cat.id); }).join("");
             html += '<div class="chapter-col"><h4>' + escapeHtml(c.name) + '</h4>' + zones + '</div>';
         });
         board.innerHTML = html;
@@ -341,6 +634,32 @@ if (!firebaseReady) {
                 chip.classList.add("dragging");
             });
             chip.addEventListener("dragend", function () { chip.classList.remove("dragging"); });
+        });
+        // Editing a chip's role control must not start a drag — disable drag while it's focused.
+        function bindNoDrag(ctrl) {
+            ctrl.addEventListener("mousedown", function (e) { e.stopPropagation(); });
+            ctrl.addEventListener("focus", function () { const c = ctrl.closest(".member-chip"); if (c) c.draggable = false; });
+            ctrl.addEventListener("blur", function () { const c = ctrl.closest(".member-chip"); if (c) c.draggable = true; });
+        }
+        // Title dropdown on each chip → sets the member's title (chip stays in its category zone).
+        board.querySelectorAll(".chip-role").forEach(function (sel) {
+            bindNoDrag(sel);
+            sel.addEventListener("change", function () {
+                const i = Number(sel.dataset.roleIdx);
+                if (!people[i]) return;
+                people[i].title = sel.value;
+                autosave("people", people);
+            });
+        });
+        // Typed board-title field on Executive Board chips → person.execTitle, saved.
+        board.querySelectorAll(".chip-exectitle").forEach(function (inp) {
+            bindNoDrag(inp);
+            inp.addEventListener("input", function () {
+                const i = Number(inp.dataset.exectitleIdx);
+                if (!people[i]) return;
+                people[i].execTitle = inp.value;
+                autosave("people", people);
+            });
         });
         board.querySelectorAll("[data-exec-remove]").forEach(function (btn) {
             btn.addEventListener("click", function (e) {
@@ -361,13 +680,15 @@ if (!firebaseReady) {
                 const idx = Number(e.dataTransfer.getData("text/plain"));
                 if (Number.isNaN(idx) || !people[idx]) return;
                 if (zone.dataset.execboard) {
-                    people[idx].execBoard = true; // non-exclusive — leave chapter/tier untouched
+                    people[idx].execBoard = true; // non-exclusive — leave chapter/category untouched
                 } else {
                     people[idx].chapter = zone.dataset.chapter || "";
-                    if (zone.dataset.tier) people[idx].tier = zone.dataset.tier;
-                    else delete people[idx].tier;
+                    // Dropping into a chapter's category zone sets the member's category (role).
+                    if (zone.dataset.cat) people[idx].roles = [zone.dataset.cat];
+                    delete people[idx].tier; // legacy tier field retired
                 }
                 renderChaptersBoard();
+                renderPeople(); // category may have changed → refresh the Members editor
                 autosave("people", people);
             });
         });
@@ -402,7 +723,7 @@ if (!firebaseReady) {
                 <label>Description <textarea data-cfield="description" data-i="${index}" rows="3">${escapeHtml(c.description || "")}</textarea></label>
                 <div style="font-weight:700; font-size:0.8rem; color:var(--ink-soft); margin-top:0.4rem;">Chapter highlights (${c.photos.length})</div>
                 <div class="gallery-grid-admin">${photosHtml}</div>
-                <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/*" multiple data-cphoto-upload="${index}" style="display:none;"></label>
+                <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" multiple data-cphoto-upload="${index}" style="display:none;"></label>
             `;
             editor.appendChild(card);
         });
@@ -432,6 +753,7 @@ if (!firebaseReady) {
                 const files = Array.from(input.files || []);
                 if (!files.length || !chapters[ci]) return;
                 if (files.some(tooBig)) { input.value = ""; return; }
+                if (files.some(notRasterImage)) { input.value = ""; return; }
                 setStatus("Uploading " + files.length + " photo(s)…");
                 try {
                     if (!Array.isArray(chapters[ci].photos)) chapters[ci].photos = [];
@@ -570,6 +892,23 @@ if (!firebaseReady) {
     });
 }
 
+// Minimal image popup for the admin gallery (admin pages don't load script.js's lightbox).
+let adminLightbox = null;
+function openAdminLightbox(src) {
+    if (!adminLightbox) {
+        adminLightbox = document.createElement("div");
+        adminLightbox.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:9999; cursor:zoom-out;";
+        adminLightbox.innerHTML = '<img alt="" style="max-width:92vw; max-height:92vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5);">';
+        adminLightbox.addEventListener("click", function () { adminLightbox.style.display = "none"; });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && adminLightbox) adminLightbox.style.display = "none";
+        });
+        document.body.appendChild(adminLightbox);
+    }
+    adminLightbox.querySelector("img").src = src;
+    adminLightbox.style.display = "flex";
+}
+
 function escapeHtml(s) {
     return String(s == null ? "" : s).replace(/[&<>]/g, function (c) {
         return c === "&" ? "&amp;" : c === "<" ? "&lt;" : "&gt;";
@@ -595,18 +934,23 @@ function avatarHTML(person, size) {
     }
     return '<span class="avatar-initials" style="width:' + s + ';height:' + s + ';font-size:' + Math.round(size * 0.4) + 'px;flex:0 0 auto;">' + escapeHtml(personInitials(person.name)) + '</span>';
 }
+// Member chip: avatar + name on top, with the member's role under it as an editable TITLE
+// dropdown (from the Structure titles list; changing it sets person.title and saves to the DB).
 function memberChip(person, index) {
     return '<div class="member-chip" draggable="true" data-idx="' + index + '">'
-        + avatarHTML(person, 24)
-        + '<span style="flex:1; overflow-wrap:anywhere;">' + escapeHtml(person.name || "(unnamed)") + '</span></div>';
+        + '<div class="chip-top">' + avatarHTML(person, 24)
+        + '<span style="flex:1; overflow-wrap:anywhere;">' + escapeHtml(person.name || "(unnamed)") + '</span></div>'
+        + '<select class="chip-role" data-role-idx="' + index + '">' + titleOptions(person.title) + '</select>'
+        + '</div>';
 }
-// Like memberChip, but with a ✕ to remove from the Executive Board (since board membership is
-// non-exclusive, you can't simply drag them out — this clears person.execBoard).
+// Executive Board chip: ✕ to remove from the board (non-exclusive), plus a TYPED role field for
+// their board title (person.execTitle) instead of a category dropdown.
 function execMemberChip(person, index) {
     return '<div class="member-chip" draggable="true" data-idx="' + index + '">'
-        + avatarHTML(person, 24)
+        + '<div class="chip-top">' + avatarHTML(person, 24)
         + '<span style="flex:1; overflow-wrap:anywhere;">' + escapeHtml(person.name || "(unnamed)") + '</span>'
-        + '<button type="button" data-exec-remove="' + index + '" title="Remove from board" style="border:none; background:none; cursor:pointer; font-weight:800; color:var(--ink-soft); padding:0 0.2rem; line-height:1;">✕</button>'
+        + '<button type="button" data-exec-remove="' + index + '" title="Remove from board" style="border:none; background:none; cursor:pointer; font-weight:800; color:var(--ink-soft); padding:0 0.2rem; line-height:1;">✕</button></div>'
+        + '<input class="chip-exectitle" data-exectitle-idx="' + index + '" value="' + escapeAttr(person.execTitle || "") + '" placeholder="Board title">'
         + '</div>';
 }
 function slug(s) {

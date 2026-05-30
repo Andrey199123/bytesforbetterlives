@@ -1,16 +1,20 @@
 rules_version = '2';
 
 // Bytes for Better Lives — Storage security rules.
-// Paste into: Firebase console → Storage → Rules.
+// Deploy: npx firebase deploy --only storage (firebase.json wires this file).
 //
-// Model: uploaded images are publicly readable; only signed-in admins can upload/delete.
-// Keep the admin email list in sync with firebase.js and firestore.rules.
+// Model: uploaded images are publicly readable; only listed admins can upload/delete.
+// This list = full admins + any chapter admin who needs to upload files. Keep the FULL-admin
+// entries in sync with firebase.js ADMIN_EMAILS and firestore.rules; add chapter-admin emails
+// here too if they should be able to upload photos (Storage rules can't read the chapterAdmins map).
 
 service firebase.storage {
   match /b/{bucket}/o {
 
-    function isAdmin() {
+    function canUpload() {
       return request.auth != null
+        && request.auth.token.email_verified == true                       // verified identity only
+        && request.auth.token.firebase.sign_in_provider == 'google.com'    // pin to Google sign-in
         && request.auth.token.email in [
           "bytesforbetterlives@gmail.com",
           "petr1264k@gmail.com",
@@ -20,9 +24,11 @@ service firebase.storage {
 
     match /{allPaths=**} {
       allow read: if true;
-      allow write: if isAdmin()
-        && request.resource.size < 10 * 1024 * 1024            // max 10 MB
-        && request.resource.contentType.matches('image/.*');   // images only
+      allow write: if canUpload()
+        && request.resource.size < 10 * 1024 * 1024                         // max 10 MB
+        // Raster images only. NB: contentType is client-asserted, so SVG (active content) is also
+        // excluded client-side (admin.js) — and images are served from this separate Storage origin.
+        && request.resource.contentType.matches('image/(png|jpeg|jpg|gif|webp|avif)');
     }
   }
 }
