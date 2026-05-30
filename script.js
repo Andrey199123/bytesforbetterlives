@@ -755,6 +755,7 @@
     function renderChapterProfilePage() {
         const chapterId = (document.body && document.body.dataset ? document.body.dataset.chapterId : "") || "";
         if (!chapterId) return;
+        document.body.classList.add("page-chapter"); // green accent for chapter profile pages
 
         ensureChapterProfileLayout();
 

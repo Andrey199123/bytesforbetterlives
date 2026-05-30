@@ -70,7 +70,22 @@
     --gradient-1: linear-gradient(135deg, var(--blue), var(--green));
     --gradient-2: linear-gradient(135deg, var(--green), var(--blue));
     --gradient-3: linear-gradient(135deg, var(--green-dark), var(--green));
+
+    --gold-dark: oklch(52% 0.12 78);
+    /* Per-page accent — overridden by body.page-* below. Defaults to blue. */
+    --accent: var(--blue);
+    --accent-soft: var(--blue-soft);
+    --accent-dark: var(--blue-dark);
 }
+
+/* Per-page accent role so each page reads distinct yet on-brand (green / blue / gold). */
+body.page-home, body.page-impact, body.page-chapters, body.page-chapter {
+    --accent: var(--green); --accent-soft: var(--green-soft); --accent-dark: var(--green-dark);
+}
+body.page-initiatives, body.page-gallery, body.page-pastevents {
+    --accent: var(--gold); --accent-soft: var(--gold-soft); --accent-dark: var(--gold-dark);
+}
+/* page-about, page-team, page-contact keep the default blue accent. */
 
 html {
     scroll-behavior: smooth;
@@ -84,7 +99,7 @@ body {
     line-height: 1.6;
     color: var(--ink);
     background:
-        linear-gradient(180deg, color-mix(in oklch, var(--blue-soft) 52%, var(--paper)), var(--paper) 34rem),
+        linear-gradient(180deg, color-mix(in oklch, var(--accent-soft) 52%, var(--paper)), var(--paper) 34rem),
         var(--paper);
     overflow-x: hidden;
 }
@@ -191,11 +206,38 @@ main {
 
 .section-kicker,
 .eyebrow {
-    display: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 900;
+    font-size: 0.78rem;
 }
+.section-kicker { color: var(--accent-dark); }      /* on light section backgrounds */
+.eyebrow { color: var(--accent-soft); }             /* on dark hero overlays — pale tint reads well */
+.section-kicker::before,
+.eyebrow::before {
+    content: "";
+    flex: 0 0 auto;
+    width: 24px;
+    height: 2px;
+}
+.section-kicker::before { background: var(--accent); }
+.eyebrow::before { background: var(--accent-soft); }
 
 .section-title {
     color: var(--ink);
+}
+.section-header .section-title::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 3px;
+    margin-top: 0.65rem;
+    border-radius: 999px;
+    background: var(--accent);
 }
 
 .section-description,
@@ -600,7 +642,7 @@ main {
 .chapter-card:hover {
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
-    border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
+    border-color: color-mix(in oklch, var(--accent) 28%, var(--line));
 }
 
 /* Story cards use 3D transforms for flipping. On iOS Safari, :hover can "stick" after a tap,
@@ -609,13 +651,13 @@ main {
 @media (hover: hover) and (pointer: fine) {
     .story-card:hover .story-face {
         box-shadow: var(--shadow-md);
-        border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
+        border-color: color-mix(in oklch, var(--accent) 28%, var(--line));
     }
 }
 
 .story-card:focus-within .story-face {
     box-shadow: var(--shadow-md);
-    border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
+    border-color: color-mix(in oklch, var(--accent) 28%, var(--line));
 }
 
 .card-media {
@@ -1208,7 +1250,7 @@ main {
 
 /* The whole block is a link to the chapter page — subtle affordance, no bouncy lift. */
 .chapter-leadership-card:hover {
-    border-color: color-mix(in oklch, var(--blue) 28%, var(--line));
+    border-color: color-mix(in oklch, var(--accent) 28%, var(--line));
     box-shadow: var(--shadow-md);
 }
 
@@ -2538,7 +2580,7 @@ main {
 
 .flip-card-back {
     transform: rotateY(180deg);
-    background: var(--surface-band);
+    background: var(--surface);
     padding: var(--space-lg);
     display: flex;
     flex-direction: column;
