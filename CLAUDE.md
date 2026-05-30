@@ -92,6 +92,9 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
 `chapters.html`, `chapter-{ahs,coral-springs,cypress,gainesville,new-york,russia,turkey}.html`,
 `contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery — a grid of all
 activity photos; clicking one opens the lightbox).
+Admin pages (noindex, not in navbar): `admin.html` (redirect → `members-admin.html`),
+`members-admin.html`, `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`,
+`structure-admin.html` (full admins), and `chapter-admin.html` (scoped chapter-admin editor).
 
 Navbar order: About · Impact · Initiatives · Team · Chapters · Gallery (no "Home" tab). The
 "Initiatives" tab is `ongoing-initiatives.html` (display label renamed to "Initiatives"; filename kept).
@@ -140,10 +143,12 @@ chapters directory summary card), `turkey` = "Turkey Chapter" (Instagram handle 
 - Keep it vanilla — no frameworks/build tooling. Match the surrounding code style.
 - To change **navigation** → `navItems` in `script.js`.
 - To change **stats** → `stats` array in `script.js`.
-- To change **content** (members, chapters, gallery, etc.) → **Firestore** via `admin.html` or the
-  Admin SDK (`tools/firestore.mjs`), NOT `data.js` (that's only the seed/offline fallback now).
+- To change **content** (members, chapters, gallery, etc.) → **Firestore** via the **per-tab admin
+  pages** (`members-admin.html` etc.; `admin.html` redirects there) or the Admin SDK
+  (`tools/firestore.mjs`), NOT `data.js` (that's only the seed/offline fallback now).
 - To change a **chapter page** → layout/template in `ensureChapterProfileLayout()` (`script.js`);
-  per-chapter content (details + highlight photos) via **admin.html → Chapter Pages tab** (Firestore).
+  per-chapter content (details + highlight photos) via **`chapter-pages-admin.html`** (full admin) or
+  **`chapter-admin.html`** (that chapter's admin) — both write the `chapterContent/{id}` doc.
 
 ## Firebase (live)
 Project: `project-686d62b7-14f5-43c7-acc`. Firestore + Auth + Storage + Hosting all in use.
@@ -199,8 +204,8 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
       checked). No real photo → green **initials** avatar. `person.title` is chosen from the `titles`
       dropdown; `person.execTitle`/`execBio` are free text. Board members render their `execTitle`
       + `execBio` publicly via `memberDisplayTitle()` / `memberDisplayBio()`. Uploads are guarded client-side
-      to <10 MB with an explicit image content-type (matches `storage.rules`; avoids the opaque
-      `storage/unauthorized`).
+      to <10 MB and **raster image types only** (`isRasterImage()`, mirroring `storage.rules`; SVG is
+      rejected); avoids the opaque `storage/unauthorized`.
     - **Gallery** — bulk upload the gallery-page photos (`galleryImages`) via a styled
       **`.upload-dropzone`** (`#gallery-dropzone`) that is **click-to-choose AND drag-and-drop**
       (`uploadGalleryFiles()`; many files at once, per-file >10 MB skip, live progress) / remove
@@ -232,10 +237,35 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
       only their chapter's page editor + members (reuses `renderChapterPages`/`renderPeople` filtered
       by `SCOPE_CID`; Chapter/Exec-Board controls hidden; saves only their `chapterContent` doc).
   Login is **Google sign-in** (official-branded button). Client checks `ADMIN_EMAILS`; rules enforce.
-- **Rules** — `firestore.rules` / `storage.rules` (both wired into `firebase.json`): public **read**;
-  Firestore write = full admin (any doc) or chapter admin (their `chapterContent` doc); Storage write =
-  listed admin emails only (image <10 MB). **Deploy with `npx firebase deploy --only firestore:rules,storage`**
-  (no longer console-only). The CLI compiles them first, so a syntax error fails loudly.
+- **Rules** — `firestore.rules` / `storage.rules` (both wired into `firebase.json`). **Deploy with
+  `npx firebase deploy --only firestore:rules,storage`** (no longer console-only); the CLI compiles
+  them first, so a syntax error fails loudly. Hardened model (2026-05-29 security pass):
+  - **Verified-identity gate** — `isVerified()` requires `request.auth.token.email_verified == true`
+    **and** `firebase.sign_in_provider == 'google.com'`. Both `isFullAdmin()` and `isChapterAdminFor()`
+    (Firestore) and `canUpload()` (Storage) build on it, so the email claim can't be spoofed via a
+    self-registered Email/Password account. **Keep only Google sign-in enabled in the Firebase console.**
+  - **Firestore writes**: `site/content` = full admin only; `chapterContent/{cid}` = full admin, or that
+    chapter's admin **constrained to `keys().hasOnly(['page','members'])` with `members.size() <= 200`**.
+    The catch-all `match /{document=**}` is now **default-deny read** (`allow read: if false`) so any
+    future collection is private until explicitly opened; only `site/content` + `chapterContent` are
+    public-read. Writes elsewhere = full admin only.
+  - **Storage writes**: verified admins only, `< 10 MB`, **raster images only**
+    (`image/(png|jpeg|jpg|gif|webp|avif)` — **SVG excluded**, since it can carry script). `admin.js`
+    mirrors this client-side via `isRasterImage()`/`notRasterImage()` on every upload path.
+- **HTTP security headers** (`firebase.json` `headers` on `**`): CSP, `X-Frame-Options: DENY`,
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy`, HSTS, `Permissions-Policy`. The CSP allowlists
+  `gstatic`/`apis.google.com` (scripts), `*.googleapis.com`/`*.firebasestorage.app` (Firestore/Storage),
+  `formsubmit.co` (email form), and the Firebase-Auth/Google hosts — keep it in sync when adding any
+  third-party script/endpoint. `frame-ancestors 'none'` blocks clickjacking of the admin pages.
+- **URL/XSS hardening** — `script.js` `escapeHTML()` covers HTML/attribute context; for any **data-driven
+  `href`** use **`safeUrl()`** (scheme allowlist: http(s)/mailto → else `#`) wrapped in `escapeHTML`,
+  e.g. `href="${escapeHTML(safeUrl(x))}"`. This blocks `javascript:`/`data:` URIs in chapter-admin-set
+  fields (instagram, fundraiser/support URLs, `pageHref`). All `target="_blank"` links carry
+  `rel="noopener noreferrer"`.
+- **Email form anti-abuse** (`chapters.html` + `script.js` `submitEmailForm`): hidden honeypot
+  (`#company-website` / FormSubmit `_honey`), 1 msg/min localStorage cooldown, 4000-char cap. Still
+  client-side only — a server-side relay/rate-limit + **Firebase App Check** + a **GCP budget cap** are
+  the remaining console-side hardening (public Firestore reads are an un-metered cost lever otherwise).
 
 ### Updating content as Claude (no browser)
 Use the Admin SDK helper `tools/firestore.mjs` (key-less — uses gcloud Application Default

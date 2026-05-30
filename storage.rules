@@ -13,6 +13,8 @@ service firebase.storage {
 
     function canUpload() {
       return request.auth != null
+        && request.auth.token.email_verified == true                       // verified identity only
+        && request.auth.token.firebase.sign_in_provider == 'google.com'    // pin to Google sign-in
         && request.auth.token.email in [
           "bytesforbetterlives@gmail.com",
           "petr1264k@gmail.com",
@@ -23,8 +25,10 @@ service firebase.storage {
     match /{allPaths=**} {
       allow read: if true;
       allow write: if canUpload()
-        && request.resource.size < 10 * 1024 * 1024            // max 10 MB
-        && request.resource.contentType.matches('image/.*');   // images only
+        && request.resource.size < 10 * 1024 * 1024                         // max 10 MB
+        // Raster images only. NB: contentType is client-asserted, so SVG (active content) is also
+        // excluded client-side (admin.js) — and images are served from this separate Storage origin.
+        && request.resource.contentType.matches('image/(png|jpeg|jpg|gif|webp|avif)');
     }
   }
 }

@@ -171,6 +171,22 @@ if (!firebaseReady) {
     }
     function uploadMeta(file) { return { contentType: file.type || "image/jpeg" }; }
 
+    // Raster images only — must mirror the allowlist in storage.rules. SVG is intentionally excluded
+    // because it can carry active script (stored-XSS risk if ever opened directly from Storage).
+    const RASTER_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/avif"];
+    function isRasterImage(file) {
+        const t = (file && file.type || "").toLowerCase();
+        if (!t) return /\.(png|jpe?g|gif|webp|avif)$/i.test((file && file.name) || ""); // some browsers leave type blank
+        return RASTER_IMAGE_TYPES.indexOf(t) !== -1;
+    }
+    function notRasterImage(file) {
+        if (!isRasterImage(file)) {
+            setStatus('Upload failed: "' + (file && file.name) + '" must be a PNG, JPEG, GIF, WebP, or AVIF image (SVG and other formats are not allowed).', true);
+            return true;
+        }
+        return false;
+    }
+
     // ---- Auth ----
     function showSignedOut() {
         messageEl.style.display = "none";
@@ -377,7 +393,7 @@ if (!firebaseReady) {
                 <label>Photo path <input data-field="photo" data-i="${index}" value="${escapeAttr(person.photo || "")}"></label>
                 <div class="upload-dropzone upload-dropzone-sm" data-photozone="${index}">
                     <span>Drop or click to upload photo</span>
-                    <input type="file" accept="image/*" data-upload="${index}" style="display:none;">
+                    <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-upload="${index}" style="display:none;">
                 </div>
             `;
             editor.appendChild(card);
@@ -442,6 +458,7 @@ if (!firebaseReady) {
     async function uploadMemberPhoto(i, file) {
         if (!people[i] || !file) return;
         if (tooBig(file)) return;
+        if (notRasterImage(file)) return;
         setStatus("Uploading photo…");
         try {
             const safe = (people[i].name || "member").toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -496,7 +513,7 @@ if (!firebaseReady) {
     // Many photos at once; oversized files are skipped individually (the rest still upload), with
     // a live "Uploading i of N…" counter.
     async function uploadGalleryFiles(fileList) {
-        const all = Array.from(fileList || []).filter(function (f) { return f && (!f.type || f.type.indexOf("image/") === 0); });
+        const all = Array.from(fileList || []).filter(function (f) { return f && isRasterImage(f); });
         if (!all.length) return;
 
         const ok = all.filter(function (f) { return f.size < MAX_UPLOAD_BYTES; });
@@ -706,7 +723,7 @@ if (!firebaseReady) {
                 <label>Description <textarea data-cfield="description" data-i="${index}" rows="3">${escapeHtml(c.description || "")}</textarea></label>
                 <div style="font-weight:700; font-size:0.8rem; color:var(--ink-soft); margin-top:0.4rem;">Chapter highlights (${c.photos.length})</div>
                 <div class="gallery-grid-admin">${photosHtml}</div>
-                <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/*" multiple data-cphoto-upload="${index}" style="display:none;"></label>
+                <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" multiple data-cphoto-upload="${index}" style="display:none;"></label>
             `;
             editor.appendChild(card);
         });
@@ -736,6 +753,7 @@ if (!firebaseReady) {
                 const files = Array.from(input.files || []);
                 if (!files.length || !chapters[ci]) return;
                 if (files.some(tooBig)) { input.value = ""; return; }
+                if (files.some(notRasterImage)) { input.value = ""; return; }
                 setStatus("Uploading " + files.length + " photo(s)…");
                 try {
                     if (!Array.isArray(chapters[ci].photos)) chapters[ci].photos = [];

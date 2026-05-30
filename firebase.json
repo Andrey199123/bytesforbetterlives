@@ -17,14 +17,29 @@
       ".dupscan/**",
       ".backup/**",
       "test-*.html",
-      "test-*.js"
+      "test-*.js",
+      "download_images.*",
+      "deploy-trigger.txt",
+      "*.py",
+      "*.sh"
     ],
     "cleanUrls": true,
     "trailingSlash": false,
     "headers": [
       {
         "source": "**",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache" },
+          { "key": "X-Frame-Options", "value": "DENY" },
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains" },
+          { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=(), payment=()" },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleapis.com https://*.firebasestorage.app https://www.gstatic.com; font-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebasestorage.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://formsubmit.co; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self' https://formsubmit.co"
+          }
+        ]
       },
       {
         "source": "**/*.@(jpg|jpeg|png|gif|webp|avif|svg|ico|JPG|JPEG|PNG|AVIF|WEBP)",
