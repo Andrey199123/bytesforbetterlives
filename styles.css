@@ -1618,17 +1618,18 @@ main {
 }
 
 @supports (aspect-ratio: 1 / 1) {
-    .story-card,
-    .story-card-inner {
-        min-height: 0;
-    }
-
+    /* aspect-ratio refines the card to 4:3, but we KEEP the min-height: 260px floor
+       (set above) instead of zeroing it: the faces are position:absolute, so the card
+       has no in-flow content height and the auto grid row collapses to 0 — which defeats
+       aspect-ratio and makes the whole gallery section disappear. The floor guarantees the
+       cards (and their photos) always render; aspect-ratio just shapes them when it resolves. */
     .story-card {
         aspect-ratio: 4 / 3;
     }
 
     .story-card-inner {
         aspect-ratio: inherit;
+        height: 100%;
     }
 }
 
@@ -1652,7 +1653,9 @@ main {
 }
 
 .story-front {
-    position: relative;
+    /* Must keep .story-face's absolute inset:0 fill — the <img> and overlay inside are
+       position:absolute, so a relative/in-flow .story-front collapses to 0 height and the
+       photo (height:100%) renders at 0. Stay absolute so the front photo fills the card. */
     display: block;
 }
 

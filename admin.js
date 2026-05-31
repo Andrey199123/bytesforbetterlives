@@ -262,7 +262,11 @@ if (!firebaseReady) {
             if (errEl) { errEl.style.display = "block"; errEl.textContent = err.message || String(err); }
         }
     });
-    on("sign-out", "click", function () { signOut(auth); });
+    // After signing out, return to the chapter-picker landing (admin.html), not the
+    // signed-out state of the current editor. .finally() so we still navigate if signOut errors.
+    on("sign-out", "click", function () {
+        signOut(auth).finally(function () { location.replace("admin.html"); });
+    });
 
     // Tabs are now per-page links (members-admin.html, gallery-admin.html, …); each page loads this
     // script and renders only the section it contains (every render*() guards for its own element).

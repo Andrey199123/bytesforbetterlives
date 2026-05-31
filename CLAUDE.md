@@ -36,8 +36,10 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
     that const. There is no `"founder"` role or category anymore.
   - `script.js` derives `data.officers` (leadership) / `data.design` /
     `data.volunteers` from `data.people` by role at startup, so existing render code is unchanged.
-    The homepage "All Members" list and team-page sections all come from `data.people`
-    (except Founders, which come from the hardcoded `FOUNDERS`).
+    The team-page sections all come from `data.people`
+    (except Founders, which come from the hardcoded `FOUNDERS`). (The homepage no longer has an
+    "All Members" roster section — it was removed; the `[data-members-slider]` renderer in `script.js`
+    is null-guarded and simply no-ops without it.)
   - **Public display title** = `memberDisplayTitle(person)` in `script.js`: exec-board members
     (`person.execBoard`) show their `execTitle`; everyone else shows **"Title ⋅ Chapter Name"** when
     they have a `chapter` (just the title otherwise). Applied via `withDisplayTitle()` and in the
@@ -48,7 +50,7 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
     in the admin (derived as `data.execBoard` in `deriveRoles()`) — NOT a heuristic over
     leadership/design. The homepage `#executive-board-preview` uses the same `data.execBoard` list.
     Members not flagged (including `design`-role people who aren't on the board) stay
-    in the registry + homepage All Members but get no separate team section. Team section order:
+    in the registry but get no separate team section. Team section order:
     Board of Directors → Chapter leadership → Volunteers → **Legacy** (the Founders section, moved to
     the bottom, titled "Legacy", no description). Old "Club Officers" section removed.
   - Team page **"Chapter leadership"** section = **one block per chapter, including AHS**
@@ -68,7 +70,7 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
     each lead's displayed **photo, bio, and canonical name are resolved from `data.people`** via
     `resolvePersonRef()` / `personByName()` in `script.js`. So a person's profile lives only in the
     registry; chapters just reference them. Add any new chapter lead to `data.people` too.
-  - Net: every person displayed anywhere (team sections, homepage preview + All Members list,
+  - Net: every person displayed anywhere (team sections, homepage Board of Directors preview,
     chapter-lead cards/avatars) is backed by the single `data.people` registry.
 - **`script.js`** — all rendering + behavior:
   - `navItems` array (~line 21) defines the **navbar** links.
@@ -132,17 +134,33 @@ chapters directory summary card), `turkey` = "Turkey Chapter" (Instagram handle 
 ## Design / branding
 - **Signature brand color = "SY Glacier Mint" `#B4D3AD`** (`--green`; shades `--green-dark: #4F7A46`,
   `--green-soft: #E8F1E4`). `--primary-color: var(--green)`. Primary CTAs (`.btn-primary`,
-  `.btn-donate`) use it with dark `--ink` text. (Earlier it was a lime green — now changed.)
-  All greens flow from these three vars; nothing hardcodes the old color.
-- **Blue** (`--blue`) is the secondary accent only. Any older notion of a blue primary (`#2563eb`)
-  is obsolete.
+  `.btn-donate`) use it with dark `--ink` text. All greens flow from these three vars.
+- **Per-page accent system** (2026-05-30 design pass): `--accent` / `--accent-soft` / `--accent-dark`
+  in `:root` default to **blue**; a `body.page-*` class overrides them per page so each reads distinct
+  yet on-brand — **green** (home, impact, chapters, chapter profiles), **gold** (initiatives, gallery,
+  past-events), **blue** (about, team, contact). `--gold-dark` was added for gold-accent text. The
+  accent drives the section kicker/underline, the hero overlay tint, the banded-section wash, the
+  card-hover border, and the top-of-page background wash. Marketing pages set `class="page-*"` on
+  `<body>`; chapter profiles get `page-chapter` via `script.js`. (`--blue`/`--gold` are no longer
+  "secondary only" — they're first-class per-page accents.)
+- **Section motif**: `.section-kicker` (eyebrow, `--accent-dark`) + a 48px `--accent` underline under
+  each `.section-title`; the hero `.eyebrow` uses the pale `--accent-soft` for dark overlays. (Both
+  were previously `display:none` — re-enabled in the design pass.)
+- **Bands**: `.surface-band` carries a gentle `--accent-soft` wash; `.band--tint` (stronger) and the
+  inverted dark `.band--ink` (one high-contrast CTA/quote per page) are available utilities.
 - **Hero banner photo**: `images/IMG_7470.JPG`, shared across home, interior, and chapter pages.
-  - `.home-hero` (home, taller), `.chapter-hero` (chapter pages), and `.hero-home-banner`
-    (About/Impact/Ongoing Initiatives/Team) all use this image over a dark gradient overlay.
-  - Plain `.hero` falls back to `images/hero-bg.avif` — but no live page uses bare `.hero` anymore.
+  - `.home-hero` (home, taller), `.chapter-hero`, and `.hero-home-banner` (About/Impact/Initiatives/
+    Team/Chapters) all use this image under an **accent-tinted directional gradient** (dark on the
+    text side, fading to the photo on the right) — so the shared-photo pages look distinct per accent.
+  - Plain `.hero` falls back to `images/hero-bg.avif`. NOTE: `IMG_7470.JPG` is ~4.5 MB — compressing it
+    to `.avif`/`.webp` (~1920px) is a pending perf win.
 - Logo: `.logo img` is `height: 58px`. Navbar logo links home (the "Home" nav tab was removed).
-- Responsive with a hamburger menu (`initMobileNavigation`). No back-to-top button (removed). The
-  home hero has no "proof pills" row (removed).
+- Responsive with a hamburger menu (`initMobileNavigation`). No back-to-top button. Home hero has no
+  "proof pills" row.
+- **Design playbook status**: phases 1-2 applied (Tier-0 bug fixes + accent system + hero/band tint;
+  commits `5403664`, `b61fb29`). NOT yet applied — the per-page signature moves (About story timeline,
+  Impact proof-ledger + scroll-spy, Initiatives cycle-rail, Team roster wall, Chapters world-map wiring,
+  per-chapter hero photo, Gallery masonry, Past-events/Contact hero+timeline) and hero-image compression.
 
 ## Current content snapshot
 - Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,
@@ -205,7 +223,10 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
   edit ONLY their `chapterContent/<id>` doc (page + members) — enforced by `firestore.rules`
   `isChapterAdminFor()`. On login `admin.js` routes a chapter admin to **`chapter-admin.html`** (a
   scoped editor: their chapter page + members only; `SCOPE_CID` gates all writes to their doc) and
-  routes full admins away from it. **`storage.rules`** = explicit admin email list only (Storage
+  routes full admins away from it. **Signing out** (the shared `#sign-out` button, handled once in
+  `admin.js`) calls `signOut()` then `location.replace("admin.html")`, so logout from any admin page
+  returns to the chapter-picker landing rather than the signed-out state of the current editor.
+  **`storage.rules`** = explicit admin email list only (Storage
   rules can't read the chapterAdmins map), so a chapter admin can't upload FILES unless their email
   is added to `storage.rules` — otherwise they set a member/chapter photo by path/URL.
 - **Admin = one page per tab** (`admin.js` SDK, shared `admin.css`): **`members-admin.html`**,
