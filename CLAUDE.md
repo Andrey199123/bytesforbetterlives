@@ -132,39 +132,94 @@ chapters directory summary card), `turkey` = "Turkey Chapter" (Instagram handle 
   (not part of the live site; possibly stale).
 
 ## Design / branding
-- **Signature brand color = "SY Glacier Mint" `#B4D3AD`** (`--green`; shades `--green-dark: #4F7A46`,
-  `--green-soft: #E8F1E4`). `--primary-color: var(--green)`. Primary CTAs (`.btn-primary`,
-  `.btn-donate`) use it with dark `--ink` text. All greens flow from these three vars.
-- **Per-page accent system** (2026-05-30 design pass): `--accent` / `--accent-soft` / `--accent-dark`
-  in `:root` default to **blue**; a `body.page-*` class overrides them per page so each reads distinct
-  yet on-brand — **green** (home, impact, chapters, chapter profiles), **gold** (initiatives, gallery,
-  past-events), **blue** (about, team, contact). `--gold-dark` was added for gold-accent text. The
-  accent drives the section kicker/underline, the hero overlay tint, the banded-section wash, the
-  card-hover border, and the top-of-page background wash. Marketing pages set `class="page-*"` on
-  `<body>`; chapter profiles get `page-chapter` via `script.js`. (`--blue`/`--gold` are no longer
-  "secondary only" — they're first-class per-page accents.)
-- **Section motif**: `.section-kicker` (eyebrow, `--accent-dark`) + a 48px `--accent` underline under
-  each `.section-title`; the hero `.eyebrow` uses the pale `--accent-soft` for dark overlays. (Both
-  were previously `display:none` — re-enabled in the design pass.)
-- **Bands**: `.surface-band` carries a gentle `--accent-soft` wash; `.band--tint` (stronger) and the
-  inverted dark `.band--ink` (one high-contrast CTA/quote per page) are available utilities.
-- **Hero banner photo**: `images/IMG_7470.JPG`, shared across home, interior, and chapter pages.
-  - `.home-hero` (home, taller), `.chapter-hero`, and `.hero-home-banner` (About/Impact/Initiatives/
-    Team/Chapters) all use this image under an **accent-tinted directional gradient** (dark on the
-    text side, fading to the photo on the right) — so the shared-photo pages look distinct per accent.
-  - Plain `.hero` falls back to `images/hero-bg.avif`. NOTE: `IMG_7470.JPG` is ~4.5 MB — compressing it
-    to `.avif`/`.webp` (~1920px) is a pending perf win.
-- Logo: `.logo img` is `height: 58px`. Navbar logo links home (the "Home" nav tab was removed).
-- Responsive with a hamburger menu (`initMobileNavigation`). No back-to-top button. Home hero has no
-  "proof pills" row.
-- **Design playbook status**: phases 1-2 applied (Tier-0 bug fixes + accent system + hero/band tint;
-  commits `5403664`, `b61fb29`). NOT yet applied — the per-page signature moves (About story timeline,
-  Impact proof-ledger + scroll-spy, Initiatives cycle-rail, Team roster wall, Chapters world-map wiring,
-  per-chapter hero photo, Gallery masonry, Past-events/Contact hero+timeline) and hero-image compression.
+**2026-05-31 full redesign** — "warm + bold blend" inspired by DECA + youthteaching.org (Ustart),
+mint-led. Goal: read as intentional/editorial, not AI-template.
+- **Typography**: `--font-display` = **Nunito** (rounded geometric, bold — a free stand-in for DECA's
+  licensed *Gotham Rounded*; headings are `font-weight: 800`); `--font-body` = **Mulish** (clean
+  geometric, stand-in for *Gotham*); `--font-label` = Nunito (kickers/buttons/nav, uppercase). (The
+  earlier Schibsted Grotesk/Afacad pair and a brief Fraunces serif experiment are gone — the user
+  rejected the serif.)
+- **Signature brand color = "SY Glacier Mint" `#B4D3AD`** (`--green`; `--green-dark: #4F7A46`,
+  `--green-deep` for confident text, `--green-soft`). Primary CTAs (`.btn-primary`, `.btn-donate`) now
+  **fill with `--green-dark` + paper text** as **pill buttons** (`border-radius: 999px`) — the pale mint
+  failed contrast (~1.6:1), so mint is reserved for soft washes.
+- **Per-page accent system**: `--accent` / `--accent-soft` / `--accent-dark` default to **green**
+  (mint-led); `body.page-*` overrides per page — **green** (home, impact, chapters, chapter profiles),
+  **gold** (initiatives, gallery, past-events), **teal** (about, contact), **coral** (team). Vivid
+  `--gold`/`--coral`/`--teal` (+ `-soft`/`-dark`) added. Accent drives kicker/underline, hero tint,
+  band wash, card-hover, stat numerals, and program-tile colours. (Blue is retired as an accent.)
+- **Warm palette**: `--paper`/`--surface` are warm off-white (hue ~92, was cold blue); shadows are
+  neutral/deeper (`--ink`-tinted, was blue); radii are generous (`--radius-lg: 18px` … `2xl: 32px`).
+- **Section motif**: `.section-kicker` (uppercase Nunito, `--accent-dark`, 0.16em tracking) + a 48px
+  `--accent` underline under each `.section-title`; hero `.eyebrow` uses `--accent-soft`.
+- **Hero**: branded **accent-tinted photo treatment** — `.hero` stacks an accent colour wash (left-heavy,
+  per-page identity) over a consistent `--ink` darkening layer + a bottom scrim, over `var(--hero-img)`.
+  **All non-chapter heroes are identical**: same photo **`images/hero-banner.jpg`** (compressed from
+  `IMG_7470.JPG`, 4.7 MB → ~540 KB via `sips`), same crop `center 34%`, and the **same FIXED height**
+  (`.hero { height: clamp(420px, 50vh, 540px) }`, content vertically centred; the `@media (max-width:680px)`
+  block relaxes to `height:auto; min-height` so long wrapped copy never clips). `.home-hero` /
+  `.hero-home-banner` / `.chapter-hero` only set `--hero-img`/`--hero-pos`. **Only chapter-profile pages
+  differ** — `renderChapterProfilePage()` overrides `--hero-img` to that chapter's `photos[0]` + shows a
+  faint name monogram (`.chapter-hero-mark`). Plain `.hero` falls back to `images/hero-bg.avif`. The
+  per-page accent changes only the TINT, not the photo or size. NOTE: the banner photo has "BYTES for
+  Better Lives" text dead-centre with people behind it (can't be cropped out); the ink wash mutes it. (An
+  earlier per-page-photo/crop scheme and a faint `.hero-bignum` watermark were tried and reverted — the
+  bignum read as a rendering glitch on the busy photo.)
+- **Editorial stat band** (`.impact-band`): de-chromed cards → big Nunito numerals (`--accent-dark`,
+  weight 900) with hairline dividers on a soft accent wash. Home + Impact use the `stats` array in
+  `script.js` (~line 501).
+- **Program tiles** (`.service-card` in `.service-grid`): DECA-style colour tiles — a top accent strip
+  (`::before`) + colored number chip, cycling green/gold/coral/teal via `:nth-child(4n+…)`; the grid is
+  3-up on desktop so a 5-program set reads 3 + 2.
+- **Bands**: `.surface-band` (accent-soft wash, strengthened to 62%); `.band--tint` / inverted `.band--ink`
+  utilities available.
+- Logo: `.logo img` is `height: 58px`; `.logo::after` wordmark is now `--green-dark` Nunito. Responsive
+  hamburger (`initMobileNavigation`). No back-to-top, no hero proof-pills.
+- **Redesign QA fixes** (after a per-page grading pass): (1) **Avatars** never show empty wells —
+  `.avatar-initials` is a confident `--green-dark` fill + paper text, and `initImageFallbacks` now also
+  catches images that 404'd *before* its listener attached (`complete && naturalWidth===0`), fixing the
+  async-render race. (2) **No orphan rows** — `.officer-grid` is `auto-fit minmax(220px,1fr)` and
+  `.chapter-card` is a flex column with `.chapter-actions { margin-top:auto }` so "View Chapter" CTAs
+  align. (3) **Chapter directory cards** show a status pill on EVERY card (`chapterStatusBadgeMarkup`:
+  founding → "Founding Chapter", else `chapter.status` || "Active") and render the lead name ONCE
+  (resolved `chapterLeadPeopleText`, "Led by" eyebrow). (4) In-page labels use the page **accent**
+  (`.person-role`, `.feature-box h3`, `.kicker-small`, flip-card location icon) so teal/coral/gold show
+  below the fold; `--teal` chroma bumped. (5) **Contact** page reuses the Start-a-Chapter email form
+  (`submitEmailForm`, honeypot) instead of a bare mailto. (6) Fundraisers with no URL fall back to
+  `data.donateUrl` ("Donate") rather than a disabled "Coming Soon" button (`fundraiserCardMarkup`).
+  (7) Placeholder images replaced with real photos (About "Our Story", Initiatives "Educational
+  Technologies"). (8) `--muted` darkened (~40% L) for AA; interior `.hero h1` + `.section-title`/`h2`
+  get a mobile clamp + `overflow-wrap` so headings no longer clip at 390px.
+- **Kill-the-template work** (iterative "AI-look" audits drove the genericness score ~7.0 → ~5.4): the
+  goal was breaking the repeated "kicker → title → uniform card grid" rhythm with reusable utilities,
+  applied across pages. Current pieces (in `styles.css` + render fns in `script.js`):
+  - **`.cards-grid--feature`** — asymmetric grid (first card spans 4×2, rest 2-wide). Applied to: Home
+    chapters preview, About "Our Story" (now superseded by the timeline below), Impact Seniors/Kids/
+    Donations, Initiatives `#fundraiser-grid`, Past-events.
+  - **`.service-number`** is a bare oversized display numeral (no circle badge); first `.service-card` spans 2.
+  - **Editorial dark beats** — `.band--ink` sections carrying `.editorial-quote` (big quote glyph via
+    `::before`) and/or `.band-figure` (oversized accent numeral): a founder pull-quote on Home, a "3,500+"
+    quote+figure on About, a "40+" stat on Team, and dark closing CTAs on Impact/Initiatives/Chapters/Past-events.
+  - **Gallery** = dense-grid **mosaic** (`.photo-gallery-grid` grid + `.g-feature`/`.g-wide`/`.g-tall` size
+    cadence + hover `<figcaption>`), built in `renderGalleryImages`.
+  - **Chapters directory** features the founding chapter (`.chapter-card--feature`, double-wide tinted),
+    status-coloured left spines (`.chapter-card.card-edge-*`), data-driven status pills (`statusClass`), the
+    lead name once ("Led by"), and a subtle `.chapter-card-go` "View chapter →" text cue (not a button).
+  - **Member rosters** — leadership renders as cards, volunteers as de-carded `.roster-chip` pills
+    (`personChipMarkup`): on chapter profiles (`renderChapterMembersByCategory`) and the Team volunteers grid.
+  - **About** "Our Story" is a numbered `.story-rail` timeline (ordinal nodes on an accent rail); **Impact**
+    partners are a grayscale `.partner-strip` ribbon (not 10 card boxes); **Contact** is a numbered
+    `.help-list` ledger + the real email form (`submitEmailForm`).
+  - Misc: in-page labels use `var(--accent)`; `--muted` darkened (~40% L) for AA; placeholder images swapped
+    for real photos; concrete number-driven copy in several description slots; `initImageFallbacks` catches
+    already-errored avatars (no empty wells; `.avatar-initials` = `--green-dark` fill).
+  - REMAINING (diminishing returns / asset-gated): genuinely distinct hero **photography** per page (the
+    photo pool is mostly portrait/rotated phone shots), and finer per-page art-direction. The shared hero
+    photo + the section-header rhythm are the two tells the audits keep citing.
 
 ## Current content snapshot
 - Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,
-  **5+** chapters.
+  **7** chapters (the `stats` array in `script.js` ~line 501).
 - `donateUrl` → GoFundMe ("help provide iPads to local schools").
 - Team is a large data-driven roster (founders + board of directors/officers + chapter leaders +
   volunteers) — not a fixed 5-person list.

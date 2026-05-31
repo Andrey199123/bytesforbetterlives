@@ -24,7 +24,7 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero hero-home-banner">
         <div class="hero-content">
             <h1>Get In Touch</h1>
             <p>We'd love to hear from you!</p>
@@ -61,17 +61,22 @@
                 <p class="section-description">Please feel free to reach out to us at any time. We'll reply as soon as possible!</p>
             </div>
             <div class="text-center">
-                <div style="background: white; padding: 3rem; border-radius: 20px; box-shadow: var(--shadow-lg); max-width: 600px; margin: 2rem auto;">
-                    <div style="margin-bottom: 1rem;">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--blue);">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                            <polyline points="22,6 12,13 2,6"></polyline>
-                        </svg>
-                    </div>
-                    <h3 style="color: var(--dark); margin-bottom: 1rem;">Email Us</h3>
-                    <p style="font-size: 1.25rem; color: var(--dark);">
-                        <a href="mailto:bytesforbetterlives@gmail.com" style="color: var(--primary-color); font-weight: 600; text-decoration: underline;">bytesforbetterlives@gmail.com</a>
-                    </p>
+                <div style="max-width: 600px; margin: 2rem auto; text-align: left; background: var(--paper); padding: 2.5rem; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);">
+                    <!-- Reuses the same handler + anti-spam as the Start-a-Chapter form (script.js submitEmailForm). -->
+                    <form id="email-form" onsubmit="submitEmailForm(event)">
+                        <input type="text" id="company-website" name="company-website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+                        <div class="form-group">
+                            <label for="sender-email">Your Email Address</label>
+                            <input type="email" id="sender-email" maxlength="254" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="sender-message">Message</label>
+                            <textarea id="sender-message" rows="5" maxlength="4000" required placeholder="Tell us how we can help — questions, partnership ideas, or how you'd like to get involved."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="submit-email-btn">Send Message</button>
+                        <p id="email-status" class="form-status"></p>
+                    </form>
+                    <p style="margin-top: 1rem; text-align: center; color: var(--muted);">Or email us directly at <a href="mailto:bytesforbetterlives@gmail.com" style="color: var(--accent-dark); font-weight: 700;">bytesforbetterlives@gmail.com</a></p>
                 </div>
             </div>
         </div>
@@ -84,36 +89,30 @@
                 <h2 class="section-title">Get Involved</h2>
                 <p class="section-description">There are many ways you can support our mission</p>
             </div>
-            <div class="cards-grid">
-                <div class="card">
-                    <div class="card-media">
-                        <img src="images/home screen/donate.png" alt="Donate" class="clickable-image" style="width: 100%; height: 300px; object-fit: contain; background: var(--light);">
+            <div class="help-list">
+                <div class="help-row help-row--lead">
+                    <span class="help-index" aria-hidden="true">01</span>
+                    <div>
+                        <h3>Donate</h3>
+                        <p>Fund iPads and devices for local schools, or give board games and electronics for seniors and kids.</p>
                     </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Donate</h3>
-                        <p class="card-description">Support our mission with a financial contribution or donate board games and electronics.</p>
-                        <a href="https://www.gofundme.com/f/help-provide-ipads-to-local-schools" target="_blank" rel="noopener noreferrer" class="btn btn-primary mt-2">Donate Now</a>
-                    </div>
+                    <a href="https://www.gofundme.com/f/help-provide-ipads-to-local-schools" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Donate Now</a>
                 </div>
-                <div class="card">
-                    <div class="card-media">
-                        <img src="images/home screen/volunteer.png" alt="Volunteer" class="clickable-image" style="width: 100%; height: 300px; object-fit: contain; background: var(--light);">
+                <div class="help-row">
+                    <span class="help-index" aria-hidden="true">02</span>
+                    <div>
+                        <h3>Volunteer</h3>
+                        <p>Join a service day or workshop and make a direct, hands-on impact in your community.</p>
                     </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Volunteer</h3>
-                        <p class="card-description">Join us at one of our events and make a direct impact in the community.</p>
-                        <a href="contact.html" class="btn btn-primary mt-2">Contact Us</a>
-                    </div>
+                    <a href="mailto:bytesforbetterlives@gmail.com?subject=Volunteering%20with%20BFBL" class="btn btn-secondary">Email to Volunteer</a>
                 </div>
-                <div class="card">
-                    <div class="card-media">
-                        <img src="images/home screen/chapter.png" alt="Chapter" class="clickable-image" style="width: 100%; height: 300px; object-fit: contain; background: var(--light);">
+                <div class="help-row">
+                    <span class="help-index" aria-hidden="true">03</span>
+                    <div>
+                        <h3>Start a Chapter</h3>
+                        <p>Bring Bytes for Better Lives to your school or town — we'll help you launch it.</p>
                     </div>
-                    <div class="card-content">
-                        <h3 class="card-title">Start a Chapter</h3>
-                        <p class="card-description">Bring Bytes for Better Lives to your school or community!</p>
-                        <a href="chapters.html" class="btn btn-primary mt-2">Learn More</a>
-                    </div>
+                    <a href="chapters.html#start-chapter" class="btn btn-secondary">Learn More</a>
                 </div>
             </div>
         </div>
