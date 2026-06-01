@@ -517,11 +517,12 @@ main {
             color-mix(in oklch, var(--accent-dark) 48%, transparent) 50%,
             transparent 100%),
         /* consistent ink darkening underneath — accent-independent, so the wordmark baked into
-           the right of the photo is muted on every page (green/teal/gold/coral alike) */
+           the right of the photo is muted (the home hero is now the ONLY photo hero, so this layer
+           is pushed darker to fully dissolve the "BYTES for Better Lives" text printed on the banner) */
         linear-gradient(95deg,
-            color-mix(in oklch, var(--ink) 64%, transparent) 0%,
-            color-mix(in oklch, var(--ink) 50%, transparent) 60%,
-            color-mix(in oklch, var(--ink) 48%, transparent) 100%),
+            color-mix(in oklch, var(--ink) 80%, transparent) 0%,
+            color-mix(in oklch, var(--ink) 68%, transparent) 55%,
+            color-mix(in oklch, var(--ink) 64%, transparent) 100%),
         /* bottom scrim for depth */
         linear-gradient(180deg, transparent 52%, color-mix(in oklch, var(--ink) 72%, transparent) 100%),
         var(--hero-img) var(--hero-pos) / cover no-repeat;
@@ -569,6 +570,47 @@ main {
 .hero-home-banner {
     --hero-img: url("images/hero-banner.jpg");
     --hero-pos: center 34%;
+}
+
+/* Editorial color-field hero — interior pages (about/impact/team/chapters/contact/initiatives/
+   past-events/gallery) drop the shared banner photo, which repeated identically on every page with
+   the wordmark bleeding through the wash (the loudest "template" tell). Instead each page commits to
+   its own ACCENT as the hero identity (green/gold/coral/teal): a directional accent gradient, a faint
+   light dot-grid for texture, and a soft top-left glow — confident and distinct per page, no photo.
+   Overrides the .hero background entirely. Unlike the photo hero (fixed height + overflow:hidden to
+   keep the banner image a constant size), the editorial hero has no image to clip, so it uses
+   min-height + height:auto + overflow:visible: the banner GROWS to fit its content (eyebrow + headline
+   + subtitle + any CTAs) and never clips elements — the photo hero's fixed height was cropping the
+   taller heroes (e.g. Impact's 2-line headline + 3-line copy + 2 buttons). */
+.hero-editorial {
+    height: auto;
+    min-height: clamp(420px, 48vh, 560px);
+    overflow: visible;
+    background:
+        /* soft top-left glow for depth */
+        radial-gradient(80% 120% at 8% 0%,
+            color-mix(in oklch, var(--accent) 36%, transparent) 0%, transparent 60%),
+        /* faint light dot-grid texture so the field never reads as a flat block */
+        radial-gradient(circle at 1px 1px,
+            color-mix(in oklch, var(--paper) 15%, transparent) 1px, transparent 1.6px) 0 0 / 24px 24px,
+        /* the accent colour field itself, deepened toward ink on the right */
+        linear-gradient(115deg,
+            var(--accent-dark) 0%,
+            color-mix(in oklch, var(--accent-dark) 72%, var(--ink)) 100%);
+    color: var(--paper);
+}
+
+/* On a solid accent field the heavy photo-legibility shadows are unnecessary — soften them so the
+   type reads as crisp editorial, not white-on-busy-photo. */
+.hero-editorial h1,
+.hero-editorial .hero-fancy-title {
+    text-shadow: 0 1px 3px color-mix(in oklch, var(--ink) 35%, transparent);
+}
+
+.hero-editorial p,
+.hero-editorial .hero-subtitle {
+    color: color-mix(in oklch, var(--paper) 90%, var(--accent));
+    text-shadow: none;
 }
 
 .home-hero h1 {
@@ -3147,4 +3189,136 @@ main {
     color: color-mix(in oklch, var(--paper) 14%, transparent);
     pointer-events: none;
     text-transform: uppercase;
+}
+
+/* ===== CHAPTER LOCATION MAPS (chapters.html "Where We Are") =====================================
+   Self-contained inline-SVG maps (images/maps/florida.svg + world.svg) with status-coloured pins
+   overlaid as absolutely-positioned links. No third-party map library / tiles → no CSP changes,
+   no API keys, same-origin only. Pin coordinates are % of the .map-frame (set inline by script.js
+   from FLORIDA_MAP_PINS / WORLD_MAP_PINS). */
+.map-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    align-items: start;
+}
+.map-card {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+.map-cap { padding-inline: 0.25rem; }
+.map-cap-title {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--ink);
+}
+.map-cap-sub {
+    display: block;
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    color: var(--accent-dark);
+}
+/* The image fills the frame EDGE-TO-EDGE (no padding) so a pin at `left:X%` lands at exactly X% of
+   the map — padding would offset the pin layer from the image and push edge pins (the SE-coast
+   cluster) off-target. The SVGs have a transparent ocean, so the soft accent wash behind shows
+   through as a subtle "sea". Inner padding is recreated with a small inset on the figure instead. */
+.map-frame {
+    position: relative;
+    border-radius: var(--radius-xl);
+    background:
+        radial-gradient(120% 130% at 18% 12%, color-mix(in oklch, var(--accent-soft) 75%, transparent) 0%, transparent 62%),
+        var(--paper);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+.map-base {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+/* The pin is sized to the DOT only and centred on its coordinate (translate -50%,-50%), so the dot
+   sits exactly on the point regardless of label width. The label floats to one side (absolute),
+   defaulting to the right; `.geo-pin--left` floats it left (used for the east-coast S. Florida
+   cluster so labels point inland instead of off the map edge). */
+.geo-pin {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%);
+    text-decoration: none;
+    z-index: 2;
+}
+.geo-pin-dot {
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent-dark);
+    border: 2.5px solid var(--paper);
+    box-shadow: 0 1px 4px color-mix(in oklch, var(--ink) 35%, transparent);
+    transition: transform 0.15s ease;
+}
+.geo-pin-label {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 7px);
+    transform: translateY(-50%);
+    font-family: var(--font-label);
+    font-weight: 700;
+    font-size: 0.74rem;
+    line-height: 1;
+    color: var(--ink);
+    background: color-mix(in oklch, var(--paper) 90%, transparent);
+    padding: 0.22rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px color-mix(in oklch, var(--ink) 18%, transparent);
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.geo-pin--left .geo-pin-label {
+    left: auto;
+    right: calc(100% + 7px);
+}
+.geo-pin.pin-active .geo-pin-dot { background: var(--green-dark); }
+.geo-pin.pin-launching .geo-pin-dot { background: var(--gold-dark); }
+.geo-pin.pin-prospective .geo-pin-dot { background: var(--muted); }
+.geo-pin:hover { z-index: 5; }
+.geo-pin:hover .geo-pin-dot { transform: scale(1.25); }
+.geo-pin:hover .geo-pin-label,
+.geo-pin:focus-visible .geo-pin-label {
+    background: var(--ink);
+    color: var(--paper);
+}
+/* Legend */
+.map-legend {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: clamp(1.25rem, 3vw, 2rem);
+    font-family: var(--font-label);
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+}
+.map-legend-item { display: inline-flex; align-items: center; gap: 0.5rem; }
+.map-dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid var(--paper);
+    box-shadow: 0 0 0 1px var(--line);
+}
+.map-dot.pin-active { background: var(--green-dark); }
+.map-dot.pin-launching { background: var(--gold-dark); }
+
+@media (max-width: 760px) {
+    .map-grid { grid-template-columns: 1fr; gap: 2rem; align-items: stretch; }
+    .geo-pin-label { font-size: 0.68rem; }
 }

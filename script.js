@@ -115,6 +115,7 @@
         renderInitiativesPage();
         renderTeamPage();
         renderChapterDirectoryPage();
+        renderChapterMaps();
         renderChapterProfilePage();
         initMobileNavigation();
         initImageFallbacks();
@@ -679,6 +680,56 @@
         const root = document.querySelector("#chapters-directory-grid");
         if (!root) return;
         root.innerHTML = (data.chapters || []).map(chapterDirectoryCardMarkup).join("");
+    }
+
+    // Pin positions for the chapters-page maps. Coordinates are PERCENTAGES of the map frame
+    // (left%, top%), hand-calibrated to images/maps/florida.svg and world.svg — chapters carry no
+    // geo data, so position lives here (like the hardcoded `stats`/`FOUNDERS`). A chapter id with no
+    // entry simply gets no pin (graceful), and each pin's name/status/href are still resolved live
+    // from data.chapters. World pins collapse the South-Florida cluster into one "Florida" marker.
+    // The three South-Florida chapters sit within ~15 mi of each other, so their dots cluster on the
+    // SE coast — labels point LEFT (inland) and the dots are staggered in y so the labels don't pile up.
+    const FLORIDA_MAP_PINS = [
+        { id: "gainesville", x: 52, y: 24 },
+        { id: "coral-springs", x: 83, y: 68, side: "left" },
+        { id: "ahs", x: 85, y: 72.5, side: "left" },
+        { id: "cypress", x: 81.5, y: 77, side: "left" }
+    ];
+    const WORLD_MAP_PINS = [
+        { id: "ahs", label: "Florida", x: 26.5, y: 35.5, side: "left" },
+        { id: "new-york", label: "New York", x: 28, y: 30, side: "left" },
+        { id: "russia", label: "Russia", x: 59, y: 18 },
+        { id: "turkey", label: "Türkiye", x: 57, y: 27 }
+    ];
+
+    function chapterById(id) {
+        return (Array.isArray(data.chapters) ? data.chapters : []).find(function (c) {
+            return c && c.id === id;
+        }) || null;
+    }
+
+    function mapPinMarkup(pin) {
+        const chapter = chapterById(pin.id);
+        if (!chapter) return "";
+        const href = chapter.pageHref || ("chapter-" + chapter.id + ".html");
+        const status = (chapter.status && String(chapter.status).trim()) || "Active";
+        const label = pin.label || String(chapter.name || "").replace(/\s*Chapter$/i, "");
+        const pinCls = statusClass(status).replace("status-", "pin-")
+            + (pin.side === "left" ? " geo-pin--left" : "");
+        return `
+            <a class="geo-pin ${pinCls}" style="left:${pin.x}%;top:${pin.y}%"
+               href="${escapeHTML(safeUrl(href))}" title="${escapeHTML(chapter.name)} — ${escapeHTML(status)}">
+                <span class="geo-pin-dot"></span>
+                <span class="geo-pin-label">${escapeHTML(label)}</span>
+            </a>`;
+    }
+
+    function renderChapterMaps() {
+        const florida = document.querySelector("#map-florida");
+        const world = document.querySelector("#map-world");
+        if (!florida && !world) return;
+        if (florida) florida.insertAdjacentHTML("beforeend", FLORIDA_MAP_PINS.map(mapPinMarkup).join(""));
+        if (world) world.insertAdjacentHTML("beforeend", WORLD_MAP_PINS.map(mapPinMarkup).join(""));
     }
 
     function chapterDirectoryCardMarkup(chapter) {

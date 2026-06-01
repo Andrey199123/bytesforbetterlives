@@ -24,7 +24,7 @@
     </nav>
 
     <main>
-        <section class="hero chapter-hero">
+        <section class="hero hero-editorial">
             <div class="hero-content">
                 <p class="eyebrow">Chapter Network</p>
                 <h1>Student-led service, expanding with care.</h1>
@@ -40,6 +40,40 @@
                     <p class="section-description">Tap a chapter to view leadership, fundraisers, and highlights.</p>
                 </div>
                 <div class="chapter-grid" id="chapters-directory-grid" aria-label="All chapters"></div>
+            </div>
+        </section>
+
+        <section class="section surface-band chapter-maps-section" aria-label="Chapter locations">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Where We Are</p>
+                    <h2 class="section-title">Chapters on the map.</h2>
+                    <p class="section-description">From the founding chapters across South Florida to New York and partners abroad — here is where BFBL is active and launching. Tap a marker to open that chapter.</p>
+                </div>
+                <div class="map-grid">
+                    <figure class="map-card">
+                        <figcaption class="map-cap">
+                            <span class="map-cap-title">Florida</span>
+                            <span class="map-cap-sub">Our founding region</span>
+                        </figcaption>
+                        <div class="map-frame" id="map-florida" data-map="florida">
+                            <img class="map-base" src="images/maps/florida.svg" alt="Map of Florida showing Bytes for Better Lives chapter locations">
+                        </div>
+                    </figure>
+                    <figure class="map-card">
+                        <figcaption class="map-cap">
+                            <span class="map-cap-title">Around the World</span>
+                            <span class="map-cap-sub">A growing global network</span>
+                        </figcaption>
+                        <div class="map-frame map-frame--world" id="map-world" data-map="world">
+                            <img class="map-base" src="images/maps/world.svg" alt="World map showing Bytes for Better Lives chapter locations">
+                        </div>
+                    </figure>
+                </div>
+                <div class="map-legend">
+                    <span class="map-legend-item"><span class="map-dot pin-active"></span>Active chapter</span>
+                    <span class="map-legend-item"><span class="map-dot pin-launching"></span>Launching chapter</span>
+                </div>
             </div>
         </section>
 
