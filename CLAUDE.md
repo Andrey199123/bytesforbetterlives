@@ -152,21 +152,33 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
   neutral/deeper (`--ink`-tinted, was blue); radii are generous (`--radius-lg: 18px` … `2xl: 32px`).
 - **Section motif**: `.section-kicker` (uppercase Nunito, `--accent-dark`, 0.16em tracking) + a 48px
   `--accent` underline under each `.section-title`; hero `.eyebrow` uses `--accent-soft`.
-- **Hero**: branded **accent-tinted photo treatment** — `.hero` stacks an accent colour wash (left-heavy,
-  per-page identity) over a consistent `--ink` darkening layer + a bottom scrim, over `var(--hero-img)`.
-  **All non-chapter heroes are identical**: same photo **`images/hero-banner.jpg`** (compressed from
-  `IMG_7470.JPG`, 4.7 MB → ~540 KB via `sips`), same crop `center 34%`, and the **same FIXED height**
-  (`.hero { height: clamp(560px, 62vh, 700px) }` — sized so the tallest hero, home's two-line headline +
-  3 lines of copy + 3 action buttons, fits without the `overflow:hidden` clipping it; content vertically
-  centred; the `@media (max-width:680px)` block relaxes to `height:auto; min-height` so long wrapped copy
-  never clips). `.home-hero` /
-  `.hero-home-banner` / `.chapter-hero` only set `--hero-img`/`--hero-pos`. **Only chapter-profile pages
-  differ** — `renderChapterProfilePage()` overrides `--hero-img` to that chapter's `photos[0]` + shows a
-  faint name monogram (`.chapter-hero-mark`). Plain `.hero` falls back to `images/hero-bg.avif`. The
-  per-page accent changes only the TINT, not the photo or size. NOTE: the banner photo has "BYTES for
-  Better Lives" text dead-centre with people behind it (can't be cropped out); the ink wash mutes it. (An
-  earlier per-page-photo/crop scheme and a faint `.hero-bignum` watermark were tried and reverted — the
-  bignum read as a rendering glitch on the busy photo.)
+- **Hero** (2026-05-31 de-vibe pass): heroes are now **split into two treatments**, because the old
+  scheme — the SAME `images/hero-banner.jpg` photo on every non-chapter page, distinguished only by tint,
+  with the "BYTES for Better Lives" wordmark printed on the banner bleeding through the wash — was the
+  single loudest "AI-template" tell (an audit scored every interior page ~5.5–7 largely on it).
+  - **Home only keeps the photo hero** (`.home-hero`, `images/hero-banner.jpg`, crop `center 34%`,
+    compressed from `IMG_7470.JPG` 4.7 MB → ~540 KB via `sips`). Since it's now the ONLY photo hero, its
+    `--ink` darkening layer was **pushed darker** (`linear-gradient(95deg, ink 80% → 68% → 64%)`, was
+    64→50→48) to fully dissolve the printed wordmark.
+  - **All 8 interior pages** (about, impact, team, ongoing-initiatives, contact, past-events, gallery, and
+    the chapters DIRECTORY) use **`.hero-editorial`** — a **photo-less accent COLOUR-FIELD** keyed to the
+    page accent (green/gold/coral/teal): a directional `--accent-dark`→ink gradient + a faint light
+    dot-grid texture + a soft top-left glow. Unlike the photo hero (FIXED height + `overflow:hidden` to keep
+    the image a constant size), the editorial hero has no image to clip, so it uses
+    `min-height: clamp(420px,48vh,560px)` + `height:auto` + `overflow:visible` and **grows to fit its
+    content** — a fixed height was cropping the taller heroes (Impact: 2-line headline + 3-line copy + 2 CTAs).
+    The per-page accent IS the hero identity now, so the 8 pages are visually distinct with no shared photo
+    and no bleeding wordmark. (Swapped in HTML: those pages' hero class is `hero hero-editorial`, replacing
+    the old `hero hero-home-banner` / `chapter-hero`.)
+  - **Chapter-PROFILE pages keep their own photo hero** (`.chapter-hero`, unchanged) —
+    `renderChapterProfilePage()` overrides `--hero-img` to that chapter's `photos[0]` + a faint name
+    monogram (`.chapter-hero-mark`). These were already the least-template heroes (page-specific photo).
+  - Base `.hero` (the photo treatment: accent wash + ink layer + scrim + `--hero-img`, fixed
+    `height: clamp(560px,62vh,700px)`, mobile relaxes to `auto`/`min-height`) still backs `.home-hero` and
+    `.chapter-hero`; `.hero-editorial` overrides its `background`/`height`. Plain `.hero` falls back to
+    `images/hero-bg.avif`. (Earlier per-page-photo/crop and `.hero-bignum` watermark schemes were tried and
+    reverted — the bignum read as a glitch on the busy photo. The colour-field approach replaces the
+    "distinct per-page photography" idea that was asset-gated by the mostly-portrait photo pool.)
 - **Editorial stat band** (`.impact-band`): de-chromed cards → big Nunito numerals (`--accent-dark`,
   weight 900) with hairline dividers on a soft accent wash. Home + Impact use the `stats` array in
   `script.js` (~line 501).
@@ -207,6 +219,23 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
   - **Chapters directory** features the founding chapter (`.chapter-card--feature`, double-wide tinted),
     status-coloured left spines (`.chapter-card.card-edge-*`), data-driven status pills (`statusClass`), the
     lead name once ("Led by"), and a subtle `.chapter-card-go` "View chapter →" text cue (not a button).
+  - **Chapter location maps** (chapters.html "Where We Are" section, 2026-06-01): two **self-contained
+    inline-SVG maps** with status-coloured pins — a **Florida** map (`images/maps/florida.svg`, a single
+    state path extracted from a public-domain US-states SVG, viewBox cropped to FL's bbox, recoloured to
+    brand mint) and a **world** map (`images/maps/world.svg`, the PD "World map - low resolution" recoloured
+    to mint via an injected `<style>path{fill}`). **No third-party map lib / tiles → no CSP change, no API
+    keys, same-origin only** (deliberately NOT Google/Mapbox/Leaflet). Pins are rendered by
+    `renderChapterMaps()` from two hand-calibrated **percent-position tables** (`FLORIDA_MAP_PINS` /
+    `WORLD_MAP_PINS`) — chapters carry no usable geo data in live Firestore, so positions are hardcoded like
+    `stats`/`FOUNDERS`; each pin still resolves its name/status/href LIVE from `data.chapters` via
+    `chapterById()`, and an id with no table entry simply gets no pin. The image fills the `.map-frame`
+    edge-to-edge (NO padding) so `left:X%` == X% of the map (padding would offset edge pins); the SVG's
+    transparent ocean lets the frame's accent wash show through as "sea". Pin classes are namespaced
+    **`.geo-pin` / `.geo-pin-dot` / `.geo-pin-label`** — they MUST NOT reuse `.map-pin`, which is a **dead
+    legacy** teardrop-pin component (lines ~1198+ in styles.css, plus an unused `renderChaptersPage()`
+    `#chapter-map` SVG + a never-loaded Leaflet/OSM block) that hijacks the markup if reused. Status colour:
+    `.pin-active`=green, `.pin-launching`=gold. `.geo-pin--left` floats the label inland (used for the
+    east-coast S. Florida cluster, whose three pins are y-staggered so labels don't pile up).
   - **Member rosters** — leadership renders as cards, volunteers as de-carded `.roster-chip` pills
     (`personChipMarkup`): on chapter profiles (`renderChapterMembersByCategory`) and the Team volunteers grid.
   - **About** "Our Story" is a numbered `.story-rail` timeline (ordinal nodes on an accent rail); **Impact**
@@ -215,9 +244,14 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
   - Misc: in-page labels use `var(--accent)`; `--muted` darkened (~40% L) for AA; placeholder images swapped
     for real photos; concrete number-driven copy in several description slots; `initImageFallbacks` catches
     already-errored avatars (no empty wells; `.avatar-initials` = `--green-dark` fill).
-  - REMAINING (diminishing returns / asset-gated): genuinely distinct hero **photography** per page (the
-    photo pool is mostly portrait/rotated phone shots), and finer per-page art-direction. The shared hero
-    photo + the section-header rhythm are the two tells the audits keep citing.
+  - **Shared-hero tell RESOLVED** (2026-05-31): the "same photo on every page" tell is gone — interior
+    pages now use the photo-less per-accent `.hero-editorial` colour-field and only home keeps a (darker-
+    washed) photo hero. See the **Hero** bullet above. Also removed the **duplicate program grid**: impact
+    no longer renders the home `#what-we-do-grid` 01–05 service tiles (it already has the detailed
+    Seniors/Kids/Donations sections), so that content lives on home only.
+  - REMAINING (diminishing returns): the **section-header rhythm** (kicker → bold title → description) is
+    the main remaining repeated-structure tell; finer per-page art-direction and richer interior-hero
+    motifs are the next lever if pushed further.
 
 ## Current content snapshot
 - Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,
