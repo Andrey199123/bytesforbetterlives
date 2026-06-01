@@ -8,7 +8,7 @@
     <link rel="icon" type="image/avif" href="images/logo.avif">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="page-about">
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="logo">
@@ -71,7 +71,7 @@
                     <p class="section-description">These values guide how we teach, volunteer, and grow chapters.</p>
                 </div>
 
-                <div class="cards-grid" aria-label="Organization values">
+                <div class="cards-grid values-list" aria-label="Organization values">
                     <article class="feature-box">
                         <h3>Patience</h3>
                         <p>We meet people where they are and explain technology in plain, supportive steps.</p>
@@ -92,6 +92,20 @@
             </div>
         </section>
 
+        <section class="section band--ink">
+            <div class="container">
+                <div class="split-section">
+                    <blockquote class="editorial-quote">We don't hand someone a tablet and walk away — we sit with them until it clicks.
+                        <cite>The BFBL volunteer pledge</cite>
+                    </blockquote>
+                    <div style="display:grid; align-content:center; gap:0.4rem;">
+                        <p class="band-figure">3,500+</p>
+                        <p class="section-description">seniors helped — one patient, in-person session at a time.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="section">
             <div class="container">
                 <div class="section-header">
@@ -100,35 +114,26 @@
                     <p class="section-description">BFBL started with hands-on tech help and community donation drives, then expanded into a chapter model so more students can serve their communities with clear status labels.</p>
                 </div>
 
-                <div class="cards-grid" aria-label="Organization story highlights">
-                    <article class="card">
-                        <div class="card-media">
-                            <img src="images/work with seniors/tech help 1.avif" alt="Student volunteer helping a senior with technology" loading="lazy" decoding="async" onerror="this.src='images/logo.avif'">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-title">Start with service</h3>
-                            <p class="card-description">We began by showing up consistently for seniors who needed help with everyday technology.</p>
-                        </div>
-                    </article>
-                    <article class="card">
-                        <div class="card-media">
-                            <img src="images/work with kids/ipad 1.jpeg" alt="Donation of iPads supporting children with learning technology" loading="lazy" decoding="async" onerror="this.src='images/logo.avif'">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-title">Expand access</h3>
-                            <p class="card-description">We fundraise and donate devices, games, and supplies that support children, families, and partners.</p>
-                        </div>
-                    </article>
-                    <article class="card">
-                        <div class="card-media">
-                            <img src="images/world-map.svg" alt="World map representing chapter expansion" loading="lazy" decoding="async" onerror="this.src='images/logo.avif'">
-                        </div>
-                        <div class="card-content">
-                            <h3 class="card-title">Grow responsibly</h3>
-                            <p class="card-description">Chapters launch with clear guidance, transparent status, and leadership expectations.</p>
-                        </div>
-                    </article>
-                </div>
+                <ol class="story-rail" aria-label="Organization story">
+                    <li class="story-step">
+                        <span class="story-step-num">01</span>
+                        <h3>Start with service</h3>
+                        <img src="images/work with seniors/tech help 1.avif" alt="Student volunteer helping a senior with technology" loading="lazy" decoding="async" onerror="this.src='images/logo.avif'">
+                        <p>We began by showing up consistently for seniors who needed help with everyday technology.</p>
+                    </li>
+                    <li class="story-step">
+                        <span class="story-step-num">02</span>
+                        <h3>Expand access</h3>
+                        <img src="images/work with kids/ipad 1.jpeg" alt="Donation of iPads supporting children with learning technology" loading="lazy" decoding="async" onerror="this.src='images/logo.avif'">
+                        <p>We fundraise and donate devices, games, and supplies that support children, families, and partners.</p>
+                    </li>
+                    <li class="story-step">
+                        <span class="story-step-num">03</span>
+                        <h3>Grow responsibly</h3>
+                        <img src="images/past events/sep board game 1.avif" alt="Students gathering donated board games at a community drive" loading="lazy" decoding="async" onerror="this.src='images/logo.avif'">
+                        <p>Chapters launch with clear guidance, transparent status, and leadership expectations.</p>
+                    </li>
+                </ol>
 
                 <div class="preview-actions mt-2">
                     <a href="team.html" class="btn btn-primary">Meet the Team</a>

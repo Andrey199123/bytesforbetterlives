@@ -8,7 +8,7 @@
     <link rel="icon" type="image/avif" href="images/logo.avif">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="page-pastevents">
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="logo">
@@ -24,17 +24,23 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero">
+    <section class="hero hero-home-banner">
         <div class="hero-content">
-            <h1>EVENTS</h1>
-            <p>Our journey of making a difference in the community</p>
+            <p class="eyebrow">Past Events</p>
+            <h1>Where we've shown up.</h1>
+            <p class="hero-subtitle">Board-game drives, digital-safety nights, tech workshops, and trivia fundraisers — a recap of BFBL in action.</p>
         </div>
     </section>
 
     <!-- Past Events Section -->
     <section class="section">
         <div class="container">
-            <div class="cards-grid">
+            <div class="section-header">
+                <p class="section-kicker">Highlights</p>
+                <h2 class="section-title">Moments that added up.</h2>
+                <p class="section-description">Every event is hands-on — seniors, students, partners, and volunteers in the same room.</p>
+            </div>
+            <div class="cards-grid cards-grid--feature">
                 <!-- September Board Game Drive -->
                 <div class="card">
                     <div class="card-media">
@@ -297,16 +303,15 @@
     </section>
 
     <!-- Contact Section -->
-    <section class="section bg-light">
+    <section class="section band--ink">
         <div class="container">
-            <div class="section-header">
-                <h2 class="section-title">Contact Us</h2>
-                <p class="section-description">Please feel free to reach out to us at any time. We'll reply as soon as possible!</p>
+            <div class="section-header centered">
+                <p class="section-kicker">Get In Touch</p>
+                <h2 class="section-title">Want to be part of the next one?</h2>
+                <p class="section-description">Questions, partnerships, or starting a chapter — we'd love to hear from you.</p>
             </div>
             <div class="text-center">
-                <p style="font-size: 1.25rem; color: var(--dark); margin-top: 2rem;">
-                    Email: <a href="mailto:bytesforbetterlives@gmail.com" style="color: var(--primary-color); font-weight: 600;">bytesforbetterlives@gmail.com</a>
-                </p>
+                <a href="contact.html" class="btn btn-primary">Contact Us</a>
             </div>
         </div>
     </section>

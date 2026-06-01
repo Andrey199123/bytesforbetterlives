@@ -52,12 +52,17 @@
                     <div id="chapter-admin-root">
                         <h2 id="chapter-admin-title" style="margin:0 0 1rem;">Chapter</h2>
 
-                        <section class="admin-section active">
+                        <div class="admin-tabs" role="tablist">
+                            <button class="admin-tab active" type="button" data-admin-tab="page">Page</button>
+                            <button class="admin-tab" type="button" data-admin-tab="members">Members</button>
+                        </div>
+
+                        <section class="admin-section active" data-tab-panel="page">
                             <div class="admin-toolbar"><strong>Chapter page &amp; highlights</strong></div>
                             <div id="chapter-pages-editor" style="display:grid; gap:1.5rem; max-width:900px;"></div>
                         </section>
 
-                        <section class="admin-section active" style="margin-top:2rem;">
+                        <section class="admin-section" data-tab-panel="members">
                             <div class="admin-toolbar">
                                 <strong>Members (<span id="people-count">0</span>)</strong>
                                 <button class="btn btn-secondary" id="add-person" type="button">+ Add member</button>

@@ -57,6 +57,10 @@
         data.officers = byRole("leadership");
         data.design = byRole("design");
         data.volunteers = byRole("volunteer");
+        // Board of Directors = members explicitly flagged in the admin (person.execBoard), NOT a
+        // heuristic over leadership/design. This is the single source of truth for that section.
+        // (The field stays `execBoard` to match Firestore; only the display name is "Board of Directors".)
+        data.execBoard = data.people.filter(function (person) { return person && person.execBoard === true; });
     }
     deriveRoles();
 
@@ -86,10 +90,15 @@
         var root = document.querySelector(".photo-gallery-grid");
         if (!root) return;
         var imgs = data.galleryImages || [];
-        root.innerHTML = imgs.map(function (im) {
+        root.innerHTML = imgs.map(function (im, i) {
             var src = typeof im === "string" ? im : (im && im.src) || "";
             var alt = typeof im === "string" ? "" : (im && im.alt) || "";
-            return '<img class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '" loading="lazy" decoding="async" data-fallback="images/logo.avif">';
+            // Deterministic size cadence → a varied mosaic instead of a uniform checkerboard.
+            var cls = "g-tile";
+            if (i % 16 === 0) cls += " g-feature";
+            else if (i % 5 === 3) cls += " g-wide";
+            else if (i % 7 === 5) cls += " g-tall";
+            return '<figure class="' + cls + '"><img class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '" loading="lazy" decoding="async" data-fallback="images/logo.avif">' + (alt ? '<figcaption>' + escapeHTML(alt) + '</figcaption>' : '') + '</figure>';
         }).join("");
     }
 
@@ -226,9 +235,13 @@
     }
 
     function chapterStatusBadgeMarkup(chapter) {
-        if (!isExecutiveChapter(chapter)) return "";
-        const tag = String(chapter.statusTag).trim();
-        return `<span class="status-badge status-executive">${escapeHTML(tag)} Chapter</span>`;
+        // Every card gets a status pill. The founding (AHS) chapter is special; everyone else
+        // shows their status (Active / Launching / …), defaulting to "Active".
+        if (isExecutiveChapter(chapter)) {
+            return `<span class="status-badge status-executive">Founding Chapter</span>`;
+        }
+        const status = (chapter && chapter.status ? String(chapter.status).trim() : "") || "Active";
+        return `<span class="status-badge ${statusClass(status)}">${escapeHTML(status)}</span>`;
     }
 
     function chapterStatusDetail(chapter) {
@@ -484,8 +497,8 @@
     function renderHomePage() {
         renderHomeStats();
         renderWhatWeDo();
-        // Homepage preview stays focused on the top leadership roles.
-        renderOfficerGrid("#executive-board-preview", (data.officers || []).slice(0, 3), true);
+        // Homepage preview shows the board of directors (members flagged person.execBoard).
+        renderOfficerGrid("#executive-board-preview", (data.execBoard || []).map(withDisplayTitle), true);
         renderChapterPreview();
         renderGalleryPreview();
     }
@@ -499,7 +512,7 @@
             { raw: 2350, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
             { raw: 1500, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
             { raw: 3500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
-            { raw: 5, prefix: "", suffix: "+", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
+            { raw: 7, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
         ];
 
         root.innerHTML = `
@@ -574,6 +587,19 @@
                 </div>
                 ${bioLine}
             </article>
+        `;
+    }
+
+    // Compact roster chip (avatar + name + title) for volunteer/general members.
+    function personChipMarkup(p) {
+        return `
+            <div class="roster-chip">
+                <span class="roster-chip-avatar">${personPhotoMarkup(p.name, p.photo || "", "")}</span>
+                <span class="roster-chip-meta">
+                    <strong>${escapeHTML(p.name)}</strong>
+                    ${p.title ? `<span>${escapeHTML(p.title)}</span>` : ""}
+                </span>
+            </div>
         `;
     }
 
@@ -658,8 +684,10 @@
     function chapterDirectoryCardMarkup(chapter) {
         const pageHref = chapter.pageHref || `chapter-${chapter.id}.html`;
         const leadNames = chapterLeadPeopleText(chapter);
+        const featureCls = isExecutiveChapter(chapter) ? " chapter-card--feature" : "";
+        const edgeCls = " " + statusClass(chapter.status).replace("status-", "card-edge-");
         return `
-            <a class="chapter-card" href="${escapeHTML(safeUrl(pageHref))}" aria-label="View ${escapeHTML(chapter.name)}">
+            <a class="chapter-card${featureCls}${edgeCls}" href="${escapeHTML(safeUrl(pageHref))}" aria-label="View ${escapeHTML(chapter.name)}">
                 <div class="chapter-card-header">
                     <div>
                         <h3>${escapeHTML(chapter.name)}</h3>
@@ -670,12 +698,12 @@
                 <div class="chapter-lead">
                     ${chapterLeadAvatarMarkup(chapter)}
                     <div>
-                        <strong>${escapeHTML(chapter.leadName)}</strong>
+                        <span class="chapter-lead-eyebrow">Led by</span>
+                        <strong>${escapeHTML(leadNames)}</strong>
                     </div>
                 </div>
-                <p style="color: var(--ink-soft); font-weight: 700; margin: 0;">${escapeHTML(leadNames)}</p>
-                <p>${escapeHTML(chapter.description)}</p>
-                <span class="btn btn-quiet chapter-actions">View Chapter</span>
+                <p class="chapter-card-desc">${escapeHTML(chapter.description)}</p>
+                <span class="chapter-card-go" aria-hidden="true">View chapter →</span>
             </a>
         `;
     }
@@ -730,20 +758,29 @@
         });
 
         root.innerHTML = catIds.map(function (cat) {
-            const cards = groups[cat].map(function (p) {
-                return officerCard({
-                    name: p.name,
-                    // On a chapter page, board members show their chapter position (regular title)
-                    // and regular bio — not their org executive title/bio.
-                    title: p.execBoard ? (p.title || "") : memberDisplayTitle(p),
-                    detail: p.detail || "",
-                    photo: p.photo || "images/logo.avif",
-                    bio: p.bio || ""
-                }, false);
-            }).join("");
+            // Leadership-type categories render as full cards (focal); volunteers/general members
+            // render as compact chips so the page reads as a hierarchy, not a wall of discs.
+            const asChips = (cat === "volunteer" || cat === "member" || cat === "general");
+            let body;
+            if (asChips) {
+                body = `<div class="roster-chips">${groups[cat].map(personChipMarkup).join("")}</div>`;
+            } else {
+                const cards = groups[cat].map(function (p) {
+                    return officerCard({
+                        name: p.name,
+                        // On a chapter page we're already in that chapter's context, so show the plain
+                        // title only — never "Title ⋅ Chapter Name" or the org executive title.
+                        title: p.title || "",
+                        detail: p.detail || "",
+                        photo: p.photo || "images/logo.avif",
+                        bio: p.bio || ""
+                    }, false);
+                }).join("");
+                body = `<div class="officer-grid officer-grid-dense mt-2">${cards}</div>`;
+            }
             return `
                 <h3 class="team-subsection-title">${escapeHTML(categoryLabel(cat))}</h3>
-                <div class="officer-grid officer-grid-dense mt-2">${cards}</div>
+                ${body}
             `;
         }).join("");
     }
@@ -751,6 +788,7 @@
     function renderChapterProfilePage() {
         const chapterId = (document.body && document.body.dataset ? document.body.dataset.chapterId : "") || "";
         if (!chapterId) return;
+        document.body.classList.add("page-chapter"); // green accent for chapter profile pages
 
         ensureChapterProfileLayout();
 
@@ -767,6 +805,20 @@
         const titleEl = document.querySelector("#chapter-page-title");
         if (titleEl) titleEl.textContent = chapter.name;
 
+        // Each chapter hero uses its OWN first highlight photo (falls back to the shared banner) +
+        // a faint monogram — so chapter pages stop sharing one identical hero.
+        const heroEl = document.querySelector(".chapter-hero");
+        const firstPhoto = chapter.photos && chapter.photos[0] ? chapter.photos[0] : "";
+        if (heroEl && firstPhoto && hasRealPhoto(firstPhoto)) {
+            heroEl.style.setProperty("--hero-img", `url("${firstPhoto}")`);
+        }
+        const markEl = document.querySelector("#chapter-hero-mark");
+        if (markEl) {
+            const words = String(chapter.name || "").replace(/chapter/ig, "").trim().split(/\s+/).filter(Boolean);
+            const mono = (words.length > 1 ? words.map(function (w) { return w.charAt(0); }).join("") : (words[0] || "")).slice(0, 3);
+            markEl.textContent = mono.toUpperCase();
+        }
+
         const subtitleEl = document.querySelector("#chapter-page-subtitle");
         if (subtitleEl) {
             const statusDetail = chapterStatusDetail(chapter);
@@ -780,7 +832,36 @@
 
         const actionsEl = document.querySelector("#chapter-page-actions");
         if (actionsEl) {
-            actionsEl.innerHTML = `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener" class="btn btn-primary">Support this Chapter</a>`;
+            const actions = [
+                `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener" class="btn btn-primary">Support this Chapter</a>`
+            ];
+            if (chapter.joinUrl) {
+                actions.push(`<a href="${escapeHTML(safeUrl(chapter.joinUrl))}" target="_blank" rel="noopener" class="btn btn-primary">Get Involved</a>`);
+            }
+            if (chapter.instagram) {
+                actions.push(`<a href="${escapeHTML(safeUrl(chapter.instagram))}" target="_blank" rel="noopener noreferrer" class="btn btn-quiet">Instagram</a>`);
+            }
+            if (chapter.contactEmail) {
+                actions.push(`<a href="${escapeHTML(safeUrl("mailto:" + chapter.contactEmail))}" class="btn btn-quiet">Email the Chapter</a>`);
+            }
+            actionsEl.innerHTML = actions.join("");
+        }
+
+        // Per-chapter impact stats — only rendered when the chapter has any.
+        const statsSection = document.querySelector("#chapter-stats-section");
+        const statsEl = document.querySelector("#chapter-stats");
+        if (statsSection && statsEl) {
+            const stats = (Array.isArray(chapter.stats) ? chapter.stats : []).filter(function (s) {
+                return s && (s.value || s.label);
+            });
+            if (stats.length) {
+                statsEl.innerHTML = stats.map(function (s) {
+                    return `<div class="chapter-stat"><span class="chapter-stat-value">${escapeHTML(s.value || "")}</span><span class="chapter-stat-label">${escapeHTML(s.label || "")}</span></div>`;
+                }).join("");
+                statsSection.style.display = "";
+            } else {
+                statsSection.style.display = "none";
+            }
         }
 
         renderChapterMembersByCategory(chapter);
@@ -791,6 +872,21 @@
             photoGrid.innerHTML = photos.map(function (photo, index) {
                 return imageMarkup(photo, `${chapter.name} photo ${index + 1}`, "", "images/logo.avif");
             }).join("");
+        }
+
+        // Community partners — only rendered when the chapter lists any.
+        const partnersSection = document.querySelector("#chapter-partners-section");
+        const partnersEl = document.querySelector("#chapter-partners");
+        if (partnersSection && partnersEl) {
+            const partners = (Array.isArray(chapter.partners) ? chapter.partners : []).filter(Boolean);
+            if (partners.length) {
+                partnersEl.innerHTML = partners.map(function (p) {
+                    return `<div class="chapter-partner">${escapeHTML(p)}</div>`;
+                }).join("");
+                partnersSection.style.display = "";
+            } else {
+                partnersSection.style.display = "none";
+            }
         }
     }
 
@@ -803,12 +899,19 @@
         const main = document.createElement("main");
         main.innerHTML = `
             <section class="hero chapter-hero">
+                <span class="chapter-hero-mark" id="chapter-hero-mark" aria-hidden="true"></span>
                 <div class="hero-content">
                     <p class="eyebrow">Chapter</p>
                     <h1 id="chapter-page-title">Chapter</h1>
                     <p class="hero-subtitle" id="chapter-page-subtitle"></p>
                     <p class="hero-subtitle" id="chapter-page-description"></p>
                     <div class="hero-actions" id="chapter-page-actions"></div>
+                </div>
+            </section>
+
+            <section class="section" id="chapter-stats-section" style="display: none;">
+                <div class="container">
+                    <div class="chapter-stats-row" id="chapter-stats" aria-label="Chapter impact"></div>
                 </div>
             </section>
 
@@ -839,6 +942,17 @@
                         <p class="section-description">A few moments from chapter events and community outreach.</p>
                     </div>
                     <div class="chapter-photo-grid" id="chapter-photo-grid" aria-label="Chapter photos"></div>
+                </div>
+            </section>
+
+            <section class="section" id="chapter-partners-section" style="display: none;">
+                <div class="container">
+                    <div class="section-header">
+                        <p class="section-kicker">Partners</p>
+                        <h2 class="section-title">Community partners</h2>
+                        <p class="section-description">Organizations this chapter works with to serve the community.</p>
+                    </div>
+                    <div class="chapter-partners-grid" id="chapter-partners" aria-label="Community partners"></div>
                 </div>
             </section>
         `;
@@ -933,7 +1047,7 @@
                     ${chapterLeadAvatarMarkup(chapter)}
                     <div>
                         <strong>${escapeHTML(chapterLeadPeopleText(chapter))}</strong>
-                        <p class="chapter-lead-note">Executive board leadership</p>
+                        <p class="chapter-lead-note">Board of directors leadership</p>
                     </div>
                 </div>
                 <p class="mt-1">${escapeHTML(chapter.description)}</p>
@@ -1182,7 +1296,7 @@
                 </div>
                 ${chapter.leadBio ? `<p style="color: var(--ink-soft); font-style: italic; font-size: 0.9rem;">${escapeHTML(chapter.leadBio)}</p>` : ""}
                 <p>${escapeHTML(chapter.description)}</p>
-                <span class="btn btn-quiet chapter-actions">View Chapter</span>
+                <span class="chapter-card-go" aria-hidden="true">View chapter →</span>
             </article>
         `;
     }
@@ -1201,7 +1315,7 @@
                         <div class="flip-card-front-content">
                             <h3>${escapeHTML(chapter.name)}</h3>
                             <p class="flip-card-location">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="location-icon" style="vertical-align: middle; margin-right: 4px; color: var(--green);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHTML(chapter.location)}
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="location-icon" style="vertical-align: middle; margin-right: 4px; color: var(--accent);"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHTML(chapter.location)}
                             </p>
                             <p class="flip-card-desc">${escapeHTML(chapter.description)}</p>
                             <div class="flip-hint">
@@ -1311,14 +1425,18 @@
     function fundraiserCardMarkup(fundraiser) {
         const url = (fundraiser && fundraiser.url ? String(fundraiser.url) : "").trim();
         const hasUrl = url && url !== "#" && url.toLowerCase() !== "tbd";
-
+        // No specific GoFundMe yet → fall back to the org's main donate link instead of a dead,
+        // permanently-disabled "Coming Soon" button.
+        const donate = (data.donateUrl ? String(data.donateUrl) : "").trim();
         const cta = hasUrl
-            ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener">Open GoFundMe</a>`
-            : `<span class="btn btn-secondary" aria-disabled="true" style="opacity: 0.7; cursor: not-allowed;">GoFundMe Link (Coming Soon)</span>`;
+            ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Open GoFundMe</a>`
+            : (donate
+                ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(donate))}" target="_blank" rel="noopener noreferrer">Donate</a>`
+                : "");
 
         return `
             <article class="card">
-                <div class="card-media" style="height: 320px;">
+                <div class="card-media">
                     ${imageMarkup(fundraiser.image, fundraiser.alt || fundraiser.title, "clickable-image", "images/logo.avif")}
                 </div>
                 <div class="card-content">
@@ -1332,6 +1450,35 @@
                 </div>
             </article>
         `;
+    }
+
+    // One Team-page "Chapter leadership" block per chapter, listing ALL of that chapter's
+    // leadership-role members (person.chapter === id AND roles includes "leadership").
+    function chapterLeadershipBlockMarkup(chapter) {
+        const leaders = (data.people || []).filter(function (p) {
+            return p && p.chapter === chapter.id
+                && Array.isArray(p.roles) && p.roles.indexOf("leadership") !== -1;
+        });
+        if (!leaders.length) return "";
+        const peopleHtml = leaders.map(function (p) {
+            return `
+                <div class="chapter-leader">
+                    ${personPhotoMarkup(p.name, p.photo, "chapter-leader-photo")}
+                    <div class="chapter-leader-info">
+                        <strong>${escapeHTML(p.name)}</strong>
+                        <span>${escapeHTML(p.title || "Chapter Lead")}</span>
+                    </div>
+                </div>`;
+        }).join("");
+        const href = chapter.pageHref || ("chapter-" + chapter.id + ".html");
+        return `
+            <a class="chapter-leadership-card" href="${escapeHTML(safeUrl(href))}">
+                <div class="chapter-leadership-head">
+                    <h3>${escapeHTML(chapter.name)}</h3>
+                    ${chapter.location ? `<p>${escapeHTML(chapter.location)}</p>` : ""}
+                </div>
+                <div class="chapter-leadership-people">${peopleHtml}</div>
+            </a>`;
     }
 
     function renderTeamPage() {
@@ -1349,9 +1496,9 @@
         }
 
         if (execRoot) {
-            // Executive board: the first 3 leadership people plus the design team, in one row.
+            // Board of Directors: ONLY members flagged person.execBoard in the admin.
             // This section always shows each member's executive bio (falling back to regular bio).
-            const execBoard = (data.officers || []).slice(0, 3).concat(data.design || []).map(function (p) {
+            const execBoard = (data.execBoard || []).map(function (p) {
                 return Object.assign({}, p, {
                     title: memberDisplayTitle(p),
                     bio: p.execBio || p.bio || ""
@@ -1361,7 +1508,7 @@
         }
 
         if (designRoot) {
-            // Design is now merged into the executive board grid above; leave any
+            // Design is now merged into the board of directors grid above; leave any
             // standalone design grid empty.
             renderOfficerGrid("#team-design-grid", [], false);
         }
@@ -1371,37 +1518,24 @@
         }
 
         if (chapterRoot) {
-            const chapterLeads = [];
-            (data.chapters || [])
-                .filter(function (chapter) { return chapter && chapter.id !== "ahs"; })
-                .forEach(function (chapter) {
-                    chapterLeadPeople(chapter).forEach(function (person) {
-                        chapterLeads.push({
-                            key: `chapter:${chapter.id}:${person.name}`,
-                            name: person.name,
-                            title: chapter.name,
-                            detail: chapterStatusDetail(chapter),
-                            photo: person.photo || chapter.leadPhoto || "images/logo.avif",
-                            fallbackPhoto: "images/logo.avif",
-                            bio: chapter.leadBio || chapter.description || ""
-                        });
-                    });
-                });
-
-            chapterRoot.innerHTML = chapterLeads.map(personCardMarkup).join("");
+            // One block per chapter (AHS included), each listing ALL of that chapter's leadership members.
+            chapterRoot.innerHTML = (data.chapters || [])
+                .filter(function (chapter) { return chapter; })
+                .map(chapterLeadershipBlockMarkup)
+                .join("");
         }
 
         if (volunteerRoot) {
             const volunteers = Array.isArray(data.volunteers) ? data.volunteers : [];
+            // Volunteers render as compact chips (not full bio cards) so the section reads as a
+            // roster, not a fourth identical card grid.
+            volunteerRoot.classList.remove("people-grid");
+            volunteerRoot.classList.add("roster-chips");
             volunteerRoot.innerHTML = volunteers.map(function (volunteer) {
-                return personCardMarkup({
-                    key: `volunteer:${volunteer.name}`,
+                return personChipMarkup({
                     name: volunteer.name,
                     title: memberDisplayTitle(volunteer) || "Volunteer",
-                    detail: volunteer.detail || "",
-                    photo: volunteer.photo || "images/logo.avif",
-                    fallbackPhoto: volunteer.fallbackPhoto || "images/logo.avif",
-                    bio: memberDisplayBio(volunteer)
+                    photo: volunteer.photo || ""
                 });
             }).join("");
 
@@ -1579,7 +1713,7 @@
             img.addEventListener("load", syncStoryCardAspect, { once: true });
             if (img.complete) syncStoryCardAspect();
 
-            img.addEventListener("error", function () {
+            function handleError() {
                 const current = img.getAttribute("src") || "";
                 const normalized = normalizeLegacyImagePath(current);
                 if (!img.dataset.normalizedTried && normalized && normalized !== current) {
@@ -1610,7 +1744,13 @@
                 img.style.objectFit = "contain";
                 img.style.padding = "12px";
                 img.style.background = "var(--surface)";
-            });
+            }
+
+            img.addEventListener("error", handleError);
+            // Catch images that already failed before this listener was attached (data-driven
+            // avatars render async after Firestore loads, so an error can fire before init runs).
+            // `complete && naturalWidth===0` = a finished-but-broken image → trigger the fallback now.
+            if (img.getAttribute("src") && img.complete && img.naturalWidth === 0) handleError();
         });
     }
 

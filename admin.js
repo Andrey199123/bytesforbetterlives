@@ -194,18 +194,34 @@ if (!firebaseReady) {
         panel.style.display = "none";
         actions.style.display = "none";
     }
+    // In-page tabs (chapter-admin.html: Page / Members). No-op where there's no tab bar.
+    document.querySelectorAll("[data-admin-tab]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var target = btn.dataset.adminTab;
+            document.querySelectorAll("[data-admin-tab]").forEach(function (b) { b.classList.toggle("active", b === btn); });
+            document.querySelectorAll("[data-tab-panel]").forEach(function (p) { p.classList.toggle("active", p.dataset.tabPanel === target); });
+        });
+    });
+
     onAuthStateChanged(auth, async function (user) {
         if (!user) { showSignedOut(); return; }
 
         if (isFullAdmin(user.email)) {
             // Full ("executive") admin — edits everything.
-            // On the chapter-admin-only page, send them to the full admin home.
-            if (IS_CHAPTER_ADMIN_PAGE) { location.replace("members-admin.html"); return; }
+            if (IS_CHAPTER_ADMIN_PAGE) {
+                // Reached the scoped editor for one chapter — from a per-chapter page
+                // (chapter-<id>-admin.html, which sets body[data-admin-chapter]) or via ?c=<id>.
+                // Edit that one chapter; without a chapter hint, send them to the full admin home.
+                var pick = new URLSearchParams(location.search).get("c")
+                    || (document.body && document.body.dataset ? document.body.dataset.adminChapter : "");
+                if (pick) { SCOPE_CID = pick; }
+                else { location.replace("members-admin.html"); return; }
+            }
             messageEl.style.display = "none";
             loginBox.style.display = "none";
             panel.style.display = "block";
             actions.style.display = "flex";
-            $("admin-who").textContent = user.email;
+            $("admin-who").textContent = user.email + (SCOPE_CID ? " · editing " + SCOPE_CID : "");
             loadContent();
             return;
         }
@@ -220,7 +236,8 @@ if (!firebaseReady) {
 
         if (cid) {
             SCOPE_CID = cid;
-            if (!IS_CHAPTER_ADMIN_PAGE) { location.replace("chapter-admin.html"); return; }
+            // Send a chapter admin to their own per-chapter editor page.
+            if (!IS_CHAPTER_ADMIN_PAGE) { location.replace("chapter-" + cid + "-admin.html"); return; }
             messageEl.style.display = "none";
             loginBox.style.display = "none";
             panel.style.display = "block";
@@ -245,7 +262,11 @@ if (!firebaseReady) {
             if (errEl) { errEl.style.display = "block"; errEl.textContent = err.message || String(err); }
         }
     });
-    on("sign-out", "click", function () { signOut(auth); });
+    // After signing out, return to the chapter-picker landing (admin.html), not the
+    // signed-out state of the current editor. .finally() so we still navigate if signOut errors.
+    on("sign-out", "click", function () {
+        signOut(auth).finally(function () { location.replace("admin.html"); });
+    });
 
     // Tabs are now per-page links (members-admin.html, gallery-admin.html, …); each page loads this
     // script and renders only the section it contains (every render*() guards for its own element).
@@ -280,10 +301,12 @@ if (!firebaseReady) {
             return cd && cd.page ? Object.assign({}, c, cd.page) : Object.assign({}, c);
         });
 
-        // Merge people: site unassigned + every chapter doc's members.
+        // Merge people: site unassigned + every chapter doc's members. A member's chapter is defined
+        // by which doc they live in, so re-stamp chapter = cid (mirrors firebase-data.js; neutralizes
+        // a forged `chapter` field and self-heals on the next save).
         people = siteUnassigned.slice();
         Object.keys(chapterDocs).forEach(function (cid) {
-            (chapterDocs[cid].members || []).forEach(function (m) { people.push(m); });
+            (chapterDocs[cid].members || []).forEach(function (m) { people.push(Object.assign({}, m, { chapter: cid })); });
         });
 
         // Chapter-admin scope: keep only their chapter + its members in the working view.
@@ -385,10 +408,10 @@ if (!firebaseReady) {
                 <label>Category <select data-field="roles" data-i="${index}">${categoryOptions((person.roles || [])[0])}</select></label>
                 ${SCOPE_CID ? "" : `<label>Chapter <select data-field="chapter" data-i="${index}">${chapterOptions(person.chapter)}</select></label>`}
                 ${SCOPE_CID ? "" : `<label style="display:flex; flex-direction:row; align-items:center; gap:0.45rem; color:var(--ink);">
-                    <input type="checkbox" data-execcheck="${index}" ${person.execBoard ? "checked" : ""} style="width:auto; margin:0;"> Executive Board
+                    <input type="checkbox" data-execcheck="${index}" ${person.execBoard ? "checked" : ""} style="width:auto; margin:0;"> Board of Directors
                 </label>`}
-                ${(!SCOPE_CID && person.execBoard) ? `<label>Executive Board title <input data-field="execTitle" data-i="${index}" value="${escapeAttr(person.execTitle || "")}"></label>` : ""}
-                ${(!SCOPE_CID && person.execBoard) ? `<label>Executive Board bio <textarea data-field="execBio" data-i="${index}" rows="2">${escapeHtml(person.execBio || "")}</textarea></label>` : ""}
+                ${(!SCOPE_CID && person.execBoard) ? `<label>Board of Directors title <input data-field="execTitle" data-i="${index}" value="${escapeAttr(person.execTitle || "")}"></label>` : ""}
+                ${(!SCOPE_CID && person.execBoard) ? `<label>Board of Directors bio <textarea data-field="execBio" data-i="${index}" rows="2">${escapeHtml(person.execBio || "")}</textarea></label>` : ""}
                 <label>Bio <textarea data-field="bio" data-i="${index}" rows="2">${escapeHtml(person.bio || "")}</textarea></label>
                 <label>Photo path <input data-field="photo" data-i="${index}" value="${escapeAttr(person.photo || "")}"></label>
                 <div class="upload-dropzone upload-dropzone-sm" data-photozone="${index}">
@@ -418,8 +441,8 @@ if (!firebaseReady) {
                 autosave("people", people);
             });
         });
-        // Executive Board checkbox — toggling it (here or on the Chapters board) flips the same
-        // person.execBoard flag; checking it reveals the separate "Executive Board title" field.
+        // Board of Directors checkbox — toggling it (here or on the Chapters board) flips the same
+        // person.execBoard flag; checking it reveals the separate "Board of Directors title" field.
         editor.querySelectorAll("[data-execcheck]").forEach(function (cb) {
             cb.addEventListener("change", function () {
                 const i = Number(cb.dataset.execcheck);
@@ -603,7 +626,7 @@ if (!firebaseReady) {
             + chips.join("") + '</div>';
     }
 
-    // Executive Board is a separate, NON-exclusive assignment (person.execBoard): a member can be
+    // Board of Directors is a separate, NON-exclusive assignment (person.execBoard): a member can be
     // on the board AND still belong to a chapter, so dropping here never touches their chapter/tier.
     function execZoneMarkup() {
         const chips = [];
@@ -620,7 +643,7 @@ if (!firebaseReady) {
         if (!board) return;
         const cats = (Array.isArray(categories) && categories.length) ? categories : [];
         let html = '<div class="chapter-col"><h4>Unassigned</h4>' + unassignedZoneMarkup() + '</div>';
-        html += '<div class="chapter-col"><h4>Executive Board</h4>' + execZoneMarkup() + '</div>';
+        html += '<div class="chapter-col"><h4>Board of Directors</h4>' + execZoneMarkup() + '</div>';
         chapters.forEach(function (c) {
             const zones = cats.map(function (cat) { return chapterCategoryZoneMarkup(c.id, cat.id, cat.label || cat.id); }).join("");
             html += '<div class="chapter-col"><h4>' + escapeHtml(c.name) + '</h4>' + zones + '</div>';
@@ -651,7 +674,7 @@ if (!firebaseReady) {
                 autosave("people", people);
             });
         });
-        // Typed board-title field on Executive Board chips → person.execTitle, saved.
+        // Typed board-title field on Board of Directors chips → person.execTitle, saved.
         board.querySelectorAll(".chip-exectitle").forEach(function (inp) {
             bindNoDrag(inp);
             inp.addEventListener("input", function () {
@@ -721,6 +744,10 @@ if (!firebaseReady) {
                 <label>Status tag <input data-cfield="statusTag" data-i="${index}" value="${escapeAttr(c.statusTag || "")}"></label>
                 <label>Instagram URL <input data-cfield="instagram" data-i="${index}" value="${escapeAttr(c.instagram || "")}"></label>
                 <label>Description <textarea data-cfield="description" data-i="${index}" rows="3">${escapeHtml(c.description || "")}</textarea></label>
+                <label>Chapter email <input data-cfield="contactEmail" data-i="${index}" value="${escapeAttr(c.contactEmail || "")}" placeholder="chapter@example.com"></label>
+                <label>Get Involved / volunteer link (URL) <input data-cfield="joinUrl" data-i="${index}" value="${escapeAttr(c.joinUrl || "")}" placeholder="https://forms.gle/…"></label>
+                <label>Impact stats — one per line as <code>value | label</code> (e.g. <code>320 | Seniors helped</code>) <textarea data-clist="stats" data-i="${index}" rows="4" placeholder="320 | Seniors helped&#10;4 | Schools served&#10;$1,200 | Raised">${escapeHtml((c.stats || []).map(function (s) { return (s && s.value || "") + " | " + (s && s.label || ""); }).join("\n"))}</textarea></label>
+                <label>Community partners — one per line <textarea data-clist="partners" data-i="${index}" rows="3" placeholder="Palomino Gardens&#10;Joe DiMaggio Children's Hospital">${escapeHtml((c.partners || []).join("\n"))}</textarea></label>
                 <div style="font-weight:700; font-size:0.8rem; color:var(--ink-soft); margin-top:0.4rem;">Chapter highlights (${c.photos.length})</div>
                 <div class="gallery-grid-admin">${photosHtml}</div>
                 <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" multiple data-cphoto-upload="${index}" style="display:none;"></label>
@@ -732,6 +759,24 @@ if (!firebaseReady) {
             input.addEventListener("input", function () {
                 const i = Number(input.dataset.i);
                 chapters[i][input.dataset.cfield] = input.value;
+                if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
+                autosave("chapters", chapters);
+            });
+        });
+        // List fields (stats / partners) — parsed from one-per-line textareas into arrays.
+        editor.querySelectorAll("[data-clist]").forEach(function (input) {
+            input.addEventListener("input", function () {
+                const i = Number(input.dataset.i);
+                const kind = input.dataset.clist;
+                const lines = input.value.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+                if (kind === "stats") {
+                    chapters[i].stats = lines.map(function (l) {
+                        const parts = l.split("|");
+                        return { value: (parts[0] || "").trim(), label: parts.slice(1).join("|").trim() };
+                    });
+                } else if (kind === "partners") {
+                    chapters[i].partners = lines;
+                }
                 if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
                 autosave("chapters", chapters);
             });
@@ -943,7 +988,7 @@ function memberChip(person, index) {
         + '<select class="chip-role" data-role-idx="' + index + '">' + titleOptions(person.title) + '</select>'
         + '</div>';
 }
-// Executive Board chip: ✕ to remove from the board (non-exclusive), plus a TYPED role field for
+// Board of Directors chip: ✕ to remove from the board (non-exclusive), plus a TYPED role field for
 // their board title (person.execTitle) instead of a category dropdown.
 function execMemberChip(person, index) {
     return '<div class="member-chip" draggable="true" data-idx="' + index + '">'
