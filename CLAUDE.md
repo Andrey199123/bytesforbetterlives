@@ -156,8 +156,10 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
   per-page identity) over a consistent `--ink` darkening layer + a bottom scrim, over `var(--hero-img)`.
   **All non-chapter heroes are identical**: same photo **`images/hero-banner.jpg`** (compressed from
   `IMG_7470.JPG`, 4.7 MB → ~540 KB via `sips`), same crop `center 34%`, and the **same FIXED height**
-  (`.hero { height: clamp(420px, 50vh, 540px) }`, content vertically centred; the `@media (max-width:680px)`
-  block relaxes to `height:auto; min-height` so long wrapped copy never clips). `.home-hero` /
+  (`.hero { height: clamp(560px, 62vh, 700px) }` — sized so the tallest hero, home's two-line headline +
+  3 lines of copy + 3 action buttons, fits without the `overflow:hidden` clipping it; content vertically
+  centred; the `@media (max-width:680px)` block relaxes to `height:auto; min-height` so long wrapped copy
+  never clips). `.home-hero` /
   `.hero-home-banner` / `.chapter-hero` only set `--hero-img`/`--hero-pos`. **Only chapter-profile pages
   differ** — `renderChapterProfilePage()` overrides `--hero-img` to that chapter's `photos[0]` + shows a
   faint name monogram (`.chapter-hero-mark`). Plain `.hero` falls back to `images/hero-bg.avif`. The
