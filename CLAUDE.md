@@ -12,13 +12,21 @@ online-safety education, donations, and a growing chapter network).
 - **Plain static site** — vanilla HTML + CSS + JS, no build step, no framework, no package manager.
 - All source files live at the **repo root** (there is no `src/` or `pages/` directory).
 - Run locally: `python3 -m http.server 8000`, then open http://localhost:8000/.
-- **Hosting = Firebase Hosting** (`firebase.json` + `.firebaserc`, project
-  `project-686d62b7-14f5-43c7-acc`). Deploy with **`npx firebase deploy --only hosting`** — this
-  uploads the **local files** (manual CLI deploy, NOT auto from git). Live at
-  **https://project-686d62b7-14f5-43c7-acc.web.app** (clean URLs: `/about`, `/admin`, …).
-  `firebase-tools` is a local devDependency; the CLI auths via the same gcloud ADC (no `firebase login`).
-  NOTE: **content** edits (Firestore via admin) are live instantly; **file/code** edits need a redeploy.
-  (Vercel may still be connected to GitHub separately, but Firebase is the intended host now.)
+- **Hosting = Vercel** (the intended host). The static files are deployed by a **GitHub Actions
+  workflow** (`.github/workflows/vercel-deploy.yml`) that runs on **every push to `main`** (and manual
+  `workflow_dispatch`): it `vercel pull` / `vercel build --prod` / `vercel deploy --prebuilt --prod`
+  using repo secrets `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`. So **file/code edits go live
+  by committing + pushing to `main`** (auto-deploy via CI) — there is no manual deploy command for the
+  files. Vercel's OWN git integration is intentionally **disabled** in `vercel.json`
+  (`git.deploymentEnabled:false`, `github.enabled:false`) so deploys happen ONLY through the Action, not
+  twice. NOTE: **content** edits (Firestore via admin) are live instantly; **file/code** edits need the
+  push-to-`main` deploy.
+- **Firebase is still the BACKEND** (Firestore + Auth + Storage), just **not the host** anymore.
+  `firebase.json` + `.firebaserc` (project `project-686d62b7-14f5-43c7-acc`) remain for **rules/Storage
+  deploys** (`npx firebase deploy --only firestore:rules,storage` — see the Firebase section) and the old
+  Firebase Hosting URL (`https://project-686d62b7-14f5-43c7-acc.web.app`) may still resolve, but Vercel is
+  the canonical site. `firebase-tools` is a local devDependency; the CLI auths via gcloud ADC (no
+  `firebase login`). Do NOT run `firebase deploy --only hosting` for normal file changes — push to `main`.
 
 ## Architecture — content is data-driven
 The HTML pages are thin shells with **empty containers** that `script.js` fills at runtime from
@@ -262,8 +270,9 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
 
 ## Git / workflow
 - Remote: `github.com/Andrey199123/bytesforbetterlives`. Default branch: `main`.
-- Feature work happens on branches (e.g. `petr`). **Deploy = `npx firebase deploy --only hosting`**
-  (uploads local files) — no longer tied to a git merge/push. Lots of recent work is uncommitted.
+- Feature work happens on branches (e.g. `petr`). **Deploying the site = merge/push to `main`**, which
+  triggers the Vercel GitHub Action (`.github/workflows/vercel-deploy.yml`) → production. (Firestore/
+  Storage **rules** are a separate, manual `npx firebase deploy --only firestore:rules,storage`.)
 - Commit only when asked. Commit-message footer:
   `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
 
@@ -279,7 +288,8 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
   **`chapter-admin.html`** (that chapter's admin) — both write the `chapterContent/{id}` doc.
 
 ## Firebase (live)
-Project: `project-686d62b7-14f5-43c7-acc`. Firestore + Auth + Storage + Hosting all in use.
+Project: `project-686d62b7-14f5-43c7-acc`. **Firestore + Auth + Storage** in use as the BACKEND
+(Hosting is **no longer** the host — the site is hosted on **Vercel**; see "Tech & how to run").
 Storage bucket is **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `firebase.js` — note
 it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
 
