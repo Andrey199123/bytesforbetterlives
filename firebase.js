@@ -30,7 +30,8 @@ const firebaseConfig = {
 export const ADMIN_EMAILS = [
     "bytesforbetterlives@gmail.com",
     "petr1264k@gmail.com",
-    "lakeqiao3805@gmail.com"
+    "lakeqiao3805@gmail.com",
+    "js1154539@gmail.com"
 ];
 
 const CDN = "https://www.gstatic.com/firebasejs/10.12.0";
