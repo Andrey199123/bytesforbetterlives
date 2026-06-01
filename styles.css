@@ -498,8 +498,10 @@ main {
     isolation: isolate;
     /* Fixed height (not min-height) so every banner is EXACTLY the same size regardless of how
        much text its hero holds; content is vertically centred within it. Mobile relaxes to auto
-       (see the max-width:680px block) so long wrapped copy never clips. */
-    height: clamp(420px, 50vh, 540px);
+       (see the max-width:680px block) so long wrapped copy never clips. Sized to comfortably fit
+       the tallest hero (home: two-line headline + 3 lines of copy + 3 action buttons) without the
+       overflow:hidden clipping it. */
+    height: clamp(560px, 62vh, 700px);
     display: flex;
     align-items: center;
     padding-block: clamp(2rem, 5vw, 3.5rem);
@@ -1313,7 +1315,10 @@ main {
     flex: 1;
 }
 
-.chapter-lead > div {
+/* Only the text block flexes to fill the row — NOT the avatars container (which is also a
+   direct <div> child). Matching it too gave avatars flex:1, splitting the row 50/50 and pushing
+   the "Led by" text to the horizontal midpoint (big gap on the wide feature card). */
+.chapter-lead > div:not(.chapter-lead-avatars) {
     min-width: 0;
     flex: 1;
 }
