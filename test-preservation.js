@@ -124,29 +124,29 @@ console.log('');
 // Property 2: Images with correct lowercase paths and literal spaces continue to load
 console.log('Property 2: Correct Lowercase Paths with Literal Spaces (Requirement 3.3)');
 console.log('-'.repeat(80));
-testPreservation('images/past events/tech help 1.png',
+testPreservation('images/past events/tech help 1.jpg',
   'Work with seniors image with correct lowercase and literal spaces continues to load', '3.3');
 testPreservation('images/work with kids/ipad 1.jpeg',
   'Work with kids image with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/work with kids/trivia night 1.png',
+testPreservation('images/work with kids/trivia night 1.jpg',
   'Trivia night image with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/past events/workshops 1.png',
+testPreservation('images/past events/workshops 1.jpg',
   'Workshops image with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/past events/lotus house.png',
+testPreservation('images/past events/lotus house.jpg',
   'Lotus house image with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/past events/his house 1.png',
+testPreservation('images/past events/his house 1.jpg',
   'His house 1 image with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/past events/joe 1.png',
+testPreservation('images/past events/joe 1.jpg',
   'Joe 1 image with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/past events/sep board game 1.png',
+testPreservation('images/past events/sep board game 1.jpg',
   'Sep board game 1 image with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/home screen/chapter.png',
+testPreservation('images/home screen/chapter.jpg',
   'Chapter icon with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/home screen/donate.png',
+testPreservation('images/home screen/donate.jpg',
   'Donate icon with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/home screen/fundraise.png',
+testPreservation('images/home screen/fundraise.jpg',
   'Fundraise icon with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/home screen/volunteer.png',
+testPreservation('images/home screen/volunteer.jpg',
   'Volunteer icon with correct lowercase and literal spaces continues to load', '3.3');
 console.log('');
 
@@ -161,33 +161,33 @@ testPreservation('images/donations/christmas haiti 3.jpeg',
   'Christmas Haiti 3 with correct lowercase and literal spaces continues to load', '3.3');
 testPreservation('images/donations/christmas haiti vid.mp4',
   'Christmas Haiti video with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/his house 1 copy.png',
+testPreservation('images/donations/his house 1 copy.jpg',
   'His House 1 copy with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/his house 1.png',
+testPreservation('images/donations/his house 1.jpg',
   'His House 1 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/his house 2.png',
+testPreservation('images/donations/his house 2.jpg',
   'His House 2 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/joe 1.png',
+testPreservation('images/donations/joe 1.jpg',
   'Joe 1 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/joe 2.png',
+testPreservation('images/donations/joe 2.jpg',
   'Joe 2 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/joe 3.png',
+testPreservation('images/donations/joe 3.jpg',
   'Joe 3 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/joe 4.png',
+testPreservation('images/donations/joe 4.jpg',
   'Joe 4 with correct lowercase and literal spaces continues to load', '3.3');
 testPreservation('images/donations/nicklaus 1.jpg',
   'Nicklaus 1 with correct lowercase extension continues to load', '3.3');
-testPreservation('images/donations/sep board game 1.png',
+testPreservation('images/donations/sep board game 1.jpg',
   'Sep board game 1 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/sep board game 2.png',
+testPreservation('images/donations/sep board game 2.jpg',
   'Sep board game 2 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/sep board game 3.png',
+testPreservation('images/donations/sep board game 3.jpg',
   'Sep board game 3 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/sep board game 4.png',
+testPreservation('images/donations/sep board game 4.jpg',
   'Sep board game 4 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/sep board game 5.png',
+testPreservation('images/donations/sep board game 5.jpg',
   'Sep board game 5 with correct lowercase and literal spaces continues to load', '3.3');
-testPreservation('images/donations/september 6.png',
+testPreservation('images/donations/september 6.jpg',
   'September 6 with correct lowercase and literal spaces continues to load', '3.3');
 console.log('');
 

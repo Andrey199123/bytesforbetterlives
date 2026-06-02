@@ -153,7 +153,7 @@ window.BFBL_DATA = {
         { name: "Platon Panov", title: "Chapter President", detail: "", photo: "images/team/platon-panov.jpg", fallbackPhoto: "images/team/platon-panov.jpg", bio: "", roles: ["volunteer"] },
         { name: "Troye Kim", title: "Chapter President", detail: "", photo: "images/team/troye-kim.jpg", fallbackPhoto: "images/team/troye-kim.jpg", bio: "", roles: ["volunteer"] },
         { name: "Aashvik Garimella", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
-        { name: "Baylee Effendi", title: "Chapter President", detail: "", photo: "images/team/baylee-effendi.png", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Baylee Effendi", title: "Chapter President", detail: "", photo: "images/team/baylee-effendi.jpg", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
         { name: "Jamal Shaer", title: "Chapter President", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] }
     ],
 
@@ -216,7 +216,7 @@ window.BFBL_DATA = {
             coordinates: { lat: 26.3017, lng: -80.2551 },
             description: "Local chapter expanding BFBL service projects and digital literacy outreach.",
             photos: [
-                "images/past events/workshops 1.png",
+                "images/past events/workshops 1.jpg",
                 "images/work with kids/trivia night 1.avif"
             ]
         },
@@ -274,12 +274,12 @@ window.BFBL_DATA = {
             status: "Launching",
             leadName: "Baylee Effendi",
             leadTitle: "Chapter President",
-            leadPhoto: "images/team/baylee-effendi.png",
+            leadPhoto: "images/team/baylee-effendi.jpg",
             leadPeople: [
                 {
                     name: "Baylee Effendi",
                     title: "Chapter President",
-                    photo: "images/team/baylee-effendi.png"
+                    photo: "images/team/baylee-effendi.jpg"
                 }
             ],
             leadBio: "Baylee leads the Coral Springs Chapter's outreach and service planning as a student at Coral Springs Charter High School.",

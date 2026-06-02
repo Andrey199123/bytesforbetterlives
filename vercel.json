@@ -5,6 +5,42 @@
   },
   "github": {
     "enabled": false
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "ahs.bytesforbetterlives.net" }],
+      "destination": "/chapter-ahs.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "cypress.bytesforbetterlives.net" }],
+      "destination": "/chapter-cypress.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "new-york.bytesforbetterlives.net" }],
+      "destination": "/chapter-new-york.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "gainesville.bytesforbetterlives.net" }],
+      "destination": "/chapter-gainesville.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "coral-springs.bytesforbetterlives.net" }],
+      "destination": "/chapter-coral-springs.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "russia.bytesforbetterlives.net" }],
+      "destination": "/chapter-russia.html"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "turkey.bytesforbetterlives.net" }],
+      "destination": "/chapter-turkey.html"
+    }
+  ]
 }
-

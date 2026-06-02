@@ -97,17 +97,17 @@ console.log('');
 // Test Case 2: URL Encoding - %20 for spaces
 console.log('Test Case 2: URL Encoding (Spaces as %20)');
 console.log('-'.repeat(80));
-testImagePath('images/donations/sep board game 5.png',
+testImagePath('images/donations/sep board game 5.jpg',
   'URL encoding: Sep%20Board%20Game (encoded) vs sep board game (literal spaces)');
-testImagePath('images/donations/his house 1.png',
+testImagePath('images/donations/his house 1.jpg',
   'URL encoding: His%20House (encoded) vs his house (literal spaces)');
-testImagePath('images/donations/his house 2.png',
+testImagePath('images/donations/his house 2.jpg',
   'URL encoding: His%20House (encoded) vs his house (literal spaces)');
-testImagePath('images/donations/joe 1.png',
+testImagePath('images/donations/joe 1.jpg',
   'URL encoding: Joe%20 (encoded) vs joe (literal spaces)');
-testImagePath('images/donations/joe 2.png',
+testImagePath('images/donations/joe 2.jpg',
   'URL encoding: Joe%20 (encoded) vs joe (literal spaces)');
-testImagePath('images/donations/joe 3.png',
+testImagePath('images/donations/joe 3.jpg',
   'URL encoding: Joe%20 (encoded) vs joe (literal spaces)');
 console.log('');
 
