@@ -204,6 +204,35 @@
         }
     }
 
+    // Returns the base domain to use for chapter subdomains.
+    // If the current host is already on bytesforbetterlives.net, we keep links on .net;
+    // otherwise we default to .org.
+    function chapterBaseDomain() {
+        var host = String(window.location.hostname || "").toLowerCase().replace(/^www\./, "");
+        if (host === "bytesforbetterlives.net" || host.endsWith(".bytesforbetterlives.net")) return "bytesforbetterlives.net";
+        return "bytesforbetterlives.org";
+    }
+
+    // Whether we should generate chapter subdomain URLs in this environment.
+    // Local previews (localhost, file://, netlify.app, vercel.app, etc.) keep using relative chapter pages.
+    function shouldUseChapterSubdomains() {
+        var host = String(window.location.hostname || "").toLowerCase().replace(/^www\./, "");
+        return host === "bytesforbetterlives.org"
+            || host === "bytesforbetterlives.net"
+            || host.endsWith(".bytesforbetterlives.org")
+            || host.endsWith(".bytesforbetterlives.net");
+    }
+
+    // Public-facing URL for a chapter. Falls back to the chapter page file when subdomains
+    // are not available (local dev / previews) or when subdomain is missing.
+    function chapterPublicHref(chapter) {
+        var pageHref = (chapter && chapter.pageHref) || (chapter && chapter.id ? ("chapter-" + chapter.id + ".html") : "chapters.html");
+        var sub = chapter && (chapter.subdomain || chapter.id);
+        if (!sub || !shouldUseChapterSubdomains()) return pageHref;
+        // Use an explicit file path under the subdomain so it works even without server-side rewrites.
+        return "https://" + String(sub).toLowerCase() + "." + chapterBaseDomain() + "/" + pageHref;
+    }
+
     function currentPageName() {
         return window.location.pathname.split("/").pop() || "index.html";
     }
@@ -358,8 +387,9 @@
         function chaptersDropdownMarkup(item) {
             const allChaptersLink = `<li><a href="${escapeHTML(safeUrl(item.href))}" class="dropdown-link${page === item.href ? " active" : ""}">All Chapters</a></li>`;
             const chapterLinks = (data.chapters || []).map(function (chapter) {
-                const href = chapter.pageHref || `chapter-${chapter.id}.html`;
-                const isActive = page === href;
+                const localHref = chapter.pageHref || `chapter-${chapter.id}.html`;
+                const href = chapterPublicHref(chapter);
+                const isActive = page === localHref;
                 return `<li><a href="${escapeHTML(safeUrl(href))}" class="dropdown-link${isActive ? " active" : ""}">${escapeHTML(chapter.name)}</a></li>`;
             }).join("");
 
@@ -711,7 +741,7 @@
     function mapPinMarkup(pin) {
         const chapter = chapterById(pin.id);
         if (!chapter) return "";
-        const href = chapter.pageHref || ("chapter-" + chapter.id + ".html");
+        const href = chapterPublicHref(chapter);
         const status = (chapter.status && String(chapter.status).trim()) || "Active";
         const label = pin.label || String(chapter.name || "").replace(/\s*Chapter$/i, "");
         const pinCls = statusClass(status).replace("status-", "pin-")
@@ -733,7 +763,7 @@
     }
 
     function chapterDirectoryCardMarkup(chapter) {
-        const pageHref = chapter.pageHref || `chapter-${chapter.id}.html`;
+        const pageHref = chapterPublicHref(chapter);
         const leadNames = chapterLeadPeopleText(chapter);
         const featureCls = isExecutiveChapter(chapter) ? " chapter-card--feature" : "";
         const edgeCls = " " + statusClass(chapter.status).replace("status-", "card-edge-");

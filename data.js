@@ -162,6 +162,9 @@ window.BFBL_DATA = {
     chapters: [
         {
             id: "ahs",
+            // Public subdomain for this chapter (edit to change the chapter URL shown across the site).
+            // Example: "ahs" -> https://ahs.bytesforbetterlives.org/
+            subdomain: "ahs",
             pageHref: "chapter-ahs.html",
             name: "AHS Chapter",
             location: "South Florida, United States",
@@ -198,6 +201,7 @@ window.BFBL_DATA = {
         },
         {
             id: "cypress",
+            subdomain: "cypress",
             pageHref: "chapter-cypress.html",
             name: "Cypress Bay Chapter",
             location: "Florida, United States",
@@ -223,6 +227,7 @@ window.BFBL_DATA = {
         },
         {
             id: "new-york",
+            subdomain: "new-york",
             pageHref: "chapter-new-york.html",
             name: "New York Chapter",
             location: "New York, United States",
@@ -246,6 +251,7 @@ window.BFBL_DATA = {
         },
         {
             id: "gainesville",
+            subdomain: "gainesville",
             pageHref: "chapter-gainesville.html",
             name: "Gainesville Chapter",
             location: "Gainesville, Florida, United States",
@@ -269,6 +275,7 @@ window.BFBL_DATA = {
         },
         {
             id: "coral-springs",
+            subdomain: "coral-springs",
             pageHref: "chapter-coral-springs.html",
             name: "Coral Springs Chapter",
             location: "Coral Springs, Florida, United States",
@@ -292,6 +299,7 @@ window.BFBL_DATA = {
         },
         {
             id: "russia",
+            subdomain: "russia",
             pageHref: "chapter-russia.html",
             name: "Russia Chapter",
             location: "Russia",
@@ -316,6 +324,8 @@ window.BFBL_DATA = {
         },
         {
             id: "turkey",
+            // Note: this can be "turkiye" if you prefer that spelling for the URL.
+            subdomain: "turkey",
             pageHref: "chapter-turkey.html",
             name: "Turkey Chapter",
             location: "Turkey",
