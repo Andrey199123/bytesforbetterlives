@@ -1,3 +1,31 @@
+// Subdomain Redirect Logic
+(function() {
+    const host = window.location.hostname;
+    const isSubdomain = host.includes('bytesforbetterlives') && 
+                        !host.startsWith('www.bytesforbetterlives') && 
+                        host !== 'bytesforbetterlives.org' && 
+                        host !== 'bytesforbetterlives.net';
+
+    if (isSubdomain) {
+        if (window.location.pathname !== '/' && window.location.pathname !== '/index.html' && !window.location.pathname.startsWith('/chapter-')) {
+            window.location.replace('https://www.bytesforbetterlives.org' + window.location.pathname + window.location.search + window.location.hash);
+        } else {
+            document.addEventListener('click', function(e) {
+                const a = e.target.closest('a');
+                if (a && a.getAttribute('href')) {
+                    const href = a.getAttribute('href');
+                    if (!href.startsWith('http') && !href.startsWith('mailto:') && !href.startsWith('tel:') && !href.startsWith('#')) {
+                        e.preventDefault();
+                        let newPath = href;
+                        if (!newPath.startsWith('/')) newPath = '/' + newPath;
+                        window.location.href = 'https://www.bytesforbetterlives.org' + newPath;
+                    }
+                }
+            });
+        }
+    }
+})();
+
 (function () {
     const fallbackData = {
         contactEmail: "bytesforbetterlives@gmail.com",
