@@ -5,20 +5,20 @@
   "git": {
     "deploymentEnabled": false
   },
-  "rewrites": [
-    { "source": "/", "has": [{ "type": "host", "value": "ahs.bytesforbetterlives.net" }], "destination": "/chapter-ahs.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "ahs.bytesforbetterlives.org" }], "destination": "/chapter-ahs.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "cypress.bytesforbetterlives.net" }], "destination": "/chapter-cypress.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "cypress.bytesforbetterlives.org" }], "destination": "/chapter-cypress.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "new-york.bytesforbetterlives.net" }], "destination": "/chapter-new-york.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "new-york.bytesforbetterlives.org" }], "destination": "/chapter-new-york.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "gainesville.bytesforbetterlives.net" }], "destination": "/chapter-gainesville.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "gainesville.bytesforbetterlives.org" }], "destination": "/chapter-gainesville.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "coral-springs.bytesforbetterlives.net" }], "destination": "/chapter-coral-springs.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "coral-springs.bytesforbetterlives.org" }], "destination": "/chapter-coral-springs.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "russia.bytesforbetterlives.net" }], "destination": "/chapter-russia.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "russia.bytesforbetterlives.org" }], "destination": "/chapter-russia.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "turkey.bytesforbetterlives.net" }], "destination": "/chapter-turkey.html" },
-    { "source": "/", "has": [{ "type": "host", "value": "turkey.bytesforbetterlives.org" }], "destination": "/chapter-turkey.html" }
+  "redirects": [
+    { "source": "/", "has": [{ "type": "host", "value": "ahs.bytesforbetterlives.net" }], "destination": "/chapter-ahs.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "ahs.bytesforbetterlives.org" }], "destination": "/chapter-ahs.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "cypress.bytesforbetterlives.net" }], "destination": "/chapter-cypress.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "cypress.bytesforbetterlives.org" }], "destination": "/chapter-cypress.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "new-york.bytesforbetterlives.net" }], "destination": "/chapter-new-york.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "new-york.bytesforbetterlives.org" }], "destination": "/chapter-new-york.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "gainesville.bytesforbetterlives.net" }], "destination": "/chapter-gainesville.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "gainesville.bytesforbetterlives.org" }], "destination": "/chapter-gainesville.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "coral-springs.bytesforbetterlives.net" }], "destination": "/chapter-coral-springs.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "coral-springs.bytesforbetterlives.org" }], "destination": "/chapter-coral-springs.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "russia.bytesforbetterlives.net" }], "destination": "/chapter-russia.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "russia.bytesforbetterlives.org" }], "destination": "/chapter-russia.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "turkey.bytesforbetterlives.net" }], "destination": "/chapter-turkey.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "turkey.bytesforbetterlives.org" }], "destination": "/chapter-turkey.html", "permanent": false }
   ]
 }
