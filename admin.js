@@ -326,10 +326,70 @@ if (!firebaseReady) {
         renderGallery();
         renderChaptersBoard();
         renderChapterPages();
+        renderInitiativesAdmin();
         renderStructure();
         renderChapterAdmins();
         renderScopedHeader();
     }
+
+    // Dedicated "Initiatives" tab on the scoped chapter-admin pages: add/edit/remove the chapter's
+    // current initiatives (the same `chapter.initiatives` aggregated into the site-wide section).
+    function scopedChapter() {
+        return SCOPE_CID ? chapters.find(function (x) { return x && x.id === SCOPE_CID; }) : chapters[0];
+    }
+
+    function renderInitiativesAdmin() {
+        const editor = $("initiatives-editor");
+        if (!editor) return;
+        const c = scopedChapter();
+        if (!c) { editor.innerHTML = '<p style="color:var(--ink-soft);">No chapter loaded.</p>'; return; }
+        if (!Array.isArray(c.initiatives)) c.initiatives = [];
+        if (!c.initiatives.length) {
+            editor.innerHTML = '<p style="color:var(--ink-soft);">No initiatives yet — click “+ Add initiative” to create one.</p>';
+            return;
+        }
+        editor.innerHTML = c.initiatives.map(function (it, i) {
+            return `
+                <div class="admin-card">
+                    <label>Title <input data-init="title" data-i="${i}" value="${escapeAttr(it.title || "")}" placeholder="iPad Donations"></label>
+                    <label>Description <textarea data-init="description" data-i="${i}" rows="2" placeholder="What the initiative is and who it helps.">${escapeHtml(it.description || "")}</textarea></label>
+                    <label>Link (URL, optional) <input data-init="url" data-i="${i}" value="${escapeAttr(it.url || "")}" placeholder="https://…"></label>
+                    <button class="btn btn-secondary" type="button" data-init-remove="${i}" style="justify-self:start;">Remove</button>
+                </div>`;
+        }).join("");
+
+        editor.querySelectorAll("[data-init]").forEach(function (input) {
+            input.addEventListener("input", function () {
+                const c2 = scopedChapter();
+                const i = Number(input.dataset.i);
+                if (!c2 || !Array.isArray(c2.initiatives) || !c2.initiatives[i]) return;
+                c2.initiatives[i][input.dataset.init] = input.value;
+                if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
+                autosave("chapters", chapters);
+            });
+        });
+        editor.querySelectorAll("[data-init-remove]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const c2 = scopedChapter();
+                const i = Number(btn.dataset.initRemove);
+                if (!c2 || !Array.isArray(c2.initiatives)) return;
+                c2.initiatives.splice(i, 1);
+                renderInitiativesAdmin();
+                if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
+                autosave("chapters", chapters);
+            });
+        });
+    }
+
+    on("add-initiative", "click", function () {
+        const c = scopedChapter();
+        if (!c) return;
+        if (!Array.isArray(c.initiatives)) c.initiatives = [];
+        c.initiatives.push({ title: "", description: "", url: "" });
+        renderInitiativesAdmin();
+        if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
+        autosave("chapters", chapters);
+    });
 
     function renderScopedHeader() {
         const el = $("chapter-admin-title");
@@ -734,11 +794,16 @@ if (!firebaseReady) {
                     + '<button class="btn btn-secondary" type="button" data-cphoto-remove="' + index + '" data-cphoto-i="' + pi + '" style="position:absolute; top:4px; right:4px; padding:0.1rem 0.5rem; font-size:0.85rem;">✕</button>'
                     + '</div>';
             }).join("");
+            // On the scoped chapter-admin pages there's a dedicated "Initiatives" tab
+            // (#initiatives-editor), so don't also show the raw textarea here; the full admin
+            // (no such tab) keeps the textarea inline.
+            const initiativesField = document.getElementById("initiatives-editor") ? "" :
+                `<label><span>Current initiatives — one per line as <code>title | description | url</code> (url optional; shown in the site-wide "Current initiatives" section)</span> <textarea data-clist="initiatives" data-i="${index}" rows="4" placeholder="iPad Donations | We donate iPads and teach lessons so students build confidence | https://...&#10;Senior Tech Help | Monthly visits to local senior communities">${escapeHtml((c.initiatives || []).map(function (it) { return [(it && it.title) || "", (it && it.description) || ""].join(" | ") + ((it && it.url) ? " | " + it.url : ""); }).join("\n"))}</textarea></label>`;
             const card = document.createElement("div");
             card.className = "admin-card";
             card.innerHTML = `
                 <strong style="font-size:1.05rem;">${escapeHtml(c.name || c.id)}</strong>
-                <label>Name <input data-cfield="name" data-i="${index}" value="${escapeAttr(c.name || "")}"></label>
+                ${SCOPE_CID ? "" : `<label>Name <input data-cfield="name" data-i="${index}" value="${escapeAttr(c.name || "")}"></label>`}
                 <label>Location <input data-cfield="location" data-i="${index}" value="${escapeAttr(c.location || "")}"></label>
                 <label>Status <input data-cfield="status" data-i="${index}" value="${escapeAttr(c.status || "")}"></label>
                 <label>Status tag <input data-cfield="statusTag" data-i="${index}" value="${escapeAttr(c.statusTag || "")}"></label>
@@ -746,8 +811,9 @@ if (!firebaseReady) {
                 <label>Description <textarea data-cfield="description" data-i="${index}" rows="3">${escapeHtml(c.description || "")}</textarea></label>
                 <label>Chapter email <input data-cfield="contactEmail" data-i="${index}" value="${escapeAttr(c.contactEmail || "")}" placeholder="chapter@example.com"></label>
                 <label>Get Involved / volunteer link (URL) <input data-cfield="joinUrl" data-i="${index}" value="${escapeAttr(c.joinUrl || "")}" placeholder="https://forms.gle/…"></label>
-                <label>Impact stats — one per line as <code>value | label</code> (e.g. <code>320 | Seniors helped</code>) <textarea data-clist="stats" data-i="${index}" rows="4" placeholder="320 | Seniors helped&#10;4 | Schools served&#10;$1,200 | Raised">${escapeHtml((c.stats || []).map(function (s) { return (s && s.value || "") + " | " + (s && s.label || ""); }).join("\n"))}</textarea></label>
+                <label><span>Impact stats — one per line as <code>value | label</code> (e.g. <code>320 | Seniors helped</code>)</span> <textarea data-clist="stats" data-i="${index}" rows="4" placeholder="320 | Seniors helped&#10;4 | Schools served&#10;$1,200 | Raised">${escapeHtml((c.stats || []).map(function (s) { return (s && s.value || "") + " | " + (s && s.label || ""); }).join("\n"))}</textarea></label>
                 <label>Community partners — one per line <textarea data-clist="partners" data-i="${index}" rows="3" placeholder="Palomino Gardens&#10;Joe DiMaggio Children's Hospital">${escapeHtml((c.partners || []).join("\n"))}</textarea></label>
+                ${initiativesField}
                 <div style="font-weight:700; font-size:0.8rem; color:var(--ink-soft); margin-top:0.4rem;">Chapter highlights (${c.photos.length})</div>
                 <div class="gallery-grid-admin">${photosHtml}</div>
                 <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" multiple data-cphoto-upload="${index}" style="display:none;"></label>
@@ -776,6 +842,11 @@ if (!firebaseReady) {
                     });
                 } else if (kind === "partners") {
                     chapters[i].partners = lines;
+                } else if (kind === "initiatives") {
+                    chapters[i].initiatives = lines.map(function (l) {
+                        const parts = l.split("|").map(function (s) { return s.trim(); });
+                        return { title: parts[0] || "", description: parts[1] || "", url: parts[2] || "" };
+                    });
                 }
                 if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
                 autosave("chapters", chapters);

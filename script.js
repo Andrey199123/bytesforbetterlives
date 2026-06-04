@@ -113,20 +113,113 @@
         { label: "Gallery", href: "gallery.html" }
     ];
 
-    // Renders the standalone gallery page's photo grid from data.galleryImages (Firestore).
+    // Renders the standalone gallery page, GROUPED INTO LOCATION SECTIONS, from
+    // data.galleryImages (Firestore). Each photo's location comes from `locationName`
+    // (reverse-geocoded from GPS at ingest time — see tools/geocode-gallery.mjs). Photos
+    // without GPS are folded into a location section when their `takenAt` is within ±2 days
+    // of a located photo (same event, location stripped on share); anything left lands in a
+    // final "No location" section.
+    var GALLERY_NO_LOCATION = "No location";
+
+    function galleryLocationFor(im, anchors) {
+        if (im.locationName) return im.locationName;        // has its own GPS-derived location
+        var t = im.takenAt ? Date.parse(im.takenAt) : NaN;
+        if (isNaN(t)) return GALLERY_NO_LOCATION;
+        var WINDOW = 2 * 86400000;                          // ±2 days
+        var best = null, bestDelta = Infinity;
+        for (var i = 0; i < anchors.length; i++) {
+            var delta = Math.abs(anchors[i].t - t);
+            if (delta <= WINDOW && delta < bestDelta) { bestDelta = delta; best = anchors[i].loc; }
+        }
+        return best || GALLERY_NO_LOCATION;
+    }
+
+    function galleryFormatDate(takenAt) {
+        if (!takenAt) return "";
+        var d = new Date(takenAt);
+        return isNaN(d) ? "" : d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    }
+
+    function galleryTileMarkup(im, i) {
+        var src = im.src || "";
+        var alt = im.alt || "";
+        var dateStr = galleryFormatDate(im.takenAt);
+        var loc = im.locationName || "";
+        // Deterministic size cadence (per section) → a varied mosaic, not a uniform grid.
+        var cls = "g-tile";
+        if (i % 16 === 0) cls += " g-feature";
+        else if (i % 5 === 3) cls += " g-wide";
+        else if (i % 7 === 5) cls += " g-tall";
+        // On hover: the capture date (figcaption overlay + native title tooltip). The date +
+        // location also ride along as data-* so the lightbox can caption the enlarged photo.
+        var caption = dateStr;
+        var titleAttr = dateStr ? ' title="' + escapeHTML(dateStr) + '"' : "";
+        var dataAttrs = (dateStr ? ' data-taken="' + escapeHTML(dateStr) + '"' : "") +
+            (loc ? ' data-location="' + escapeHTML(loc) + '"' : "");
+        return '<figure class="' + cls + '">' +
+            '<img class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '"' + titleAttr + dataAttrs + ' loading="lazy" decoding="async" data-fallback="images/logo.avif">' +
+            (caption ? '<figcaption>' + escapeHTML(caption) + '</figcaption>' : '') +
+            '</figure>';
+    }
+
+    function galleryDateLabel(items) {
+        var ts = [];
+        items.forEach(function (im) { var t = Date.parse(im.takenAt); if (!isNaN(t)) ts.push(t); });
+        if (!ts.length) return "";
+        ts.sort(function (a, b) { return a - b; });
+        var fmt = function (t) { return new Date(t).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }); };
+        var first = fmt(ts[0]), last = fmt(ts[ts.length - 1]);
+        return first === last ? first : first + " – " + last;
+    }
+
     function renderGalleryImages() {
-        var root = document.querySelector(".photo-gallery-grid");
+        var root = document.querySelector(".gallery-locations");
         if (!root) return;
-        var imgs = data.galleryImages || [];
-        root.innerHTML = imgs.map(function (im, i) {
-            var src = typeof im === "string" ? im : (im && im.src) || "";
-            var alt = typeof im === "string" ? "" : (im && im.alt) || "";
-            // Deterministic size cadence → a varied mosaic instead of a uniform checkerboard.
-            var cls = "g-tile";
-            if (i % 16 === 0) cls += " g-feature";
-            else if (i % 5 === 3) cls += " g-wide";
-            else if (i % 7 === 5) cls += " g-tall";
-            return '<figure class="' + cls + '"><img class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '" loading="lazy" decoding="async" data-fallback="images/logo.avif">' + (alt ? '<figcaption>' + escapeHTML(alt) + '</figcaption>' : '') + '</figure>';
+        var imgs = (data.galleryImages || []).map(function (im) {
+            return typeof im === "string" ? { src: im } : (im || {});
+        });
+
+        // Time anchors = located photos; they pull in nearby-in-time photos that lost their GPS.
+        var anchors = [];
+        imgs.forEach(function (im) {
+            if (im.locationName && im.takenAt) {
+                var t = Date.parse(im.takenAt);
+                if (!isNaN(t)) anchors.push({ t: t, loc: im.locationName });
+            }
+        });
+
+        // Bucket every photo into a location (first-seen order preserved).
+        var order = [], buckets = {};
+        imgs.forEach(function (im) {
+            var name = galleryLocationFor(im, anchors);
+            if (!buckets[name]) { buckets[name] = []; order.push(name); }
+            buckets[name].push(im);
+        });
+
+        // Section order: located sections newest-event-first, "No location" always last.
+        function sectionTime(name) {
+            var max = -Infinity;
+            buckets[name].forEach(function (im) { var t = Date.parse(im.takenAt); if (!isNaN(t) && t > max) max = t; });
+            return max;
+        }
+        var sections = order.filter(function (n) { return n !== GALLERY_NO_LOCATION; })
+            .sort(function (a, b) { return sectionTime(b) - sectionTime(a); });
+        if (buckets[GALLERY_NO_LOCATION]) sections.push(GALLERY_NO_LOCATION);
+
+        root.innerHTML = sections.map(function (name) {
+            var items = buckets[name];
+            items.sort(function (a, b) { return (Date.parse(a.takenAt) || 0) - (Date.parse(b.takenAt) || 0); });
+            var meta = galleryDateLabel(items);
+            var sub = (meta ? meta + " · " : "") + items.length + " photo" + (items.length === 1 ? "" : "s");
+            return '<section class="gallery-location">' +
+                '<div class="gallery-location-head">' +
+                '<h2 class="gallery-location-title">' + escapeHTML(name) + '</h2>' +
+                '<p class="gallery-location-meta">' + escapeHTML(sub) + '</p>' +
+                '</div>' +
+                '<div class="photo-gallery-grid" data-lightbox-group>' +
+                items.map(galleryTileMarkup).join("") +
+                '</div>' +
+                '</section>';
         }).join("");
     }
 
@@ -413,7 +506,8 @@
         if (!menus.length) return;
 
         function chaptersDropdownMarkup(item) {
-            const allChaptersLink = `<li><a href="${escapeHTML(safeUrl(item.href))}" class="dropdown-link${page === item.href ? " active" : ""}">All Chapters</a></li>`;
+            // The "Chapters" button itself opens chapters.html; the dropdown lists only specific
+            // chapters (no "All Chapters" entry — the button serves that purpose).
             const chapterLinks = (data.chapters || []).map(function (chapter) {
                 const localHref = chapter.pageHref || `chapter-${chapter.id}.html`;
                 const href = chapterPublicHref(chapter);
@@ -428,7 +522,6 @@
                         ${escapeHTML(item.label)} <span class="dropdown-caret" aria-hidden="true">▾</span>
                     </a>
                     <ul class="dropdown-menu" aria-label="Chapter pages">
-                        ${allChaptersLink}
                         ${chapterLinks}
                     </ul>
                 </li>
@@ -571,7 +664,7 @@
             { raw: 2350, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
             { raw: 1500, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
             { raw: 3500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
-            { raw: 7, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
+            { raw: 8, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
         ];
 
         root.innerHTML = `
@@ -756,6 +849,7 @@
     const WORLD_MAP_PINS = [
         { id: "ahs", label: "Florida", x: 26.5, y: 35.5, side: "left" },
         { id: "new-york", label: "New York", x: 28, y: 30, side: "left" },
+        { id: "virginia", label: "Virginia", x: 26, y: 32, side: "left" },
         { id: "russia", label: "Russia", x: 59, y: 18 },
         { id: "turkey", label: "Türkiye", x: 57, y: 27 }
     ];
@@ -976,11 +1070,14 @@
         renderChapterMembersByCategory(chapter);
 
         const photoGrid = document.querySelector("#chapter-photo-grid");
+        const highlightsSection = document.querySelector("#chapter-highlights-section");
         if (photoGrid) {
-            const photos = chapter.photos && chapter.photos.length ? chapter.photos : [];
+            const photos = (Array.isArray(chapter.photos) ? chapter.photos : []).filter(Boolean);
             photoGrid.innerHTML = photos.map(function (photo, index) {
                 return imageMarkup(photo, `${chapter.name} photo ${index + 1}`, "", "images/logo.avif");
             }).join("");
+            // Global rule: don't show a section with nothing inside — hide highlights if no photos.
+            if (highlightsSection) highlightsSection.style.display = photos.length ? "" : "none";
         }
 
         // Community partners — only rendered when the chapter lists any.
@@ -1043,7 +1140,7 @@
                 </div>
             </section>
 
-            <section class="section surface-band">
+            <section class="section surface-band" id="chapter-highlights-section" style="display: none;">
                 <div class="container">
                     <div class="section-header">
                         <p class="section-kicker">Gallery</p>
@@ -1529,6 +1626,78 @@
 
         const fundraisers = Array.isArray(data.fundraisers) ? data.fundraisers : [];
         fundraiserGrid.innerHTML = fundraisers.map(fundraiserCardMarkup).join("");
+
+        // Current drives — optional section, hidden when there are none.
+        const drivesGrid = document.querySelector("#drives-grid");
+        const drivesSection = document.querySelector("#drives-section");
+        if (drivesGrid) {
+            const drives = Array.isArray(data.drives) ? data.drives : [];
+            drivesGrid.innerHTML = drives.map(driveCardMarkup).join("");
+            if (drivesSection) drivesSection.style.display = drives.length ? "" : "none";
+        }
+
+        // Current initiatives — aggregated from every chapter's `initiatives` (pulled from the clubs).
+        const initiativesGrid = document.querySelector("#current-initiatives-grid");
+        const initiativesSection = document.querySelector("#current-initiatives-section");
+        if (initiativesGrid) {
+            const cards = [];
+            (Array.isArray(data.chapters) ? data.chapters : []).forEach(function (ch) {
+                (Array.isArray(ch.initiatives) ? ch.initiatives : []).forEach(function (it) {
+                    if (it && (it.title || it.description)) cards.push(initiativeCardMarkup(it, ch));
+                });
+            });
+            initiativesGrid.innerHTML = cards.join("");
+            if (initiativesSection) initiativesSection.style.display = cards.length ? "" : "none";
+        }
+    }
+
+    function initiativeCardMarkup(it, chapter) {
+        const url = (it.url || "").trim();
+        const hasUrl = url && url !== "#" && url.toLowerCase() !== "tbd";
+        const chHref = (chapter && chapter.pageHref) || ("chapter-" + (chapter && chapter.id) + ".html");
+        const cta = hasUrl
+            ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Learn More</a>`
+            : "";
+        return `
+            <article class="card">
+                <div class="card-content">
+                    <span class="drive-status">${escapeHTML((chapter && chapter.name) || "Chapter")}</span>
+                    <h3 class="card-title">${escapeHTML(it.title || "")}</h3>
+                    ${it.description ? `<p class="card-description">${escapeHTML(it.description)}</p>` : ""}
+                    <div class="btn-row">
+                        ${cta}
+                        ${chapter && chHref ? `<a class="btn btn-quiet" href="${escapeHTML(safeUrl(chHref))}">View Chapter</a>` : ""}
+                    </div>
+                </div>
+            </article>
+        `;
+    }
+
+    function driveCardMarkup(drive) {
+        const url = (drive && drive.url ? String(drive.url) : "").trim();
+        const hasUrl = url && url !== "#" && url.toLowerCase() !== "tbd";
+        // A drive is contributed to either by donating (external link) or by reaching out to drop off items.
+        const cta = hasUrl
+            ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Donate</a>`
+            : `<a class="btn btn-primary" href="contact.html">Get Involved</a>`;
+        const status = drive && drive.status ? `<span class="drive-status">${escapeHTML(drive.status)}</span>` : "";
+        return `
+            <article class="card">
+                <div class="card-media">
+                    ${imageMarkup(drive.image, drive.alt || drive.title, "clickable-image", "images/logo.avif")}
+                </div>
+                <div class="card-content">
+                    ${status}
+                    <h3 class="card-title">${escapeHTML(drive.title)}</h3>
+                    ${drive.by ? `<p style="margin: 0; color: var(--ink-soft); font-weight: 800;">Led by ${escapeHTML(drive.by)}</p>` : ""}
+                    ${drive.description ? `<p class="card-description">${escapeHTML(drive.description)}</p>` : ""}
+                    <div class="btn-row">
+                        ${cta}
+                        ${drive.chapterHref ? `<a class="btn btn-quiet" href="${escapeHTML(safeUrl(drive.chapterHref))}">View Chapter</a>` : ""}
+                    </div>
+                </div>
+            </article>
+        `;
     }
 
     function fundraiserCardMarkup(fundraiser) {
@@ -1538,7 +1707,7 @@
         // permanently-disabled "Coming Soon" button.
         const donate = (data.donateUrl ? String(data.donateUrl) : "").trim();
         const cta = hasUrl
-            ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Open GoFundMe</a>`
+            ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Donate</a>`
             : (donate
                 ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(donate))}" target="_blank" rel="noopener noreferrer">Donate</a>`
                 : "");
@@ -1698,13 +1867,27 @@
             document.querySelectorAll(".story-card.is-flipped").forEach(function (card) {
                 card.classList.remove("is-flipped");
                 card.setAttribute("aria-pressed", "false");
+                syncStoryCardHeight(card, false);
             });
         });
+    }
+
+    function syncStoryCardHeight(card, flipped) {
+        // Faces are position:absolute, so the card keeps a fixed photo height by default. When
+        // flipped to the story text, grow the card to fit that text instead of clipping/scrolling.
+        const back = card.querySelector(".story-back");
+        if (flipped && back) {
+            // +2px guards against sub-pixel rounding clipping the last line.
+            card.style.height = (back.scrollHeight + 2) + "px";
+        } else {
+            card.style.height = "";
+        }
     }
 
     function toggleStoryCard(card) {
         const flipped = card.classList.toggle("is-flipped");
         card.setAttribute("aria-pressed", flipped ? "true" : "false");
+        syncStoryCardHeight(card, flipped);
     }
 
     function initFlipCards() {
@@ -1929,12 +2112,21 @@
         if (!document.querySelector(".lightbox")) {
             document.body.insertAdjacentHTML("beforeend", `
                 <div class="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer">
-                    <button class="lightbox-close" type="button" aria-label="Close image viewer">x</button>
+                    <button class="lightbox-close" type="button" aria-label="Close image viewer">
+                        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
                     <div class="lightbox-content">
-                        <button class="lightbox-nav lightbox-prev" type="button" aria-label="Previous image">&lt;</button>
-                        <button class="lightbox-nav lightbox-next" type="button" aria-label="Next image">&gt;</button>
+                        <button class="lightbox-nav lightbox-prev" type="button" aria-label="Previous image">
+                            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
+                        <button class="lightbox-nav lightbox-next" type="button" aria-label="Next image">
+                            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </button>
                     </div>
-                    <div class="lightbox-counter"></div>
+                    <div class="lightbox-info">
+                        <span class="lightbox-caption"></span>
+                        <span class="lightbox-counter"></span>
+                    </div>
                 </div>
             `);
         }
@@ -1945,6 +2137,7 @@
         const prevButton = lightbox.querySelector(".lightbox-prev");
         const nextButton = lightbox.querySelector(".lightbox-next");
         const counter = lightbox.querySelector(".lightbox-counter");
+        const caption = lightbox.querySelector(".lightbox-caption");
         let galleryItems = [];
         let currentIndex = 0;
 
@@ -1985,6 +2178,13 @@
             }
 
             counter.textContent = `${currentIndex + 1} / ${galleryItems.length}`;
+            if (caption) {
+                // Show the capture date + location of the enlarged photo (from the tile's data-*).
+                var bits = [];
+                if (item.dataset && item.dataset.taken) bits.push(item.dataset.taken);
+                if (item.dataset && item.dataset.location) bits.push(item.dataset.location);
+                caption.textContent = bits.join(" · ");
+            }
             prevButton.style.display = galleryItems.length > 1 ? "inline-flex" : "none";
             nextButton.style.display = galleryItems.length > 1 ? "inline-flex" : "none";
             lightbox.classList.add("active");

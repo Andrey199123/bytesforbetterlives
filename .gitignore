@@ -16,3 +16,6 @@ yarn-error.log*
 .dupscan/
 .backup/
 .vercel
+
+# Local-only: original full-res photos used by tools/ingest-gallery.mjs (not deployed)
+originals/

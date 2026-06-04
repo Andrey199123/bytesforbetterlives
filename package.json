@@ -4,7 +4,9 @@
   "type": "module",
   "description": "Local admin tooling for updating Firestore content. NOT part of the deployed static site.",
   "dependencies": {
-    "firebase-admin": "^12.7.0"
+    "exifr": "^7.1.3",
+    "firebase-admin": "^12.7.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "firebase-tools": "^15.19.0"

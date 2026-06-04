@@ -33,7 +33,12 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
 `data.js`. Edit data/logic, not the rendered markup.
 
 - **`data.js`** — site content. Top-level keys: `contactEmail`, `donateUrl`, `socialLinks`,
-  `fundraisers`, **`people`**, `chapters`, `gallery`.
+  `fundraisers`, `drives`, **`people`**, `chapters`, `gallery`.
+  - **`drives`** — current donation drives, rendered by `driveCardMarkup` into `#drives-grid` in the
+    **"Current drives"** section on `ongoing-initiatives.html` (sits right under "Current fundraisers";
+    `renderInitiativesPage` hides `#drives-section` when the array is empty). Each: `{id, title, status,
+    description, url, image, alt}` — `status` shows as a `.drive-status` pill; a `url` makes the CTA a
+    "Donate" link, otherwise it's "Get Involved" → contact.html. Live source = Firestore `drives`.
   - **`people` is the central member registry — the single source of truth for every member.**
     Each person is defined ONCE with `name`, `title`, `photo`, `fallbackPhoto`, `bio`, `detail`,
     `contact`, and a `roles` array (`"leadership"`, `"design"`, `"volunteer"`; a
@@ -66,10 +71,15 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
     `leadership`-role members (`person.chapter === id` & `roles` includes `"leadership"`), not just a
     single designated lead. (AHS leaders may also appear in the Board of Directors section if flagged
     `execBoard` — that's expected.)
-  - **People/member cards do NOT hover-highlight** — the hover lift (`translateY`+shadow) is reserved
-    for clickable cards (`.card`, `.service-card`, `.chapter-card` directory links). `.officer-card`
-    (Board of Directors + Legacy), `.leader-card`, `.team-member`, and the chapter-leadership blocks are
-    informational and stay flat on hover.
+  - **Hover feedback signals CLICKABILITY — and ONLY clickability** (hard user rule: a non-clickable
+    element must never glow/lift/change on hover). The hover lift (`translateY`+shadow) is reserved for
+    whole-card **links**: `.chapter-card` (directory) and `.chapter-leadership-card` (an `<a>`). Everything
+    that is NOT itself a link stays completely flat: `.service-card` (info tiles), `.card`
+    (program/fundraiser tiles — they contain buttons/clickable images, but the card itself isn't a link),
+    `.partner-strip` logos (now full-colour, no grayscale→colour hover), and all member cards
+    (`.officer-card`, `.leader-card`, `.team-member`, `.person-card`). Clickable children inside a flat
+    card (`.clickable-image`, `.btn`, carousel arrows) keep their own hover. When adding any block, give it
+    a hover state IFF the whole block is clickable.
   - Members carry a `chapter` (chapter id) and a category (`roles[0]`) set via the admin Chapters
     board. **Public chapter pages list their members grouped by category** (`renderChapterMembersByCategory`,
     headings from `categories`). `firebase-data.js` fetches `categories`/`titles` too, so the public
@@ -90,9 +100,18 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
     on the brand green (`.avatar-initials`) when there's no real photo. `hasRealPhoto()` treats a
     missing photo *or* the `logo.avif` placeholder as "no photo"; if a real photo 404s,
     `initImageFallbacks` swaps the `<img>` for the initials avatar.
-  - **Lightbox**: any `.clickable-image` opens the shared popup. Wrap a set in a
-    `.carousel-container` or `[data-lightbox-group]` to enable prev/next across the group
-    (the Gallery page uses `data-lightbox-group`).
+  - **Lightbox**: any `.clickable-image` opens the shared popup (injected once by `initLightbox`).
+    Wrap a set in a `.carousel-container` or `[data-lightbox-group]` to enable prev/next across the
+    group (each gallery location section is its own group). Controls are **inline-SVG icons** (a
+    centred `×` close + chevron nav) in frosted circular buttons on a blurred backdrop — NOT text
+    glyphs (a lowercase "x" rendered off-centre). A bottom `.lightbox-info` pill shows the photo's
+    **capture date · location** (`.lightbox-caption`, read from the tile's `data-taken`/`data-location`)
+    then the `N / M` counter. Gallery tiles also expose the date on hover via the `<figcaption>` +
+    a native `title` tooltip.
+  - **Story flip cards** (home "Photo Stories" preview, `.story-card`): tap flips photo → story text.
+    The faces are `position:absolute`, so `toggleStoryCard`/`syncStoryCardHeight` **grows the card to the
+    back face's `scrollHeight` when flipped** (and clears it on flip-back/Escape) so the text is never
+    clipped; `.gallery-grid` is `align-items:start` so a flipped card doesn't stretch its row-mates.
   - `ensureChapterProfileLayout()` **injects the hero/layout into the lightweight
     `chapter-*.html` stub pages** (which carry only `data-chapter-id`). Edit the chapter template
     here and chapter data in `data.js` — not the stub HTML.
@@ -131,8 +150,11 @@ Chapter display names: AHS = "AHS Chapter" (still labelled the "Founding Chapter
 chapters directory summary card), `turkey` = "Turkey Chapter" (Instagram handle `bfbl_turkiye` kept).
 
 - **`impact.html` is consolidated**: it holds the former "work with seniors", "work with kids",
-  "donations", "partners", and "gallery" content as in-page sections with anchors
-  `#seniors`, `#kids`, `#donations`, `#partners`, `#gallery`.
+  "donations", and "partners" content as in-page sections with anchors `#seniors`, `#kids`,
+  `#donations`, `#partners`. (The old `#gallery` "Stories behind the photos" `#gallery-grid` section
+  was **REMOVED** — it re-told the same initiatives as the detailed program cards and duplicated the
+  standalone `gallery.html`; `renderGalleryPage()` is null-guarded so it just no-ops now. Home's "View
+  Full Gallery" CTA now points to `gallery.html`, not `impact.html#gallery`.)
 - ⚠️ **Do NOT recreate** `donations.html`, `work-with-seniors.html`, `work-with-kids.html`, or
   `our-impact.html` — they were intentionally removed and merged into `impact.html`.
 - `test-image-loading.html`, `test-preservation.html`, `test-preservation.js`,
@@ -165,9 +187,11 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
   with the "BYTES for Better Lives" wordmark printed on the banner bleeding through the wash — was the
   single loudest "AI-template" tell (an audit scored every interior page ~5.5–7 largely on it).
   - **Home only keeps the photo hero** (`.home-hero`, `images/hero-banner.jpg`, crop `center 34%`,
-    compressed from `IMG_7470.JPG` 4.7 MB → ~540 KB via `sips`). Since it's now the ONLY photo hero, its
-    `--ink` darkening layer was **pushed darker** (`linear-gradient(95deg, ink 80% → 68% → 64%)`, was
-    64→50→48) to fully dissolve the printed wordmark.
+    compressed from `IMG_7470.JPG` 4.7 MB → ~540 KB via `sips`). `.home-hero` now **overrides** the base
+    `.hero` background with a **lighter treatment** (per user request to "decrease the green / make the
+    image clearer"): green `--accent-dark` wash cut to ~58→20→0% and the `--ink` layer eased to
+    ~50→28→16% (was 80→68→64%), so the photo reads clearly while the left side keeps enough darkening for
+    the white hero text. (The banner the students hold IS real BFBL signage, not a template wordmark.)
   - **All 8 interior pages** (about, impact, team, ongoing-initiatives, contact, past-events, gallery, and
     the chapters DIRECTORY) use **`.hero-editorial`** — a **photo-less accent COLOUR-FIELD** keyed to the
     page accent (green/gold/coral/teal): a directional `--accent-dark`→ink gradient + a faint light
@@ -190,9 +214,10 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
 - **Editorial stat band** (`.impact-band`): de-chromed cards → big Nunito numerals (`--accent-dark`,
   weight 900) with hairline dividers on a soft accent wash. Home + Impact use the `stats` array in
   `script.js` (~line 501).
-- **Program tiles** (`.service-card` in `.service-grid`): DECA-style colour tiles — a top accent strip
-  (`::before`) + colored number chip, cycling green/gold/coral/teal via `:nth-child(4n+…)`; the grid is
-  3-up on desktop so a 5-program set reads 3 + 2.
+- **Program tiles** (`.service-card` in `.service-grid`): colored number chip cycling
+  green/gold/coral/teal via `:nth-child(4n+…)`; the grid is 3-up on desktop. (The old `::before` **top
+  accent strip was REMOVED** — per the user rule against decorative top/left "lines" on blocks; the
+  coloured numeral carries the accent now. Service tiles are also flat on hover — they're not links.)
 - **Bands**: `.surface-band` (accent-soft wash, strengthened to 62%); `.band--tint` / inverted `.band--ink`
   utilities available.
 - Logo: `.logo img` is `height: 58px`; `.logo::after` wordmark is now `--green-dark` Nunito. Responsive
@@ -215,18 +240,23 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
 - **Kill-the-template work** (iterative "AI-look" audits drove the genericness score ~7.0 → ~5.4): the
   goal was breaking the repeated "kicker → title → uniform card grid" rhythm with reusable utilities,
   applied across pages. Current pieces (in `styles.css` + render fns in `script.js`):
-  - **`.cards-grid--feature`** — asymmetric grid (first card spans 4×2, rest 2-wide). Applied to: Home
-    chapters preview, About "Our Story" (now superseded by the timeline below), Impact Seniors/Kids/
-    Donations, Initiatives `#fundraiser-grid`, Past-events.
-  - **`.service-number`** is a bare oversized display numeral (no circle badge); first `.service-card` spans 2.
+  - **`.cards-grid--feature`** — was an asymmetric grid (first card 4×2, rest 2-wide); **changed to a
+    UNIFORM grid** (`auto-fit minmax(300px,1fr)`, equal-width cards, rows stretch to equal height) per
+    user request that "blocks should be the same size and spaced nicely." Cards flex-column so a short
+    bio doesn't shrink its card. Applied to: Home chapters preview, Impact Seniors/Kids/Donations,
+    Initiatives `#fundraiser-grid`, Past-events. The old per-`:first-child` span overrides on
+    `.service-grid` and `.chapter-card--feature` were also removed so all tiles are equal size.
+  - **`.service-number`** is a bare oversized display numeral (no circle badge).
   - **Editorial dark beats** — `.band--ink` sections carrying `.editorial-quote` (big quote glyph via
     `::before`) and/or `.band-figure` (oversized accent numeral): a founder pull-quote on Home, a "3,500+"
     quote+figure on About, a "40+" stat on Team, and dark closing CTAs on Impact/Initiatives/Chapters/Past-events.
   - **Gallery** = dense-grid **mosaic** (`.photo-gallery-grid` grid + `.g-feature`/`.g-wide`/`.g-tall` size
     cadence + hover `<figcaption>`), built in `renderGalleryImages`.
-  - **Chapters directory** features the founding chapter (`.chapter-card--feature`, double-wide tinted),
-    status-coloured left spines (`.chapter-card.card-edge-*`), data-driven status pills (`statusClass`), the
-    lead name once ("Led by"), and a subtle `.chapter-card-go` "View chapter →" text cue (not a button).
+  - **Chapters directory** is a uniform grid (the founding chapter is just tinted via
+    `.chapter-card--feature`, NOT double-wide anymore). The status-coloured **left spines
+    (`.chapter-card.card-edge-*`) were REMOVED** (no decorative left "lines" on blocks); status now shows
+    via the data-driven pill (`statusClass`) only. Lead name once ("Led by") + a subtle `.chapter-card-go`
+    "View chapter →" text cue. Chapter cards ARE links, so they keep their hover lift.
   - **Chapter location maps** (chapters.html "Where We Are" section, 2026-06-01): two **self-contained
     inline-SVG maps** with status-coloured pins — a **Florida** map (`images/maps/florida.svg`, a single
     state path extracted from a public-domain US-states SVG, viewBox cropped to FL's bbox, recoloured to
@@ -277,6 +307,11 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
   `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
 
 ## Conventions
+- **GLOBAL RULE — never render an empty section.** Any section whose only content is data-driven must
+  hide itself (`display:none`) when it has nothing to show — no bare headings over empty grids. This is
+  a hard user rule applied site-wide. Already done for: `#drives-section` (initiatives),
+  `#chapter-highlights-section` / `#chapter-stats-section` / `#chapter-partners-section` (chapter
+  profiles). When adding any data-driven section, gate its visibility on having content.
 - Keep it vanilla — no frameworks/build tooling. Match the surrounding code style.
 - To change **navigation** → `navItems` in `script.js`.
 - To change **stats** → `stats` array in `script.js`.
@@ -308,8 +343,28 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
 
 `data.js` is the **seed / offline fallback** — editing it alone does NOT change the live site.
 
-- `gallery.html` is **de-hardcoded** — `script.js` `renderGalleryImages()` renders `.photo-gallery-grid`
-  from `data.galleryImages`.
+- `gallery.html` is **de-hardcoded** — `script.js` `renderGalleryImages()` renders the gallery from
+  `data.galleryImages` (the page's container is now `.gallery-locations`, not a bare grid).
+  - **`galleryImages` entries are objects** `{src, alt}` plus optional ingested metadata:
+    **`takenAt`** (ISO capture date from EXIF), **`gps`** `{lat,lng}`, **`camera`**, a full flattened
+    **`exif`** block, and **`locationName`** (place name reverse-geocoded from `gps`). A few legacy
+    entries are still bare path strings — the renderer normalizes both. The public render only needs
+    `src`/`alt`/`takenAt`/`locationName`; the rest is stored for reference.
+  - **The gallery is GROUPED INTO LOCATION SECTIONS.** `renderGalleryImages()` buckets each photo by
+    `locationName`; a photo with no `locationName` is folded into a section when its `takenAt` is
+    within **±2 days** of a located photo (closest anchor wins) — anything left lands in a final
+    **"No location"** section. Sections render newest-event-first (by latest `takenAt`), "No location"
+    last; each section is its own `[data-lightbox-group]`. Styling: `.gallery-location` /
+    `.gallery-location-title` (accent underline) / `.gallery-location-meta` (date + count).
+  - **Ingest tooling (Node, key-less ADC — like `tools/firestore.mjs`; deps `sharp`+`exifr`, not
+    deployed):** `tools/ingest-gallery.mjs <folder> [--commit]` matches ORIGINAL photos to existing
+    gallery entries **by image content** (dHash — filenames are generic `IMG_####`), uploads the
+    originals to Storage (EXIF intact) and writes their full metadata, replacing matched entries in
+    place (only ingests confident matches). `tools/geocode-gallery.mjs [--commit]` clusters
+    GPS-bearing entries by proximity and reverse-geocodes each cluster (OpenStreetMap Nominatim, in
+    Node — NO browser map API / CSP change) into `locationName`. Both default to a dry-run.
+    NOTE: iOS strips **only GPS** (not date/camera) when photos are shared via AirDrop/Messages/share
+    sheet, so many originals have `takenAt` but no `gps` — that's expected, not a bug.
 - Public-side TODO: render dynamic Team sections for new `categories`, and admin editors for
   **fundraisers** / **gallery stories** /
   **site settings** / full chapter-detail editing.
@@ -366,10 +421,15 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
     - **Chapter Pages** — per-chapter card editor (`renderChapterPages()`): edit name, location,
       status, statusTag, Instagram URL, description, **chapter email** (`contactEmail`), **Get
       Involved/volunteer link** (`joinUrl`), **impact stats** (`stats`, a `value | label` per-line
-      textarea), **community partners** (`partners`, one per line), and **manage chapter-highlight
+      textarea), **community partners** (`partners`, one per line), **current initiatives**
+      (`initiatives`, a `title | description | url` per-line textarea), and **manage chapter-highlight
       photos** (upload to Storage `chapters/<id>/…` / remove → `chapter.photos`). All persist to the
       chapter's `page` doc via `chapterPageFields()` (copies every chapter field except `id`), so new
       fields auto-save with no extra wiring. The public page renders stats/partners/CTAs only when set.
+      **`initiatives` are NOT shown on the chapter page** — they're aggregated ACROSS all clubs into the
+      **"Current initiatives"** section on `ongoing-initiatives.html` (`renderInitiativesPage` →
+      `initiativeCardMarkup`, each card tagged with its club name; section hidden when no club has any).
+      This section replaced the old static "Recurring initiatives" cards (migrated onto the AHS chapter).
     - **Structure** — add/remove/**rename** **categories**, **chapters**, and **titles** (the member
       Title dropdown options). Renaming categories/chapters edits the display `label`/`name` only
       (the `id` stays stable so member role/chapter assignments hold). **Titles** are plain strings
@@ -379,10 +439,19 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
       Also has a **Chapter admins** editor (`renderChapterAdmins()`): add/remove `email → chapter`
       entries → `site/content.chapterAdmins`.
     - **`chapter-<id>-admin.html`** (one scoped editor page **per chapter**, reached from the
-      `admin.html` picker) — where approved chapter admins land: their chapter's editor with **two
-      in-page tabs, "Page" and "Members"** (`[data-admin-tab]`/`[data-tab-panel]` toggled in `admin.js`;
-      reuses `renderChapterPages`/`renderPeople` filtered by `SCOPE_CID`; Chapter/Board controls hidden;
-      saves only their `chapterContent` doc). Each page sets `<body data-admin-chapter="<id>">`, which
+      `admin.html` picker) — where approved chapter admins land: their chapter's editor with **three
+      in-page tabs, "Page", "Initiatives", and "Members"** (`[data-admin-tab]`/`[data-tab-panel]` toggled
+      in `admin.js`; reuses `renderChapterPages`/`renderPeople` filtered by `SCOPE_CID`; Chapter/Board
+      controls hidden; saves only their `chapterContent` doc). **Chapter admins CANNOT edit the chapter
+      Name** (the Name `<input>` is omitted when `SCOPE_CID` is set — name shows as the card heading only;
+      full admins still edit it in Chapter Pages). The **Initiatives tab** (`renderInitiativesAdmin` →
+      `#initiatives-editor`, `+ Add initiative`) is a structured add/edit/remove editor for that chapter's
+      `initiatives`; when it's present, `renderChapterPages` omits its inline initiatives textarea (the
+      full admin, which has no such tab, keeps the textarea). The chapter-pages editor stretches full width
+      (the old inline `max-width:900px` was removed across the template + all generated pages). Admin
+      `<label>`s are `display:grid`, so any descriptive text containing inline `<code>` must be wrapped in
+      one `<span>` or each fragment becomes its own grid row (the "Impact stats"/"Current initiatives"
+      labels do this). Each page sets `<body data-admin-chapter="<id>">`, which
       `admin.js` reads as the chapter scope (full admins) — chapter admins are still scoped by their
       **email** (the rules enforce it). A chapter admin who lands on any other admin page is redirected
       to their `chapter-<id>-admin.html`.

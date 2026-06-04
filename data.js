@@ -15,11 +15,11 @@ window.BFBL_DATA = {
     fundraisers: [
         {
             id: "cypress-bay-dhava",
-            title: "Cypress Bay Chapter Fundraiser",
+            title: "Build a Safe Bathroom for Kids in Tamil Nadu",
             by: "Dhava Rajamanikandan",
-            description: "Support the Cypress Bay Chapter's ongoing tech access and digital literacy work led by Dhava.",
+            description: "Dhava is raising funds to build proper bathroom facilities at Nehruji Higher Secondary School in Tamil Nadu, India, where students currently lack adequate, safe sanitation.",
             chapterId: "cypress",
-            url: "",
+            url: "https://www.gofundme.com/f/build-a-safe-bathroom-for-kids-in-tamil-nadu",
             image: "images/team/dhava-rajamanikandan.jpg",
             alt: "Dhava Rajamanikandan portrait",
             chapterHref: "chapter-cypress.html"
@@ -36,6 +36,11 @@ window.BFBL_DATA = {
             chapterHref: "chapter-ahs.html"
         }
     ],
+
+    // Current donation drives — shown under "Current fundraisers" on ongoing-initiatives.html
+    // (driveCardMarkup into #drives-grid). The "Current drives" section auto-hides while this is
+    // empty. Add a drive: { id, title, status, description, url, image, alt }. Live source = Firestore.
+    drives: [],
 
     // ===== CENTRAL MEMBER REGISTRY =====
     // Single source of truth for every member — define each person ONCE here.

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex">
-    <title>russia &middot; Chapter Admin | Bytes for Better Lives</title>
+    <title>Chapter Admin | Bytes for Better Lives</title>
     <link rel="icon" type="image/avif" href="images/logo.avif">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="admin.css">
@@ -56,12 +56,22 @@
 
                         <div class="admin-tabs" role="tablist">
                             <button class="admin-tab active" type="button" data-admin-tab="page">Page</button>
+                            <button class="admin-tab" type="button" data-admin-tab="initiatives">Initiatives</button>
                             <button class="admin-tab" type="button" data-admin-tab="members">Members</button>
                         </div>
 
                         <section class="admin-section active" data-tab-panel="page">
                             <div class="admin-toolbar"><strong>Chapter page &amp; highlights</strong></div>
-                            <div id="chapter-pages-editor" style="display:grid; gap:1.5rem; max-width:900px;"></div>
+                            <div id="chapter-pages-editor" style="display:grid; gap:1.5rem;"></div>
+                        </section>
+
+                        <section class="admin-section" data-tab-panel="initiatives">
+                            <div class="admin-toolbar">
+                                <strong>Current initiatives</strong>
+                                <button class="btn btn-secondary" id="add-initiative" type="button">+ Add initiative</button>
+                            </div>
+                            <p style="color:var(--ink-soft); margin:0 0 1rem; font-size:0.9rem;">These appear in the site-wide “Current initiatives” section, tagged with your chapter.</p>
+                            <div id="initiatives-editor" style="display:grid; gap:1rem;"></div>
                         </section>
 
                         <section class="admin-section" data-tab-panel="members">
