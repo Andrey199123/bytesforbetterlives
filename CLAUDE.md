@@ -144,12 +144,12 @@ The HTML pages are thin shells with **empty containers** that `script.js` fills 
 
 ## Pages (current)
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
-`chapters.html`, `chapter-{ahs,coral-springs,cypress,gainesville,new-york,russia,turkey}.html`,
+`chapters.html`, `chapter-{ahs,coral-springs,cypress,gainesville,new-york,virginia,russia,turkey}.html`,
 `contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery — a grid of all
 activity photos; clicking one opens the lightbox).
 Admin pages (noindex, not in navbar): `admin.html` (chapter-picker login landing),
 `members-admin.html`, `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`,
-`initiatives-admin.html`, `structure-admin.html` (full admins), and **per-chapter scoped editors `chapter-<id>-admin.html`**
+`initiatives-admin.html`, `fundraisers-admin.html`, `structure-admin.html` (full admins), and **per-chapter scoped editors `chapter-<id>-admin.html`**
 (one per chapter: `chapter-ahs-admin.html`, `chapter-cypress-admin.html`, …). `chapter-admin.html` is
 the **template** they're generated from (and a generic `?c=<id>` fallback).
 
@@ -311,7 +311,8 @@ mint-led. Goal: read as intentional/editorial, not AI-template.
 
 ## Current content snapshot
 - Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,
-  **7** chapters (the `stats` array in `script.js` ~line 501).
+  **8** chapters (the `stats` array in `script.js`). Chapters (registry order): AHS, Cypress Bay,
+  Gainesville, Coral Springs, New York, Virginia, Russia, Turkey.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools").
 - Team is a large data-driven roster (founders + board of directors/officers + chapter leaders +
   volunteers) — not a fixed 5-person list.
@@ -384,8 +385,8 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
     NOTE: iOS strips **only GPS** (not date/camera) when photos are shared via AirDrop/Messages/share
     sheet, so many originals have `takenAt` but no `gps` — that's expected, not a bug.
 - Public-side TODO: render dynamic Team sections for new `categories`, and admin editors for
-  **fundraisers** / **gallery stories** /
-  **site settings** / full chapter-detail editing.
+  **gallery stories** / **site settings**. (Fundraisers now have an admin editor —
+  `fundraisers-admin.html`.)
 
 - **Public read** — `firebase-data.js` (classic script on every page, before `script.js`) fetches
   **`site/content` AND the `chapterContent` collection** via Firestore's public REST API, **merges**
@@ -404,7 +405,8 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
   rules can't read the chapterAdmins map), so a chapter admin can't upload FILES unless their email
   is added to `storage.rules` — otherwise they set a member/chapter photo by path/URL.
 - **Admin = one page per tab** (`admin.js` SDK, shared `admin.css`): **`members-admin.html`**,
-  `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `structure-admin.html`.
+  `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `initiatives-admin.html`,
+  `fundraisers-admin.html`, `structure-admin.html`.
   Tabs are links between these pages (not in-page switching). **`admin.html` is the chapter-picker
   login landing**: lists all chapters live (from `firebase-data.js`, so it updates as chapters are
   created/deleted), each linking to that chapter's **`chapter-<id>-admin.html`** page. **All pages load the same `admin.js`** — every `render*()` and listener is
@@ -466,6 +468,10 @@ it is NOT `.appspot.com`; the wrong value caused upload hangs earlier).
       (`renderInitiativesAdmin` + `initiativesChapter()`, shared with the scoped chapter-admin tab — the
       dropdown picks the club on the full admin; scoped pages fall back to their own chapter). `+ Add
       initiative` / Remove; auto-saves to the chapter `page` doc.
+    - **Fundraisers** (`fundraisers-admin.html`, full admin) — `renderFundraisers()` add/edit/remove
+      editor for `site/content.fundraisers`: title, "Led by", description, donate URL, a **Chapter**
+      dropdown (sets `chapterId`/`chapterHref`), and an **image** (drag-drop dropzone, `uploadFundraiserImage`
+      → Storage `fundraisers/…`). Auto-saves; powers the "Current fundraisers" section on the Initiatives page.
     - **Structure** — add/remove/**rename** **categories** and **titles** (the member Title dropdown
       options). (**Chapter editing was REMOVED from this tab** — no add/rename/remove of chapters here;
       `#structure-chapters` + the add-chapter input are gone and `renderStructure` null-guards `chRoot`.
