@@ -422,13 +422,31 @@
         return `<span class="avatar-initials${className ? ` ${escapeHTML(className)}` : ""}" role="img" aria-label="${escapeHTML(name || "Member")}">${escapeHTML(personInitials(name))}</span>`;
     }
 
+    // Per-member photo framing (set in the admin): zoom + position within the circle. Returns an
+    // inline style string when the member has adjusted it, else "" (no change for everyone else).
+    function photoFitStyle(name) {
+        const p = personByName(name);
+        if (!p) return "";
+        const zoom = Number(p.photoZoom) || 1;
+        const x = (p.photoX == null) ? 50 : Number(p.photoX);
+        const y = (p.photoY == null) ? 50 : Number(p.photoY);
+        if (zoom === 1 && x === 50 && y === 50) return "";
+        return `object-fit:cover;object-position:${x}% ${y}%;transform:scale(${zoom});transform-origin:${x}% ${y}%;`;
+    }
+
     // Renders a person's portrait, or their initials on the brand green when no real photo exists.
     // If a real photo fails to load, initImageFallbacks swaps it for the initials avatar.
     function personPhotoMarkup(name, photo, className, loading, fetchPriority) {
         if (!hasRealPhoto(photo)) return initialsAvatarMarkup(name, className);
         const loadMode = loading === "eager" ? "eager" : "lazy";
         const priorityAttr = fetchPriority ? ` fetchpriority="${escapeHTML(fetchPriority)}"` : "";
-        return `<img src="${escapeHTML(photo)}" alt="${escapeHTML(`${name || "Member"} portrait`)}"${className ? ` class="${escapeHTML(className)}"` : ""} data-name="${escapeHTML(name || "")}" data-initials-fallback="1" loading="${loadMode}" decoding="async"${priorityAttr}>`;
+        const fit = photoFitStyle(name);
+        const styleAttr = fit ? ` style="${fit}"` : "";
+        const img = `<img src="${escapeHTML(photo)}" alt="${escapeHTML(`${name || "Member"} portrait`)}"${className ? ` class="${escapeHTML(className)}"` : ""} data-name="${escapeHTML(name || "")}" data-initials-fallback="1" loading="${loadMode}" decoding="async"${priorityAttr}${styleAttr}>`;
+        if (!fit) return img;
+        // Adjusted photos are wrapped in a circle that shrink-wraps the img box and clips the
+        // zoom/pan so it never overflows into neighbours (layout is unaffected).
+        return `<span class="avatar-fit">${img}</span>`;
     }
 
     // Look up a person in the central registry (data.people) by name.
@@ -849,10 +867,27 @@
     const WORLD_MAP_PINS = [
         { id: "ahs", label: "Florida", x: 26.5, y: 35.5, side: "left" },
         { id: "new-york", label: "New York", x: 28, y: 30, side: "left" },
-        { id: "virginia", label: "Virginia", x: 26, y: 32, side: "left" },
+        { id: "virginia", label: "Virginia", x: 27, y: 31.5, side: "left" },
         { id: "russia", label: "Russia", x: 59, y: 18 },
         { id: "turkey", label: "Türkiye", x: 57, y: 27 }
     ];
+
+    // Chapter-hero locator map: Florida chapters show the Florida outline (edge-to-edge, so the dot
+    // %s line up with FLORIDA_MAP_PINS); everyone else shows the world map with their dot. Both fill
+    // the box, so left:X%/top:Y% == X%/Y% of the map. (Dot %s mirror the directory map tables.)
+    function chapterLocatorConfig(id) {
+        const FL = { gainesville: [52, 24], "coral-springs": [83, 68], ahs: [85, 72.5], cypress: [81.5, 77] };
+        if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
+        // Each chapter shows its OWN state/country outline (extracted from the US-states + world SVGs);
+        // dot % is the chapter city within that shape (hand-calibrated).
+        const R = {
+            "new-york": { map: "images/maps/new-york.svg", x: 88, y: 88, aspect: "1.279" },
+            "virginia": { map: "images/maps/virginia.svg", x: 48, y: 52, aspect: "1.679" },
+            "russia":   { map: "images/maps/russia.svg",   x: 15, y: 42, aspect: "1.714" },
+            "turkey":   { map: "images/maps/turkey.svg",   x: 14, y: 20, aspect: "2.088" }
+        };
+        return R[id] || null;
+    }
 
     function chapterById(id) {
         return (Array.isArray(data.chapters) ? data.chapters : []).find(function (c) {
@@ -1017,9 +1052,21 @@
         }
         const markEl = document.querySelector("#chapter-hero-mark");
         if (markEl) {
-            const words = String(chapter.name || "").replace(/chapter/ig, "").trim().split(/\s+/).filter(Boolean);
-            const mono = (words.length > 1 ? words.map(function (w) { return w.charAt(0); }).join("") : (words[0] || "")).slice(0, 3);
-            markEl.textContent = mono.toUpperCase();
+            const loc = chapterLocatorConfig(chapter.id);
+            if (loc) {
+                // Faint locator MAP (Florida for FL chapters, the world map otherwise) + a dot at the
+                // chapter's location, replacing the old letter monogram.
+                markEl.className = "chapter-hero-mark chapter-hero-locator";
+                markEl.style.setProperty("--locator-aspect", loc.aspect);
+                markEl.innerHTML =
+                    `<span class="hero-locator-map" style="background-image:url('${escapeHTML(loc.map)}');"></span>` +
+                    `<span class="hero-locator-dot" style="left:${loc.x}%;top:${loc.y}%;"></span>`;
+            } else {
+                markEl.className = "chapter-hero-mark";
+                const words = String(chapter.name || "").replace(/chapter/ig, "").trim().split(/\s+/).filter(Boolean);
+                const mono = (words.length > 1 ? words.map(function (w) { return w.charAt(0); }).join("") : (words[0] || "")).slice(0, 3);
+                markEl.textContent = mono.toUpperCase();
+            }
         }
 
         const subtitleEl = document.querySelector("#chapter-page-subtitle");
@@ -1048,6 +1095,19 @@
                 actions.push(`<a href="${escapeHTML(safeUrl("mailto:" + chapter.contactEmail))}" class="btn btn-quiet">Email the Chapter</a>`);
             }
             actionsEl.innerHTML = actions.join("");
+        }
+
+        // Current initiatives — this chapter's own, shown as the first section (hidden when none).
+        const initiativesSection = document.querySelector("#chapter-initiatives-section");
+        const initiativesGrid = document.querySelector("#chapter-initiatives-grid");
+        if (initiativesSection && initiativesGrid) {
+            const inits = (Array.isArray(chapter.initiatives) ? chapter.initiatives : []).filter(function (it) {
+                return it && (it.title || it.description);
+            });
+            initiativesGrid.innerHTML = inits.map(function (it) {
+                return initiativeCardMarkup(it, chapter, { hideChapter: true });
+            }).join("");
+            initiativesSection.style.display = inits.length ? "" : "none";
         }
 
         // Per-chapter impact stats — only rendered when the chapter has any.
@@ -1112,6 +1172,17 @@
                     <p class="hero-subtitle" id="chapter-page-subtitle"></p>
                     <p class="hero-subtitle" id="chapter-page-description"></p>
                     <div class="hero-actions" id="chapter-page-actions"></div>
+                </div>
+            </section>
+
+            <section class="section" id="chapter-initiatives-section" style="display: none;">
+                <div class="container">
+                    <div class="section-header">
+                        <p class="section-kicker">Initiatives</p>
+                        <h2 class="section-title">Current initiatives</h2>
+                        <p class="section-description">What this chapter is running right now.</p>
+                    </div>
+                    <div class="cards-grid" id="chapter-initiatives-grid" aria-label="Current initiatives"></div>
                 </div>
             </section>
 
@@ -1626,6 +1697,8 @@
 
         const fundraisers = Array.isArray(data.fundraisers) ? data.fundraisers : [];
         fundraiserGrid.innerHTML = fundraisers.map(fundraiserCardMarkup).join("");
+        const fundraisersSection = document.querySelector("#fundraisers-section");
+        if (fundraisersSection) fundraisersSection.style.display = fundraisers.length ? "" : "none";
 
         // Current drives — optional section, hidden when there are none.
         const drivesGrid = document.querySelector("#drives-grid");
@@ -1651,23 +1724,52 @@
         }
     }
 
-    function initiativeCardMarkup(it, chapter) {
+    function initiativeFmtDate(d) {
+        var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || "");
+        if (!m) return "";
+        var dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+        return isNaN(dt) ? "" : dt.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+    function initiativeFmtTime(t) {
+        var m = /^(\d{1,2}):(\d{2})$/.exec(t || "");
+        if (!m) return "";
+        var h = Number(m[1]); var ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+        return h + ":" + m[2] + " " + ap;
+    }
+    function initiativeWhen(it) {
+        var sd = initiativeFmtDate(it.startDate), ed = initiativeFmtDate(it.endDate);
+        var datePart = (sd && ed && it.startDate !== it.endDate) ? (sd + " – " + ed) : (sd || ed || "");
+        var st = initiativeFmtTime(it.startTime), et = initiativeFmtTime(it.endTime);
+        var timePart = (st && et) ? (st + " – " + et) : (st || et || "");
+        return datePart && timePart ? (datePart + " · " + timePart) : (datePart || timePart || "");
+    }
+
+    function initiativeCardMarkup(it, chapter, opts) {
+        opts = opts || {};
+        const hideChapter = !!opts.hideChapter; // on a chapter's own page the club tag/link is redundant
         const url = (it.url || "").trim();
         const hasUrl = url && url !== "#" && url.toLowerCase() !== "tbd";
         const chHref = (chapter && chapter.pageHref) || ("chapter-" + (chapter && chapter.id) + ".html");
         const cta = hasUrl
             ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Learn More</a>`
             : "";
+        const viewChapter = (!hideChapter && chapter && chHref)
+            ? `<a class="btn btn-quiet" href="${escapeHTML(safeUrl(chHref))}">View Chapter</a>` : "";
+        const when = initiativeWhen(it);
+        const media = hasRealPhoto(it.image)
+            ? `<div class="card-media"><img class="clickable-image" src="${escapeHTML(it.image)}" alt="${escapeHTML((it.title || "Initiative") + " flyer")}" loading="lazy" decoding="async" data-fallback="images/logo.avif"></div>`
+            : "";
+        const btnRow = (cta || viewChapter) ? `<div class="btn-row">${cta}${viewChapter}</div>` : "";
         return `
             <article class="card">
+                ${media}
                 <div class="card-content">
-                    <span class="drive-status">${escapeHTML((chapter && chapter.name) || "Chapter")}</span>
+                    ${hideChapter ? "" : `<span class="drive-status">${escapeHTML((chapter && chapter.name) || "Chapter")}</span>`}
+                    ${it.recurring ? `<span class="initiative-tag">↻ Recurring</span>` : ""}
                     <h3 class="card-title">${escapeHTML(it.title || "")}</h3>
+                    ${when ? `<p class="initiative-when">${escapeHTML(when)}</p>` : ""}
                     ${it.description ? `<p class="card-description">${escapeHTML(it.description)}</p>` : ""}
-                    <div class="btn-row">
-                        ${cta}
-                        ${chapter && chHref ? `<a class="btn btn-quiet" href="${escapeHTML(safeUrl(chHref))}">View Chapter</a>` : ""}
-                    </div>
+                    ${btnRow}
                 </div>
             </article>
         `;

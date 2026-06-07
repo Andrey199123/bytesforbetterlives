@@ -1592,6 +1592,46 @@ main {
 }
 
 /* Standalone gallery page — grid of clickable photos that open the lightbox. */
+/* Wrapper for a member photo that's been zoomed/panned in the admin — shrink-wraps the avatar's
+   own box and clips the transform to its circle so it never overflows into neighbours. */
+.avatar-fit {
+    display: inline-flex;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 50%;
+    line-height: 0;
+}
+/* In containers that size the avatar via a descendant `… img` rule (the className is NOT on the
+   img itself), the wrapper has no intrinsic size, so make it fill the frame; the inner img then
+   fills the wrapper via the existing `… img { width/height:100% }` rules. */
+.portrait-frame > .avatar-fit,
+.roster-chip-avatar > .avatar-fit { width: 100%; height: 100%; }
+
+/* "Recurring" tag on an initiative card. */
+.initiative-tag {
+    justify-self: start;
+    width: fit-content;
+    display: inline-block;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--gold) 24%, var(--surface));
+    color: var(--gold-dark);
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+/* Initiative schedule line (date · time) on the Current initiatives cards. */
+.initiative-when {
+    margin: 0;
+    font-family: var(--font-label);
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--accent-dark);
+}
+
 /* "Current drives" status pill (initiatives page). */
 .drive-status {
     justify-self: start;
@@ -3252,6 +3292,32 @@ main {
     pointer-events: none;
     text-transform: uppercase;
 }
+/* Locator-map variant of the hero mark: a faint region map + a bright location dot. */
+.chapter-hero-mark.chapter-hero-locator {
+    font-size: 0;
+    width: clamp(190px, 28vw, 380px);
+    aspect-ratio: var(--locator-aspect, 950 / 620);
+    height: auto;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+}
+.hero-locator-map {
+    position: absolute;
+    inset: 0;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    opacity: 0.3;
+}
+.hero-locator-dot {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: color-mix(in oklch, white 62%, transparent);
+    transform: translate(-50%, -50%);
+    z-index: 1;
+}
+@media (max-width: 680px) { .chapter-hero-mark.chapter-hero-locator { display: none; } }
 
 /* ===== CHAPTER LOCATION MAPS (chapters.html "Where We Are") =====================================
    Self-contained inline-SVG maps (images/maps/florida.svg + world.svg) with status-coloured pins

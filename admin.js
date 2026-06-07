@@ -43,6 +43,7 @@ if (!firebaseReady) {
     // Merged working state (render code is unchanged; only load + save are doc-aware).
     let people = [];          // merged: site.people (unassigned) + every chapterContent[*].members
     let galleryImages = [];
+    let fundraisers = [];     // site/content.fundraisers (full-admin editable)
     let chapters = [];        // merged: site registry overlaid with chapterContent[*].page
     let categories = [];
     let titles = [];
@@ -52,6 +53,9 @@ if (!firebaseReady) {
     let chapterDocCids = [];  // chapter ids that have a chapterContent doc (for orphan cleanup)
     // Chapter-admin scope: when set, this admin may ONLY read/write chapterContent/<SCOPE_CID>.
     let SCOPE_CID = null;
+    // Master-admin club selectors (which chapter the Chapter Pages / Initiatives editor is showing).
+    let pagesPickId = null;
+    let initiativesPickId = null;
     const IS_CHAPTER_ADMIN_PAGE = !!document.getElementById("chapter-admin-root");
 
     function isFullAdmin(email) {
@@ -289,6 +293,7 @@ if (!firebaseReady) {
         chapterDocCids = Object.keys(chapterDocs);
 
         galleryImages = Array.isArray(d.galleryImages) ? d.galleryImages : [];
+        fundraisers = Array.isArray(d.fundraisers) ? d.fundraisers : [];
         categories = (Array.isArray(d.categories) && d.categories.length) ? d.categories : DEFAULT_CATEGORIES.slice();
         titles = Array.isArray(d.titles) ? d.titles.slice() : [];
         chapterAdmins = (d.chapterAdmins && typeof d.chapterAdmins === "object") ? d.chapterAdmins : {};
@@ -327,21 +332,36 @@ if (!firebaseReady) {
         renderChaptersBoard();
         renderChapterPages();
         renderInitiativesAdmin();
+        renderFundraisers();
         renderStructure();
         renderChapterAdmins();
         renderScopedHeader();
     }
 
-    // Dedicated "Initiatives" tab on the scoped chapter-admin pages: add/edit/remove the chapter's
-    // current initiatives (the same `chapter.initiatives` aggregated into the site-wide section).
-    function scopedChapter() {
+    // "Initiatives" editor — add/edit/remove a chapter's current initiatives (the same
+    // `chapter.initiatives` aggregated into the site-wide section). Used by BOTH the scoped
+    // chapter-admin tab (no dropdown → its own chapter) and the master-admin Initiatives page
+    // (a #initiatives-pick dropdown chooses which club).
+    function initiativesChapter() {
+        if (document.getElementById("initiatives-pick")) {
+            if (!initiativesPickId || !chapters.some(function (c) { return c && c.id === initiativesPickId; })) {
+                initiativesPickId = (chapters[0] && chapters[0].id) || null;
+            }
+            return chapters.find(function (c) { return c && c.id === initiativesPickId; }) || null;
+        }
         return SCOPE_CID ? chapters.find(function (x) { return x && x.id === SCOPE_CID; }) : chapters[0];
     }
 
     function renderInitiativesAdmin() {
         const editor = $("initiatives-editor");
         if (!editor) return;
-        const c = scopedChapter();
+        const c = initiativesChapter();
+        const pick = $("initiatives-pick");
+        if (pick) {
+            pick.innerHTML = chapters.map(function (ch) {
+                return `<option value="${escapeAttr(ch.id)}"${c && ch.id === c.id ? " selected" : ""}>${escapeHtml(ch.name || ch.id)}</option>`;
+            }).join("");
+        }
         if (!c) { editor.innerHTML = '<p style="color:var(--ink-soft);">No chapter loaded.</p>'; return; }
         if (!Array.isArray(c.initiatives)) c.initiatives = [];
         if (!c.initiatives.length) {
@@ -354,13 +374,30 @@ if (!firebaseReady) {
                     <label>Title <input data-init="title" data-i="${i}" value="${escapeAttr(it.title || "")}" placeholder="iPad Donations"></label>
                     <label>Description <textarea data-init="description" data-i="${i}" rows="2" placeholder="What the initiative is and who it helps.">${escapeHtml(it.description || "")}</textarea></label>
                     <label>Link (URL, optional) <input data-init="url" data-i="${i}" value="${escapeAttr(it.url || "")}" placeholder="https://…"></label>
+                    <div class="init-daterow">
+                        <label>Start date <input type="date" data-init="startDate" data-i="${i}" value="${escapeAttr(it.startDate || "")}"></label>
+                        <label>End date <input type="date" data-init="endDate" data-i="${i}" value="${escapeAttr(it.endDate || "")}"></label>
+                    </div>
+                    <div class="init-daterow">
+                        <label>Start time (optional) <input type="time" data-init="startTime" data-i="${i}" value="${escapeAttr(it.startTime || "")}"></label>
+                        <label>End time (optional) <input type="time" data-init="endTime" data-i="${i}" value="${escapeAttr(it.endTime || "")}"></label>
+                    </div>
+                    <label class="init-rec"><input type="checkbox" data-irec="${i}" ${it.recurring ? "checked" : ""}> Recurring event (shows a “Recurring” tag on the site)</label>
+                    <div class="init-flyer">
+                        ${it.image ? `<img src="${escapeAttr(it.image)}" alt="" class="init-flyer-thumb" onerror="this.style.display='none'">` : ""}
+                        <div class="upload-dropzone upload-dropzone-sm" data-iflyerzone="${i}">
+                            <span>${it.image ? "Replace flyer/image — drop or click" : "Drop or click to add a flyer/image"}</span>
+                            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-iflyer="${i}" style="display:none;">
+                        </div>
+                        ${it.image ? `<button class="btn btn-secondary" type="button" data-iflyer-remove="${i}" style="padding:0.2rem 0.7rem;">Remove flyer/image</button>` : ""}
+                    </div>
                     <button class="btn btn-secondary" type="button" data-init-remove="${i}" style="justify-self:start;">Remove</button>
                 </div>`;
         }).join("");
 
         editor.querySelectorAll("[data-init]").forEach(function (input) {
             input.addEventListener("input", function () {
-                const c2 = scopedChapter();
+                const c2 = initiativesChapter();
                 const i = Number(input.dataset.i);
                 if (!c2 || !Array.isArray(c2.initiatives) || !c2.initiatives[i]) return;
                 c2.initiatives[i][input.dataset.init] = input.value;
@@ -368,9 +405,41 @@ if (!firebaseReady) {
                 autosave("chapters", chapters);
             });
         });
+        editor.querySelectorAll("[data-iflyer]").forEach(function (input) {
+            input.addEventListener("change", function () {
+                uploadInitiativeFlyer(initiativesChapter(), Number(input.dataset.iflyer), input.files && input.files[0], renderInitiativesAdmin);
+                input.value = "";
+            });
+        });
+        editor.querySelectorAll("[data-irec]").forEach(function (cb) {
+            cb.addEventListener("change", function () {
+                const c2 = initiativesChapter(), i = Number(cb.dataset.irec);
+                if (!c2 || !Array.isArray(c2.initiatives) || !c2.initiatives[i]) return;
+                c2.initiatives[i].recurring = cb.checked;
+                if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
+                autosave("chapters", chapters);
+            });
+        });
+        editor.querySelectorAll("[data-iflyerzone]").forEach(function (zone) {
+            const inp = zone.querySelector("input[type=file]");
+            zone.addEventListener("click", function (e) { if (e.target.tagName === "INPUT") return; if (inp) inp.click(); });
+            zone.addEventListener("dragover", function (e) { e.preventDefault(); zone.classList.add("dragover"); });
+            zone.addEventListener("dragleave", function () { zone.classList.remove("dragover"); });
+            zone.addEventListener("drop", function (e) {
+                e.preventDefault(); zone.classList.remove("dragover");
+                const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                uploadInitiativeFlyer(initiativesChapter(), Number(zone.dataset.iflyerzone), f, renderInitiativesAdmin);
+            });
+        });
+        editor.querySelectorAll("[data-iflyer-remove]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const c2 = initiativesChapter(), i = Number(btn.dataset.iflyerRemove);
+                if (c2 && c2.initiatives && c2.initiatives[i]) { delete c2.initiatives[i].image; renderInitiativesAdmin(); if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters; autosave("chapters", chapters); }
+            });
+        });
         editor.querySelectorAll("[data-init-remove]").forEach(function (btn) {
             btn.addEventListener("click", function () {
-                const c2 = scopedChapter();
+                const c2 = initiativesChapter();
                 const i = Number(btn.dataset.initRemove);
                 if (!c2 || !Array.isArray(c2.initiatives)) return;
                 c2.initiatives.splice(i, 1);
@@ -381,8 +450,114 @@ if (!firebaseReady) {
         });
     }
 
+    on("initiatives-pick", "change", function () {
+        const pick = $("initiatives-pick");
+        if (pick) initiativesPickId = pick.value;
+        renderInitiativesAdmin();
+    });
+
+    on("chapter-pages-pick", "change", function () {
+        const pick = $("chapter-pages-pick");
+        if (pick) pagesPickId = pick.value;
+        renderChapterPages();
+    });
+
+    // ---- Fundraisers (site/content.fundraisers) — full-admin editor ----
+    function renderFundraisers() {
+        const editor = $("fundraisers-editor");
+        if (!editor) return;
+        if (!fundraisers.length) {
+            editor.innerHTML = '<p style="color:var(--ink-soft);">No fundraisers yet — click “+ Add fundraiser”.</p>';
+            return;
+        }
+        editor.innerHTML = fundraisers.map(function (f, i) {
+            return `
+                <div class="admin-card">
+                    <div style="display:flex; gap:0.6rem; align-items:center;">
+                        ${f.image ? `<img src="${escapeAttr(f.image)}" alt="" style="width:46px;height:46px;border-radius:8px;object-fit:cover;flex:0 0 auto;border:1px solid var(--line);" onerror="this.style.display='none'">` : ""}
+                        <strong style="flex:1; overflow-wrap:anywhere;">${escapeHtml(f.title || "(new fundraiser)")}</strong>
+                        <button class="btn btn-secondary" type="button" data-fr-remove="${i}" style="padding:0.2rem 0.6rem;">Remove</button>
+                    </div>
+                    <label>Title <input data-fr="title" data-i="${i}" value="${escapeAttr(f.title || "")}"></label>
+                    <label>Led by <input data-fr="by" data-i="${i}" value="${escapeAttr(f.by || "")}" placeholder="Name"></label>
+                    <label>Description <textarea data-fr="description" data-i="${i}" rows="2">${escapeHtml(f.description || "")}</textarea></label>
+                    <label>Donate link (URL) <input data-fr="url" data-i="${i}" value="${escapeAttr(f.url || "")}" placeholder="https://www.gofundme.com/…"></label>
+                    <label>Chapter <select data-fr-chapter="${i}">${chapterOptions(f.chapterId)}</select></label>
+                    <div class="upload-dropzone upload-dropzone-sm" data-frzone="${i}">
+                        <span>${f.image ? "Replace image — drop or click" : "Drop or click to add an image"}</span>
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-frimg="${i}" style="display:none;">
+                    </div>
+                </div>`;
+        }).join("");
+
+        editor.querySelectorAll("[data-fr]").forEach(function (input) {
+            input.addEventListener("input", function () {
+                const i = Number(input.dataset.i);
+                if (!fundraisers[i]) return;
+                fundraisers[i][input.dataset.fr] = input.value;
+                autosave("fundraisers", fundraisers);
+            });
+        });
+        editor.querySelectorAll("[data-fr-chapter]").forEach(function (sel) {
+            sel.addEventListener("change", function () {
+                const i = Number(sel.dataset.frChapter);
+                if (!fundraisers[i]) return;
+                fundraisers[i].chapterId = sel.value;
+                const ch = (chapters || []).find(function (c) { return c && c.id === sel.value; });
+                fundraisers[i].chapterHref = sel.value ? ((ch && ch.pageHref) || ("chapter-" + sel.value + ".html")) : "";
+                autosave("fundraisers", fundraisers);
+            });
+        });
+        editor.querySelectorAll("[data-fr-remove]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                fundraisers.splice(Number(btn.dataset.frRemove), 1);
+                renderFundraisers();
+                autosave("fundraisers", fundraisers);
+            });
+        });
+        editor.querySelectorAll("[data-frimg]").forEach(function (input) {
+            input.addEventListener("change", function () {
+                uploadFundraiserImage(Number(input.dataset.frimg), input.files && input.files[0]);
+                input.value = "";
+            });
+        });
+        editor.querySelectorAll("[data-frzone]").forEach(function (zone) {
+            const inp = zone.querySelector("input[type=file]");
+            zone.addEventListener("click", function (e) { if (e.target.tagName === "INPUT") return; if (inp) inp.click(); });
+            zone.addEventListener("dragover", function (e) { e.preventDefault(); zone.classList.add("dragover"); });
+            zone.addEventListener("dragleave", function () { zone.classList.remove("dragover"); });
+            zone.addEventListener("drop", function (e) {
+                e.preventDefault(); zone.classList.remove("dragover");
+                uploadFundraiserImage(Number(zone.dataset.frzone), e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]);
+            });
+        });
+    }
+
+    async function uploadFundraiserImage(i, file) {
+        if (!fundraisers[i] || !file) return;
+        if (tooBig(file)) return;
+        if (notRasterImage(file)) return;
+        setStatus("Uploading image…");
+        try {
+            const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+            const storageRef = ref(storage, "fundraisers/" + Date.now() + "-" + safe);
+            await uploadBytes(storageRef, file, uploadMeta(file));
+            fundraisers[i].image = await getDownloadURL(storageRef);
+            renderFundraisers();
+            autosave("fundraisers", fundraisers);
+        } catch (err) {
+            setStatus("Upload failed: " + (err.message || err), true);
+        }
+    }
+
+    on("add-fundraiser", "click", function () {
+        fundraisers.push({ id: "fr-" + Date.now().toString(36), title: "", by: "", description: "", url: "", image: "", alt: "", chapterId: "", chapterHref: "" });
+        renderFundraisers();
+        autosave("fundraisers", fundraisers);
+    });
+
     on("add-initiative", "click", function () {
-        const c = scopedChapter();
+        const c = initiativesChapter();
         if (!c) return;
         if (!Array.isArray(c.initiatives)) c.initiatives = [];
         c.initiatives.push({ title: "", description: "", url: "" });
@@ -478,6 +653,21 @@ if (!firebaseReady) {
                     <span>Drop or click to upload photo</span>
                     <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-upload="${index}" style="display:none;">
                 </div>
+                ${hasRealPhoto(person.photo) ? `
+                <div class="photo-fit">
+                    <div class="photo-fit-crop" data-fit-crop="${index}" title="Drag to reposition">
+                        <img src="${escapeAttr(person.photo)}" alt="" data-fit-img="${index}" draggable="false" style="width:100%;height:100%;object-fit:cover;${fitInline(person)}">
+                    </div>
+                    <div class="photo-fit-sliders">
+                        <span style="font-size:0.74rem; color:var(--ink-soft);">Drag the photo to position it, then use the slider to zoom.</span>
+                        <label class="photo-fit-zoom">
+                            <span aria-hidden="true">🔍−</span>
+                            <input type="range" min="1" max="3" step="0.01" data-fit-zoomrange="${index}" value="${person.photoZoom || 1}" aria-label="Zoom">
+                            <span aria-hidden="true">＋</span>
+                        </label>
+                        <button type="button" class="btn btn-secondary" data-fit-reset="${index}" style="padding:0.12rem 0.7rem; justify-self:start;">Reset</button>
+                    </div>
+                </div>` : ""}
             `;
             editor.appendChild(card);
         });
@@ -536,6 +726,65 @@ if (!firebaseReady) {
                 uploadMemberPhoto(Number(zone.dataset.photozone), f);
             });
         });
+        // Reframe a member's photo directly in the circle: DRAG to reposition, SCROLL (or ± buttons)
+        // to zoom — no full-size popup. Persists photoZoom / photoX / photoY on the member.
+        function applyFitPreview(i) {
+            const img = editor.querySelector('[data-fit-img="' + i + '"]');
+            if (img) img.setAttribute("style", "width:100%;height:100%;object-fit:cover;" + fitInline(people[i]));
+        }
+        function setZoom(i, z) {
+            if (!people[i]) return;
+            people[i].photoZoom = Math.min(3, Math.max(1, Math.round(z * 100) / 100));
+            if (people[i].photoX == null) people[i].photoX = 50;
+            if (people[i].photoY == null) people[i].photoY = 50;
+            const range = editor.querySelector('[data-fit-zoomrange="' + i + '"]');
+            if (range && Number(range.value) !== people[i].photoZoom) range.value = people[i].photoZoom;
+            applyFitPreview(i);
+        }
+        editor.querySelectorAll("[data-fit-crop]").forEach(function (box) {
+            const i = Number(box.dataset.fitCrop);
+            box.addEventListener("wheel", function (e) {
+                e.preventDefault();
+                setZoom(i, (Number(people[i] && people[i].photoZoom) || 1) + (e.deltaY < 0 ? 0.12 : -0.12));
+                autosave("people", people);
+            }, { passive: false });
+            let dragging = false, lastX = 0, lastY = 0;
+            box.addEventListener("pointerdown", function (e) {
+                dragging = true; lastX = e.clientX; lastY = e.clientY;
+                box.setPointerCapture(e.pointerId); box.classList.add("dragging");
+            });
+            box.addEventListener("pointermove", function (e) {
+                if (!dragging || !people[i]) return;
+                const dx = e.clientX - lastX, dy = e.clientY - lastY;
+                lastX = e.clientX; lastY = e.clientY;
+                const cur = people[i];
+                const x = (cur.photoX == null ? 50 : Number(cur.photoX)) - dx * 0.35;
+                const y = (cur.photoY == null ? 50 : Number(cur.photoY)) - dy * 0.35;
+                cur.photoX = Math.min(100, Math.max(0, Math.round(x)));
+                cur.photoY = Math.min(100, Math.max(0, Math.round(y)));
+                cur.photoZoom = Number(cur.photoZoom) || 1;
+                applyFitPreview(i);
+            });
+            function endDrag() { if (dragging) { dragging = false; box.classList.remove("dragging"); autosave("people", people); } }
+            box.addEventListener("pointerup", endDrag);
+            box.addEventListener("pointercancel", endDrag);
+        });
+        editor.querySelectorAll("[data-fit-zoomrange]").forEach(function (input) {
+            input.addEventListener("input", function () {
+                setZoom(Number(input.dataset.fitZoomrange), Number(input.value));
+                autosave("people", people);
+            });
+        });
+        editor.querySelectorAll("[data-fit-reset]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const i = Number(btn.dataset.fitReset);
+                if (!people[i]) return;
+                delete people[i].photoZoom; delete people[i].photoX; delete people[i].photoY;
+                renderPeople();
+                if (window.BFBL_DATA) window.BFBL_DATA.people = people;
+                autosave("people", people);
+            });
+        });
     }
 
     async function uploadMemberPhoto(i, file) {
@@ -550,6 +799,28 @@ if (!firebaseReady) {
             people[i].photo = await getDownloadURL(storageRef);
             renderPeople();
             autosave("people", people);
+        } catch (err) {
+            setStatus("Upload failed: " + (err.message || err), true);
+        }
+    }
+
+    // Upload a flyer image for one initiative on a chapter (shared by the Chapter Pages row editor
+    // and the dedicated Initiatives editor). rerender() refreshes whichever editor is showing.
+    async function uploadInitiativeFlyer(chapter, ii, file, rerender) {
+        if (!chapter || !file) return;
+        if (tooBig(file)) return;
+        if (notRasterImage(file)) return;
+        if (!Array.isArray(chapter.initiatives)) chapter.initiatives = [];
+        if (!chapter.initiatives[ii]) chapter.initiatives[ii] = { title: "", description: "", url: "" };
+        setStatus("Uploading flyer…");
+        try {
+            const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+            const storageRef = ref(storage, "initiatives/" + (chapter.id || "chapter") + "/" + Date.now() + "-" + safe);
+            await uploadBytes(storageRef, file, uploadMeta(file));
+            chapter.initiatives[ii].image = await getDownloadURL(storageRef);
+            if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
+            if (typeof rerender === "function") rerender();
+            autosave("chapters", chapters);
         } catch (err) {
             setStatus("Upload failed: " + (err.message || err), true);
         }
@@ -778,6 +1049,59 @@ if (!firebaseReady) {
     }
 
     // ---- Chapter pages (details + highlight photos) ----
+    // Structured list editors (each row + a "+ Add" button) for stats / partners / initiatives —
+    // replaces the old one-per-line textareas. ci = index into the full `chapters` array.
+    function statsEditorMarkup(c, ci) {
+        const rows = (Array.isArray(c.stats) ? c.stats : []).map(function (s, si) {
+            return `<div class="admin-list-row">
+                <input data-stat="value" data-ci="${ci}" data-si="${si}" value="${escapeAttr((s && s.value) || "")}" placeholder="320" style="flex:0 0 90px;">
+                <input data-stat="label" data-ci="${ci}" data-si="${si}" value="${escapeAttr((s && s.label) || "")}" placeholder="Seniors helped">
+                <button type="button" class="admin-list-x" data-stat-remove data-ci="${ci}" data-si="${si}" title="Remove">✕</button>
+            </div>`;
+        }).join("");
+        return `<div class="admin-list"><div class="admin-list-label">Impact stats</div>${rows}
+            <button type="button" class="btn btn-secondary admin-list-add" data-stat-add data-ci="${ci}">+ Add stat</button></div>`;
+    }
+    function partnersEditorMarkup(c, ci) {
+        const rows = (Array.isArray(c.partners) ? c.partners : []).map(function (p, pi) {
+            return `<div class="admin-list-row">
+                <input data-partner data-ci="${ci}" data-pi="${pi}" value="${escapeAttr(p || "")}" placeholder="Palomino Gardens">
+                <button type="button" class="admin-list-x" data-partner-remove data-ci="${ci}" data-pi="${pi}" title="Remove">✕</button>
+            </div>`;
+        }).join("");
+        return `<div class="admin-list"><div class="admin-list-label">Community partners</div>${rows}
+            <button type="button" class="btn btn-secondary admin-list-add" data-partner-add data-ci="${ci}">+ Add partner</button></div>`;
+    }
+    function initiativesEditorMarkup(c, ci) {
+        const rows = (Array.isArray(c.initiatives) ? c.initiatives : []).map(function (it, ii) {
+            return `<div class="admin-list-row admin-list-row--stack">
+                <input data-initrow="title" data-ci="${ci}" data-ii="${ii}" value="${escapeAttr((it && it.title) || "")}" placeholder="Title (e.g. iPad Donations)">
+                <input data-initrow="description" data-ci="${ci}" data-ii="${ii}" value="${escapeAttr((it && it.description) || "")}" placeholder="Short description">
+                <input data-initrow="url" data-ci="${ci}" data-ii="${ii}" value="${escapeAttr((it && it.url) || "")}" placeholder="Link (optional)">
+                <div class="init-daterow">
+                    <label>Start date <input type="date" data-initrow="startDate" data-ci="${ci}" data-ii="${ii}" value="${escapeAttr((it && it.startDate) || "")}"></label>
+                    <label>End date <input type="date" data-initrow="endDate" data-ci="${ci}" data-ii="${ii}" value="${escapeAttr((it && it.endDate) || "")}"></label>
+                </div>
+                <div class="init-daterow">
+                    <label>Start time (optional) <input type="time" data-initrow="startTime" data-ci="${ci}" data-ii="${ii}" value="${escapeAttr((it && it.startTime) || "")}"></label>
+                    <label>End time (optional) <input type="time" data-initrow="endTime" data-ci="${ci}" data-ii="${ii}" value="${escapeAttr((it && it.endTime) || "")}"></label>
+                </div>
+                <label class="init-rec"><input type="checkbox" data-initrec data-ci="${ci}" data-ii="${ii}" ${it && it.recurring ? "checked" : ""}> Recurring event (shows a “Recurring” tag on the site)</label>
+                <div class="init-flyer">
+                    ${it && it.image ? `<img src="${escapeAttr(it.image)}" alt="" class="init-flyer-thumb" onerror="this.style.display='none'">` : ""}
+                    <div class="upload-dropzone upload-dropzone-sm" data-initflyerzone data-ci="${ci}" data-ii="${ii}">
+                        <span>${it && it.image ? "Replace flyer/image — drop or click" : "Drop or click to add a flyer/image"}</span>
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-initflyer data-ci="${ci}" data-ii="${ii}" style="display:none;">
+                    </div>
+                    ${it && it.image ? `<button type="button" class="btn btn-secondary admin-list-x" data-initflyer-remove data-ci="${ci}" data-ii="${ii}">Remove flyer/image</button>` : ""}
+                </div>
+                <button type="button" class="btn btn-secondary admin-list-x" data-initrow-remove data-ci="${ci}" data-ii="${ii}" style="justify-self:start;">Remove</button>
+            </div>`;
+        }).join("");
+        return `<div class="admin-list"><div class="admin-list-label">Current initiatives</div>${rows}
+            <button type="button" class="btn btn-secondary admin-list-add" data-initrow-add data-ci="${ci}">+ Add initiative</button></div>`;
+    }
+
     function renderChapterPages() {
         const editor = $("chapter-pages-editor");
         if (!editor) return;
@@ -786,7 +1110,21 @@ if (!firebaseReady) {
             editor.innerHTML = '<p style="color:var(--ink-soft);">No chapters yet. Add one in the Structure tab.</p>';
             return;
         }
-        chapters.forEach(function (c, index) {
+        // Master admin: a #chapter-pages-pick dropdown focuses one club at a time. Scoped chapter
+        // admins (no dropdown) just edit their own (already-filtered) chapter.
+        let list = chapters;
+        const pick = $("chapter-pages-pick");
+        if (pick) {
+            if (!pagesPickId || !chapters.some(function (c) { return c && c.id === pagesPickId; })) {
+                pagesPickId = (chapters[0] && chapters[0].id) || null;
+            }
+            pick.innerHTML = chapters.map(function (c) {
+                return `<option value="${escapeAttr(c.id)}"${c.id === pagesPickId ? " selected" : ""}>${escapeHtml(c.name || c.id)}</option>`;
+            }).join("");
+            list = chapters.filter(function (c) { return c.id === pagesPickId; });
+        }
+        list.forEach(function (c) {
+            const index = chapters.indexOf(c); // data-i must index the full chapters array
             if (!Array.isArray(c.photos)) c.photos = [];
             const photosHtml = c.photos.map(function (src, pi) {
                 return '<div style="position:relative; border:1px solid var(--line); border-radius:8px; overflow:hidden;">'
@@ -797,12 +1135,14 @@ if (!firebaseReady) {
             // On the scoped chapter-admin pages there's a dedicated "Initiatives" tab
             // (#initiatives-editor), so don't also show the raw textarea here; the full admin
             // (no such tab) keeps the textarea inline.
-            const initiativesField = document.getElementById("initiatives-editor") ? "" :
-                `<label><span>Current initiatives — one per line as <code>title | description | url</code> (url optional; shown in the site-wide "Current initiatives" section)</span> <textarea data-clist="initiatives" data-i="${index}" rows="4" placeholder="iPad Donations | We donate iPads and teach lessons so students build confidence | https://...&#10;Senior Tech Help | Monthly visits to local senior communities">${escapeHtml((c.initiatives || []).map(function (it) { return [(it && it.title) || "", (it && it.description) || ""].join(" | ") + ((it && it.url) ? " | " + it.url : ""); }).join("\n"))}</textarea></label>`;
+            // The scoped chapter-admin pages have a dedicated "Initiatives" tab (#initiatives-editor),
+            // so don't duplicate the editor here; the full admin (no such tab) shows it inline.
+            const initiativesField = document.getElementById("initiatives-editor") ? "" : initiativesEditorMarkup(c, index);
             const card = document.createElement("div");
             card.className = "admin-card";
             card.innerHTML = `
                 <strong style="font-size:1.05rem;">${escapeHtml(c.name || c.id)}</strong>
+                ${initiativesField}
                 ${SCOPE_CID ? "" : `<label>Name <input data-cfield="name" data-i="${index}" value="${escapeAttr(c.name || "")}"></label>`}
                 <label>Location <input data-cfield="location" data-i="${index}" value="${escapeAttr(c.location || "")}"></label>
                 <label>Status <input data-cfield="status" data-i="${index}" value="${escapeAttr(c.status || "")}"></label>
@@ -811,9 +1151,8 @@ if (!firebaseReady) {
                 <label>Description <textarea data-cfield="description" data-i="${index}" rows="3">${escapeHtml(c.description || "")}</textarea></label>
                 <label>Chapter email <input data-cfield="contactEmail" data-i="${index}" value="${escapeAttr(c.contactEmail || "")}" placeholder="chapter@example.com"></label>
                 <label>Get Involved / volunteer link (URL) <input data-cfield="joinUrl" data-i="${index}" value="${escapeAttr(c.joinUrl || "")}" placeholder="https://forms.gle/…"></label>
-                <label><span>Impact stats — one per line as <code>value | label</code> (e.g. <code>320 | Seniors helped</code>)</span> <textarea data-clist="stats" data-i="${index}" rows="4" placeholder="320 | Seniors helped&#10;4 | Schools served&#10;$1,200 | Raised">${escapeHtml((c.stats || []).map(function (s) { return (s && s.value || "") + " | " + (s && s.label || ""); }).join("\n"))}</textarea></label>
-                <label>Community partners — one per line <textarea data-clist="partners" data-i="${index}" rows="3" placeholder="Palomino Gardens&#10;Joe DiMaggio Children's Hospital">${escapeHtml((c.partners || []).join("\n"))}</textarea></label>
-                ${initiativesField}
+                ${statsEditorMarkup(c, index)}
+                ${partnersEditorMarkup(c, index)}
                 <div style="font-weight:700; font-size:0.8rem; color:var(--ink-soft); margin-top:0.4rem;">Chapter highlights (${c.photos.length})</div>
                 <div class="gallery-grid-admin">${photosHtml}</div>
                 <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" multiple data-cphoto-upload="${index}" style="display:none;"></label>
@@ -829,27 +1168,114 @@ if (!firebaseReady) {
                 autosave("chapters", chapters);
             });
         });
-        // List fields (stats / partners) — parsed from one-per-line textareas into arrays.
-        editor.querySelectorAll("[data-clist]").forEach(function (input) {
+        // Structured list editors (rows + "+ Add"): stats, partners, initiatives. ci/si/pi/ii are
+        // indices into the full chapters array and the per-chapter list.
+        function saveChaptersLive() { if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters; autosave("chapters", chapters); }
+        // Impact stats
+        editor.querySelectorAll("[data-stat]").forEach(function (input) {
             input.addEventListener("input", function () {
-                const i = Number(input.dataset.i);
-                const kind = input.dataset.clist;
-                const lines = input.value.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
-                if (kind === "stats") {
-                    chapters[i].stats = lines.map(function (l) {
-                        const parts = l.split("|");
-                        return { value: (parts[0] || "").trim(), label: parts.slice(1).join("|").trim() };
-                    });
-                } else if (kind === "partners") {
-                    chapters[i].partners = lines;
-                } else if (kind === "initiatives") {
-                    chapters[i].initiatives = lines.map(function (l) {
-                        const parts = l.split("|").map(function (s) { return s.trim(); });
-                        return { title: parts[0] || "", description: parts[1] || "", url: parts[2] || "" };
-                    });
+                const ci = Number(input.dataset.ci), si = Number(input.dataset.si);
+                if (!chapters[ci]) return;
+                if (!Array.isArray(chapters[ci].stats)) chapters[ci].stats = [];
+                if (!chapters[ci].stats[si]) chapters[ci].stats[si] = { value: "", label: "" };
+                chapters[ci].stats[si][input.dataset.stat] = input.value;
+                saveChaptersLive();
+            });
+        });
+        editor.querySelectorAll("[data-stat-add]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const ci = Number(btn.dataset.ci); if (!chapters[ci]) return;
+                if (!Array.isArray(chapters[ci].stats)) chapters[ci].stats = [];
+                chapters[ci].stats.push({ value: "", label: "" });
+                renderChapterPages(); saveChaptersLive();
+            });
+        });
+        editor.querySelectorAll("[data-stat-remove]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const ci = Number(btn.dataset.ci), si = Number(btn.dataset.si);
+                if (chapters[ci] && Array.isArray(chapters[ci].stats)) { chapters[ci].stats.splice(si, 1); renderChapterPages(); saveChaptersLive(); }
+            });
+        });
+        // Community partners
+        editor.querySelectorAll("[data-partner]").forEach(function (input) {
+            input.addEventListener("input", function () {
+                const ci = Number(input.dataset.ci), pi = Number(input.dataset.pi);
+                if (!chapters[ci]) return;
+                if (!Array.isArray(chapters[ci].partners)) chapters[ci].partners = [];
+                chapters[ci].partners[pi] = input.value;
+                saveChaptersLive();
+            });
+        });
+        editor.querySelectorAll("[data-partner-add]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const ci = Number(btn.dataset.ci); if (!chapters[ci]) return;
+                if (!Array.isArray(chapters[ci].partners)) chapters[ci].partners = [];
+                chapters[ci].partners.push(""); renderChapterPages(); saveChaptersLive();
+            });
+        });
+        editor.querySelectorAll("[data-partner-remove]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const ci = Number(btn.dataset.ci), pi = Number(btn.dataset.pi);
+                if (chapters[ci] && Array.isArray(chapters[ci].partners)) { chapters[ci].partners.splice(pi, 1); renderChapterPages(); saveChaptersLive(); }
+            });
+        });
+        // Current initiatives
+        editor.querySelectorAll("[data-initrow]").forEach(function (input) {
+            input.addEventListener("input", function () {
+                const ci = Number(input.dataset.ci), ii = Number(input.dataset.ii);
+                if (!chapters[ci]) return;
+                if (!Array.isArray(chapters[ci].initiatives)) chapters[ci].initiatives = [];
+                if (!chapters[ci].initiatives[ii]) chapters[ci].initiatives[ii] = { title: "", description: "", url: "" };
+                chapters[ci].initiatives[ii][input.dataset.initrow] = input.value;
+                saveChaptersLive();
+            });
+        });
+        editor.querySelectorAll("[data-initrow-add]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const ci = Number(btn.dataset.ci); if (!chapters[ci]) return;
+                if (!Array.isArray(chapters[ci].initiatives)) chapters[ci].initiatives = [];
+                chapters[ci].initiatives.push({ title: "", description: "", url: "" });
+                renderChapterPages(); saveChaptersLive();
+            });
+        });
+        editor.querySelectorAll("[data-initrow-remove]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const ci = Number(btn.dataset.ci), ii = Number(btn.dataset.ii);
+                if (chapters[ci] && Array.isArray(chapters[ci].initiatives)) { chapters[ci].initiatives.splice(ii, 1); renderChapterPages(); saveChaptersLive(); }
+            });
+        });
+        editor.querySelectorAll("[data-initflyer]").forEach(function (input) {
+            input.addEventListener("change", function () {
+                const ci = Number(input.dataset.ci), ii = Number(input.dataset.ii);
+                uploadInitiativeFlyer(chapters[ci], ii, input.files && input.files[0], renderChapterPages);
+                input.value = "";
+            });
+        });
+        editor.querySelectorAll("[data-initrec]").forEach(function (cb) {
+            cb.addEventListener("change", function () {
+                const ci = Number(cb.dataset.ci), ii = Number(cb.dataset.ii);
+                if (!chapters[ci] || !Array.isArray(chapters[ci].initiatives) || !chapters[ci].initiatives[ii]) return;
+                chapters[ci].initiatives[ii].recurring = cb.checked;
+                saveChaptersLive();
+            });
+        });
+        editor.querySelectorAll("[data-initflyerzone]").forEach(function (zone) {
+            const inp = zone.querySelector("input[type=file]");
+            zone.addEventListener("click", function (e) { if (e.target.tagName === "INPUT") return; if (inp) inp.click(); });
+            zone.addEventListener("dragover", function (e) { e.preventDefault(); zone.classList.add("dragover"); });
+            zone.addEventListener("dragleave", function () { zone.classList.remove("dragover"); });
+            zone.addEventListener("drop", function (e) {
+                e.preventDefault(); zone.classList.remove("dragover");
+                const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                uploadInitiativeFlyer(chapters[Number(zone.dataset.ci)], Number(zone.dataset.ii), f, renderChapterPages);
+            });
+        });
+        editor.querySelectorAll("[data-initflyer-remove]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                const ci = Number(btn.dataset.ci), ii = Number(btn.dataset.ii);
+                if (chapters[ci] && chapters[ci].initiatives && chapters[ci].initiatives[ii]) {
+                    delete chapters[ci].initiatives[ii].image; renderChapterPages(); saveChaptersLive();
                 }
-                if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
-                autosave("chapters", chapters);
             });
         });
         editor.querySelectorAll("[data-cphoto-remove]").forEach(function (btn) {
@@ -898,11 +1324,11 @@ if (!firebaseReady) {
     }
     function renderStructure() {
         const catRoot = $("structure-categories");
-        const chRoot = $("structure-chapters");
+        const chRoot = $("structure-chapters"); // removed from the UI — chapters are no longer editable here
         const tRoot = $("structure-titles");
-        if (!catRoot || !chRoot) return;
+        if (!catRoot) return;
         catRoot.innerHTML = categories.map(function (c, i) { return structRow(c.label || c.id, "data-cat-rename", "data-cat-remove", i); }).join("");
-        chRoot.innerHTML = chapters.map(function (c, i) { return structRow(c.name || c.id, "data-ch-rename", "data-ch-remove", i); }).join("");
+        if (chRoot) chRoot.innerHTML = chapters.map(function (c, i) { return structRow(c.name || c.id, "data-ch-rename", "data-ch-remove", i); }).join("");
         if (tRoot) tRoot.innerHTML = titles.map(function (t, i) { return structRow(t, "data-title-rename", "data-title-remove", i); }).join("");
         catRoot.querySelectorAll("[data-cat-rename]").forEach(function (input) {
             input.addEventListener("input", function () {
@@ -913,7 +1339,7 @@ if (!firebaseReady) {
                 autosave("categories", categories);
             });
         });
-        chRoot.querySelectorAll("[data-ch-rename]").forEach(function (input) {
+        if (chRoot) chRoot.querySelectorAll("[data-ch-rename]").forEach(function (input) {
             input.addEventListener("input", function () {
                 const i = Number(input.dataset.chRename);
                 if (!chapters[i]) return;
@@ -930,7 +1356,7 @@ if (!firebaseReady) {
                 autosave("categories", categories);
             });
         });
-        chRoot.querySelectorAll("[data-ch-remove]").forEach(function (b) {
+        if (chRoot) chRoot.querySelectorAll("[data-ch-remove]").forEach(function (b) {
             b.addEventListener("click", function () {
                 chapters.splice(Number(b.dataset.chRemove), 1);
                 if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
@@ -1043,10 +1469,24 @@ function personInitials(name) {
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
+// Per-member photo framing (zoom + position in the circle) as an inline style string; "" when default.
+function fitInline(person) {
+    var zoom = Number(person.photoZoom) || 1;
+    var x = (person.photoX == null) ? 50 : Number(person.photoX);
+    var y = (person.photoY == null) ? 50 : Number(person.photoY);
+    if (zoom === 1 && x === 50 && y === 50) return "";
+    return "object-fit:cover;object-position:" + x + "% " + y + "%;transform:scale(" + zoom + ");transform-origin:" + x + "% " + y + "%;";
+}
+
 function avatarHTML(person, size) {
     var s = size + "px";
     if (hasRealPhoto(person.photo)) {
-        return '<img src="' + escapeAttr(person.photo) + '" alt="" style="width:' + s + ';height:' + s + ';border-radius:50%;object-fit:cover;background:var(--surface);flex:0 0 auto;">';
+        var fit = fitInline(person);
+        if (!fit) {
+            return '<img src="' + escapeAttr(person.photo) + '" alt="" style="width:' + s + ';height:' + s + ';border-radius:50%;object-fit:cover;background:var(--surface);flex:0 0 auto;">';
+        }
+        return '<span style="display:inline-flex;width:' + s + ';height:' + s + ';border-radius:50%;overflow:hidden;flex:0 0 auto;background:var(--surface);">'
+            + '<img src="' + escapeAttr(person.photo) + '" alt="" style="width:100%;height:100%;' + fit + '"></span>';
     }
     return '<span class="avatar-initials" style="width:' + s + ';height:' + s + ';font-size:' + Math.round(size * 0.4) + 'px;flex:0 0 auto;">' + escapeHtml(personInitials(person.name)) + '</span>';
 }

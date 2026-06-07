@@ -30,7 +30,7 @@ window.BFBL_DATA = {
             by: "Joel Cardenas",
             description: "Support Joel's Peru fundraiser and the outreach work it enables.",
             chapterId: "ahs",
-            url: "",
+            url: "https://www.gofundme.com/f/help-children-gain-access-education-tools-in-peru",
             image: "images/team/joel-cardenas.jpg",
             alt: "Joel Cardenas portrait",
             chapterHref: "chapter-ahs.html"
