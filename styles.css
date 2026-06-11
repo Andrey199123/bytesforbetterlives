@@ -578,6 +578,19 @@ main {
 .chapter-hero {
     --hero-img: url("images/hero-banner.jpg");
     --hero-pos: center 34%;
+    /* Chapter pages show that chapter's own photo — keep the green wash light so the people read
+       clearly; legibility comes from the left ink gradient + bottom scrim, not the accent colour. */
+    background:
+        linear-gradient(95deg,
+            color-mix(in oklch, var(--accent-dark) 36%, transparent) 0%,
+            color-mix(in oklch, var(--accent-dark) 12%, transparent) 38%,
+            transparent 62%),
+        linear-gradient(95deg,
+            color-mix(in oklch, var(--ink) 54%, transparent) 0%,
+            color-mix(in oklch, var(--ink) 30%, transparent) 50%,
+            color-mix(in oklch, var(--ink) 14%, transparent) 100%),
+        linear-gradient(180deg, transparent 56%, color-mix(in oklch, var(--ink) 56%, transparent) 100%),
+        var(--hero-img) var(--hero-pos) / cover no-repeat;
 }
 
 .hero-home-banner {
@@ -2415,19 +2428,28 @@ main {
 .social-links {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-sm);
     margin-top: var(--space-xs);
 }
 
+/* Quiet square icon button — monochrome SVG inherits currentColor (footer = pale paper, page = ink). */
 .social-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 40px;
-    padding: 0.45rem 0.75rem;
-    border: 1px solid color-mix(in oklch, var(--paper) 18%, transparent);
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid color-mix(in oklch, var(--paper) 24%, transparent);
     border-radius: var(--radius-md);
-    font-weight: 800;
+    transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease;
+}
+
+.social-link:hover {
+    color: var(--green-soft);
+    border-color: color-mix(in oklch, var(--green-soft) 55%, transparent);
+    background: color-mix(in oklch, var(--paper) 8%, transparent);
 }
 
 .footer-bottom {
@@ -3138,6 +3160,76 @@ main {
 @media (max-width: 680px) {
     .help-row { grid-template-columns: 44px 1fr; row-gap: var(--space-sm); }
     .help-row .btn { grid-column: 1 / -1; justify-self: start; }
+}
+
+/* ===== CONTACT PAGE ===== */
+/* Editorial split: intro + direct channels on the left, the message form on the right. */
+.contact-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: var(--space-2xl);
+    align-items: start;
+}
+
+.contact-channels {
+    display: grid;
+    gap: var(--space-sm);
+    margin-top: var(--space-xl);
+}
+
+.contact-channel {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    color: var(--ink);
+    transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+.contact-channel:hover {
+    border-color: color-mix(in oklch, var(--accent) 38%, var(--line));
+    background: color-mix(in oklch, var(--accent-soft) 40%, var(--paper));
+}
+
+.contact-channel svg {
+    flex: none;
+    color: var(--accent-dark);
+}
+
+.contact-channel-label {
+    display: block;
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+}
+
+.contact-channel-value {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.contact-form-card {
+    background: var(--paper);
+    border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
+    border-radius: var(--radius-xl);
+    padding: clamp(1.5rem, 3.5vw, 2.5rem);
+    box-shadow: var(--shadow-md);
+}
+
+.contact-form-note {
+    margin: var(--space-md) 0 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+}
+
+@media (max-width: 900px) {
+    .contact-layout { grid-template-columns: 1fr; }
 }
 
 /* Partner logos as a quiet grayscale ribbon, not 10 bordered card boxes. (!important overrides the

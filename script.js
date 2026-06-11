@@ -604,6 +604,12 @@
         });
     }
 
+    // Monochrome inline-SVG glyphs (inherit currentColor) — replaces the old full-colour raster logos.
+    const SOCIAL_ICONS = {
+        instagram: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1.1" fill="currentColor" stroke="none"/></svg>',
+        linkedin: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.49 2.49 0 1 1-.02 4.98 2.49 2.49 0 0 1 .02-4.98zM3 9.4h4V21H3zM9.6 9.4h3.83v1.58h.05c.53-.95 1.84-1.95 3.78-1.95 4.04 0 4.79 2.6 4.79 5.98V21h-4v-5.28c0-1.26-.02-2.88-1.8-2.88-1.8 0-2.07 1.37-2.07 2.79V21h-3.98z"/></svg>'
+    };
+
     function renderFooter() {
         const footerContainer = document.querySelector(".footer .container");
         if (!footerContainer) return;
@@ -614,8 +620,7 @@
             ["Impact", "impact.html"],
             ["Initiatives", "ongoing-initiatives.html"],
             ["Team", "team.html"],
-            ["Chapters", "chapters.html"],
-            ["Admin", "admin.html"]
+            ["Chapters", "chapters.html"]
         ];
 
         const programLinks = [
@@ -648,13 +653,9 @@
                 <div class="footer-section">
                     <h3>Contact</h3>
                     <a href="${escapeHTML(safeUrl("mailto:" + contactEmail))}">${escapeHTML(contactEmail)}</a>
-                    <div class="social-links" style="display: flex; gap: 1rem; align-items: center;">
-                        <a class="social-link" href="${escapeHTML(safeUrl(data.socialLinks.instagram))}" target="_blank" rel="noopener" title="Instagram" style="width: 40px; height: 40px; padding: 0;">
-                            <img src="images/contact us logo/instagram logo.jpg" alt="Instagram" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                        </a>
-                        <a class="social-link" href="${escapeHTML(safeUrl(data.socialLinks.linkedin))}" target="_blank" rel="noopener" title="LinkedIn" style="width: 40px; height: 40px; padding: 0;">
-                            <img src="images/contact us logo/linkedin.jpeg" alt="LinkedIn" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
-                        </a>
+                    <div class="social-links">
+                        <a class="social-link" href="${escapeHTML(safeUrl(data.socialLinks.instagram))}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">${SOCIAL_ICONS.instagram}</a>
+                        <a class="social-link" href="${escapeHTML(safeUrl(data.socialLinks.linkedin))}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" title="LinkedIn">${SOCIAL_ICONS.linkedin}</a>
                     </div>
                 </div>
             </div>
@@ -865,11 +866,11 @@
         { id: "cypress", x: 81.5, y: 77, side: "left" }
     ];
     const WORLD_MAP_PINS = [
-        { id: "ahs", label: "Florida", x: 26.5, y: 35.5, side: "left" },
-        { id: "new-york", label: "New York", x: 28, y: 30, side: "left" },
-        { id: "virginia", label: "Virginia", x: 27, y: 31.5, side: "left" },
-        { id: "russia", label: "Russia", x: 59, y: 18 },
-        { id: "turkey", label: "Türkiye", x: 57, y: 27 }
+        { id: "ahs", label: "Florida", x: 31, y: 40, side: "left" },
+        { id: "new-york", label: "New York", x: 33, y: 27, side: "left" },
+        { id: "virginia", label: "Virginia", x: 32.5, y: 30, side: "left" },
+        { id: "russia", label: "Russia", x: 60, y: 18 },
+        { id: "turkey", label: "Türkiye", x: 58.5, y: 27 }
     ];
 
     // Chapter-hero locator map: Florida chapters show the Florida outline (edge-to-edge, so the dot
@@ -881,9 +882,9 @@
         // Each chapter shows its OWN state/country outline (extracted from the US-states + world SVGs);
         // dot % is the chapter city within that shape (hand-calibrated).
         const R = {
-            "new-york": { map: "images/maps/new-york.svg", x: 88, y: 88, aspect: "1.279" },
-            "virginia": { map: "images/maps/virginia.svg", x: 48, y: 52, aspect: "1.679" },
-            "russia":   { map: "images/maps/russia.svg",   x: 15, y: 42, aspect: "1.714" },
+            "new-york": { map: "images/maps/new-york.svg", x: 78, y: 88, aspect: "1.279" },
+            "virginia": { map: "images/maps/virginia.svg", x: 92, y: 75, aspect: "1.679" },
+            "russia":   { map: "images/maps/russia.svg",   x: 16, y: 45, aspect: "1.714" },
             "turkey":   { map: "images/maps/turkey.svg",   x: 14, y: 20, aspect: "2.088" }
         };
         return R[id] || null;
