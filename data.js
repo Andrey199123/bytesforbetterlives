@@ -226,8 +226,8 @@ window.BFBL_DATA = {
             instagram: "https://www.instagram.com/bytesforbetterlivescbhs/",
             coordinates: { lat: 26.3017, lng: -80.2551 },
             description: "Local chapter expanding BFBL service projects and digital literacy outreach.",
-            // Chapter hero crop: moves the banner image lower so the empty top area is trimmed.
-            heroPos: "center 54%",
+            // Chapter hero crop: push the visible frame much lower so the empty top quarter is clipped.
+            heroPos: "center 72%",
             photos: [
                 "images/past events/workshops 1.jpg",
                 "images/work with kids/trivia night 1.avif"
