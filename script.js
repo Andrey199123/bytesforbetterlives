@@ -1051,7 +1051,7 @@
         if (heroEl && firstPhoto && hasRealPhoto(firstPhoto)) {
             heroEl.style.setProperty("--hero-img", `url("${firstPhoto}")`);
             const heroPos = chapter.id === "cypress"
-                ? "center 100%"
+                ? "center 76%"
                 : (chapter.heroPos ? String(chapter.heroPos) : "");
             if (heroPos) {
                 heroEl.style.setProperty("--hero-pos", heroPos);
