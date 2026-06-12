@@ -860,7 +860,7 @@
     // The three South-Florida chapters sit within ~15 mi of each other, so their dots cluster on the
     // SE coast — labels point LEFT (inland) and the dots are staggered in y so the labels don't pile up.
     const FLORIDA_MAP_PINS = [
-        { id: "gainesville", x: 52, y: 24 },
+        { id: "gainesville", x: 61, y: 25 },
         { id: "coral-springs", x: 83, y: 68, side: "left" },
         { id: "ahs", x: 85, y: 72.5, side: "left" },
         { id: "cypress", x: 81.5, y: 77, side: "left" }
@@ -877,15 +877,15 @@
     // %s line up with FLORIDA_MAP_PINS); everyone else shows the world map with their dot. Both fill
     // the box, so left:X%/top:Y% == X%/Y% of the map. (Dot %s mirror the directory map tables.)
     function chapterLocatorConfig(id) {
-        const FL = { gainesville: [52, 24], "coral-springs": [83, 68], ahs: [85, 72.5], cypress: [81.5, 77] };
+        const FL = { gainesville: [61, 25], "coral-springs": [83, 68], ahs: [85, 72.5], cypress: [81.5, 77] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         // Each chapter shows its OWN state/country outline (extracted from the US-states + world SVGs);
         // dot % is the chapter city within that shape (hand-calibrated).
         const R = {
             "new-york": { map: "images/maps/new-york.svg", x: 78, y: 88, aspect: "1.279" },
-            "virginia": { map: "images/maps/virginia.svg", x: 92, y: 75, aspect: "1.679" },
-            "russia":   { map: "images/maps/russia.svg",   x: 16, y: 45, aspect: "1.714" },
-            "turkey":   { map: "images/maps/turkey.svg",   x: 14, y: 20, aspect: "2.088" }
+            "virginia": { map: "images/maps/virginia.svg", x: 88.5, y: 74, aspect: "1.679" },
+            "russia":   { map: "images/maps/russia.svg",   x: 13, y: 54, aspect: "1.714" },
+            "turkey":   { map: "images/maps/turkey.svg",   x: 20, y: 25, aspect: "2.088" }
         };
         return R[id] || null;
     }
