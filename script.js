@@ -1050,6 +1050,9 @@
         const firstPhoto = chapter.photos && chapter.photos[0] ? chapter.photos[0] : "";
         if (heroEl && firstPhoto && hasRealPhoto(firstPhoto)) {
             heroEl.style.setProperty("--hero-img", `url("${firstPhoto}")`);
+            if (chapter.heroPos) {
+                heroEl.style.setProperty("--hero-pos", String(chapter.heroPos));
+            }
         }
         const markEl = document.querySelector("#chapter-hero-mark");
         if (markEl) {
