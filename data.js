@@ -196,6 +196,7 @@ window.BFBL_DATA = {
                 }
             ],
             leadBio: "The founding board of directors manages outreach, events, and partnerships across South Florida.",
+            instagram: "https://www.instagram.com/bytesforbetterlives/",
             coordinates: { lat: 26.1224, lng: -80.1373 },
             description: "Original chapter focused on senior tech help, children's donations, and digital literacy outreach.",
             photos: [
@@ -222,7 +223,7 @@ window.BFBL_DATA = {
                 }
             ],
             leadBio: "Dhava leads the Cypress Bay Chapter's local service projects and digital literacy outreach.",
-            instagram: "https://instagram.com/bfbl_cypressbay",
+            instagram: "https://www.instagram.com/bytesforbetterlivescbhs/",
             coordinates: { lat: 26.3017, lng: -80.2551 },
             description: "Local chapter expanding BFBL service projects and digital literacy outreach.",
             photos: [
