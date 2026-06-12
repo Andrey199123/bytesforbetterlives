@@ -1050,8 +1050,12 @@
         const firstPhoto = chapter.photos && chapter.photos[0] ? chapter.photos[0] : "";
         if (heroEl && firstPhoto && hasRealPhoto(firstPhoto)) {
             heroEl.style.setProperty("--hero-img", `url("${firstPhoto}")`);
-            if (chapter.heroPos) {
-                heroEl.style.setProperty("--hero-pos", String(chapter.heroPos));
+            const heroPos = chapter.id === "cypress"
+                ? "center 100%"
+                : (chapter.heroPos ? String(chapter.heroPos) : "");
+            if (heroPos) {
+                heroEl.style.setProperty("--hero-pos", heroPos);
+                heroEl.style.backgroundPosition = heroPos;
             }
         }
         const markEl = document.querySelector("#chapter-hero-mark");
