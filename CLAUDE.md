@@ -124,7 +124,9 @@ intentional/editorial, not AI-template.
 - **Per-page accent**: `--accent`/`-soft`/`-dark` default green; `body.page-*` overrides — green
   (home, impact, chapters, chapter profiles), gold (initiatives, gallery, past-events), teal (about,
   contact), coral (team). Accent drives kicker/underline, hero tint, band wash, card-hover, stat
-  numerals, program-tile colours. (Blue retired.)
+  numerals, program-tile colours. (Blue retired.) Every page keeps `--accent-dark` a shade DEEPER
+  than `--accent` so the kicker text sits below its underline bar (two-tone layering): green uses
+  `--green-deep`, the others use `--gold-deep`/`--teal-deep`/`--coral-deep`.
 - **Warm palette**: `--paper`/`--surface` warm off-white; neutral/deeper shadows; generous radii
   (`--radius-lg:18px`…`2xl:32px`).
 - **Section motif**: `.section-kicker` (uppercase Nunito, `--accent-dark`, 0.16em) + 48px `--accent`
@@ -140,10 +142,13 @@ intentional/editorial, not AI-template.
   `--accent-dark`→ink gradient + faint dot-grid + top-left glow), keyed per-page accent. No image →
   `min-height:clamp(420px,48vh,560px)` + `height:auto` + `overflow:visible` so it grows to fit content.
   HTML class is `hero hero-editorial`.
-- **Chapter-PROFILE pages** keep their own photo hero (`.chapter-hero`); `renderChapterProfilePage()`
-  sets `--hero-img` to `photos[0]`. `.chapter-hero` overrides the base `.hero` wash with a LIGHT one
-  (accent 36→12→0%, ink 54→30→14%) so the chapter's own photo reads clearly — the heavy base wash
-  exists to dissolve the wordmark baked into the shared banner photo, which chapter photos don't need. A faint **locator MAP + dot** (`chapterLocatorConfig` +
+- **Chapter-PROFILE pages** keep their own photo hero (`.chapter-hero`) WHEN the chapter has a real
+  `photos[0]`; `renderChapterProfilePage()` sets `--hero-img` to it. `.chapter-hero` overrides the base
+  `.hero` wash with a LIGHT one (accent 36→12→0%, ink 54→30→14%) so the chapter's own photo reads
+  clearly. **Chapters with NO real photo get `.chapter-hero--editorial`** (a photo-less accent
+  colour-field, same recipe as `.hero-editorial`) instead of falling back to the shared `hero-banner.jpg`
+  — whose printed wordmark bled through the light wash and made every photoless chapter look identical.
+  The locator map carries identity in both cases. A faint **locator MAP + dot** (`chapterLocatorConfig` +
   `.chapter-hero-locator`/`.hero-locator-map`/`.hero-locator-dot`, hidden on mobile) shows each
   chapter's OWN region outline from `images/maps/`: FL chapters→`florida.svg` (dot %s mirror
   `FLORIDA_MAP_PINS`); `new-york.svg`/`virginia.svg` (US-state outlines); `russia.svg`/`turkey.svg`
@@ -161,8 +166,11 @@ intentional/editorial, not AI-template.
   Clickable children inside a flat card keep their own hover.
 - **No decorative top/left "lines" on blocks** (HARD rule): removed `.service-card::before` top strip
   and `.chapter-card.card-edge-*` left spines; accent carried by coloured numeral / data-driven pill.
-- **Editorial stat band** (`.impact-band`): big Nunito numerals (`--accent-dark`, 900) + hairline
-  dividers on soft accent wash; Home+Impact use the `stats` array.
+- **Editorial stat band** (`.impact-band`): big Nunito numerals (`--accent-dark`, 900, `tabular-nums`
+  so the count-up doesn't jitter) + hairline dividers on soft accent wash; Home+Impact use the `stats`
+  array. Dividers (`border-left`) are scoped to the desktop 5-up row (`@media min-width:901px`) — on
+  stacked/2-col layouts the numeral carries the accent (a left spine there would break the no-lines
+  HARD rule). Grid laddering: 5 (≥901px) → 3 (≤900) → 2 (≤680 and ≤440); never 1-col.
 - **Program tiles** (`.service-card` in `.service-grid`): coloured `.service-number` (bare oversized
   numeral) cycling green/gold/coral/teal via `:nth-child(4n+…)`; 3-up desktop.
 - **`.cards-grid--feature`**: UNIFORM grid (`auto-fit minmax(300px,1fr)`, equal width/height; cards
@@ -175,9 +183,11 @@ intentional/editorial, not AI-template.
 - **Gallery** = dense mosaic (`.photo-gallery-grid` + `.g-feature`/`.g-wide`/`.g-tall` cadence + hover
   `<figcaption>`), built in `renderGalleryImages`.
 - **Chapters directory** = uniform grid (founding chapter just tinted via `.chapter-card--feature`).
-  Status pill on EVERY card (`chapterStatusBadgeMarkup`: founding→"Founding Chapter", else
-  `chapter.status`||"Active"); lead name once ("Led by", `chapterLeadPeopleText`) + `.chapter-card-go`
-  "View chapter →". Chapter cards ARE links → keep hover lift.
+  Status pill on EVERY card (`.status-badge`: true `999px` pill, uppercase `--font-label`;
+  `chapterStatusBadgeMarkup`: founding→"Founding Chapter", else `chapter.status`||"Active"); lead name
+  once ("Led by", `chapterLeadPeopleText`) + `.chapter-card-go` "View chapter →". `.chapter-card-desc`
+  is `-webkit-line-clamp:3` so cards don't stretch unevenly. Chapter cards ARE links → keep hover lift.
+  (Dead `card-edge-*` classes removed from `chapterDirectoryCardMarkup`.)
 - **Chapter location maps** (chapters.html "Where We Are"): two self-contained inline-SVG maps with
   status-coloured pins — `images/maps/florida.svg` and `images/maps/world.svg` (both PD, recoloured
   mint). **No third-party map lib/tiles → no CSP change, same-origin** (deliberately NOT
@@ -197,8 +207,19 @@ intentional/editorial, not AI-template.
   raster logos in `images/contact us logo/` are unused (kept only by stale test files). Footer quick
   links deliberately do NOT include Admin (reach it via `/admin.html` directly).
 - Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Nunito. Responsive hamburger
-  (`initMobileNavigation`). `--muted` darkened (~40% L) for AA; interior `.hero h1` + `.section-title`/`h2`
-  get a mobile clamp + `overflow-wrap`.
+  (`initMobileNavigation`, sets `aria-label`/`aria-expanded`). `--muted` darkened (~40% L) for AA;
+  interior `.hero h1` + `.section-title`/`h2` get a mobile clamp + `overflow-wrap`.
+- **A11y baseline** (keep when adding pages/components): `:focus-visible` ring = `--accent` outline +
+  paper halo (works on light & dark); skip-link + `<main id>` + `<meta theme-color>` are INJECTED once
+  per page by `ensureSkipLink()` in `script.js` (DRY — don't add them to each static head); `:root`
+  has `color-scheme: light`. Lightbox tiles (`.clickable-image`) are `role=button tabindex=0` + Enter/Space
+  (`openLightboxFrom`); both the lightbox and the email modal (`role=dialog aria-modal`) move focus in,
+  trap Tab / honor Escape, and restore focus on close. `scrollBehavior()` returns `auto` under reduced
+  motion (count-up + JS smooth-scroll respect it). Icon-only buttons need `aria-label` + wrap the glyph
+  in `<span aria-hidden>`; status `<p>`s use `role=status aria-live=polite`; email inputs carry
+  `autocomplete=email inputmode=email spellcheck=false name`. Form error/success colours: `--danger` /
+  `--green-dark` (NOT `--green`/the non-existent `--red`). Headings/section titles use `text-wrap:balance`,
+  long prose `text-wrap:pretty`; numerals (`.stat-number`, gallery meta) use `tabular-nums`.
 
 ## Current content snapshot
 - Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,

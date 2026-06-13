@@ -8,6 +8,9 @@
 }
 
 :root {
+    /* The site is intentionally light-only (no prefers-color-scheme dark styles); declare it so
+       form controls and scrollbars render with light-mode chrome. */
+    color-scheme: light;
     --font-body: "Mulish", "Segoe UI", sans-serif;
     /* Rounded geometric display + clean geometric body — the closest free match to DECA's
        Gotham Rounded / Gotham pairing (Gotham is licensed and can't be embedded). */
@@ -40,6 +43,11 @@
     --teal: oklch(60% 0.12 215);
     --teal-soft: oklch(93% 0.05 210);
     --teal-dark: oklch(45% 0.115 216);
+    /* Deeper sibling of each accent so kicker text can sit a shade below its underline bar,
+       matching the green pages' two-tone --accent / --accent-dark layering. */
+    --gold-deep: oklch(42% 0.11 68);
+    --teal-deep: oklch(38% 0.105 216);
+    --coral-deep: oklch(42% 0.15 35);
     --danger-soft: oklch(93% 0.046 25);
     --danger: oklch(50% 0.15 25);
     --footer-bg: oklch(24% 0.045 200);
@@ -97,13 +105,13 @@ body.page-home, body.page-impact, body.page-chapters, body.page-chapter {
     --accent: var(--green-dark); --accent-soft: var(--green-soft); --accent-dark: var(--green-deep);
 }
 body.page-initiatives, body.page-gallery, body.page-pastevents {
-    --accent: var(--gold-dark); --accent-soft: var(--gold-soft); --accent-dark: var(--gold-dark);
+    --accent: var(--gold-dark); --accent-soft: var(--gold-soft); --accent-dark: var(--gold-deep);
 }
 body.page-about, body.page-contact {
-    --accent: var(--teal-dark); --accent-soft: var(--teal-soft); --accent-dark: var(--teal-dark);
+    --accent: var(--teal-dark); --accent-soft: var(--teal-soft); --accent-dark: var(--teal-deep);
 }
 body.page-team {
-    --accent: var(--coral-dark); --accent-soft: var(--coral-soft); --accent-dark: var(--coral-dark);
+    --accent: var(--coral-dark); --accent-soft: var(--coral-soft); --accent-dark: var(--coral-deep);
 }
 
 html {
@@ -150,9 +158,54 @@ button {
     cursor: pointer;
 }
 
+/* Skip link — off-screen until a keyboard user tabs to it, then a clear pill at the top. */
+.skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 2000;
+    transform: translateY(-180%);
+    padding: 0.7rem 1.1rem;
+    background: var(--green-dark);
+    color: var(--paper);
+    font-family: var(--font-label);
+    font-weight: 700;
+    font-size: 0.95rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    transition: transform 0.18s ease;
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+    transform: translateY(0);
+}
+
 :focus-visible {
-    outline: 3px solid color-mix(in oklch, var(--green) 65%, var(--paper));
-    outline-offset: 3px;
+    /* On-brand, high-contrast keyboard focus ring: the page accent (dark) reads clearly on the
+       light backgrounds that carry most focusable content; the light halo keeps it visible on the
+       dark heroes/footer too. */
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px color-mix(in oklch, var(--paper) 55%, transparent);
+}
+
+/* Anchor jumps (impact.html #seniors/#kids/#donations/#partners, #start-chapter, etc.) must clear
+   the fixed navbar instead of hiding the target heading underneath it. */
+:target {
+    scroll-margin-top: calc(var(--nav-height) + 1.25rem);
+}
+
+/* Remove the 300ms double-tap delay on controls; keep gestures snappy on touch. */
+a,
+button,
+label,
+summary,
+[role="button"],
+input,
+select,
+textarea {
+    touch-action: manipulation;
 }
 
 h1,
@@ -269,8 +322,20 @@ main {
 .section-kicker::before { background: var(--accent); }
 .eyebrow::before { background: var(--accent-soft); }
 
+/* Home photo hero: the eyebrow sits over the busy banner photo under the lightest wash, so give it
+   the same paper colour + legibility shadow as the h1/subtitle (the bare pale-mint eyebrow has none).
+   Editorial colour-field heroes keep their pale-mint eyebrow. */
+.home-hero .eyebrow {
+    color: var(--paper);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 0 12px rgba(0, 0, 0, 0.5);
+}
+.home-hero .eyebrow::before {
+    background: var(--paper);
+}
+
 .section-title {
     color: var(--ink);
+    text-wrap: balance;
 }
 .section-header .section-title::after {
     content: "";
@@ -287,6 +352,7 @@ main {
     max-width: 68ch;
     font-size: clamp(1.08rem, 1.6vw, 1.28rem);
     color: var(--ink-soft);
+    text-wrap: pretty;
 }
 
 .text-center {
@@ -593,6 +659,20 @@ main {
         var(--hero-img) var(--hero-pos) / cover no-repeat;
 }
 
+/* Chapters with no real photo of their own: use the same photo-less accent colour-field as the
+   interior editorial heroes instead of the shared banner (whose printed wordmark bleeds through the
+   light chapter wash). Applied by renderChapterProfilePage; the locator map still gives identity. */
+.chapter-hero.chapter-hero--editorial {
+    background:
+        radial-gradient(80% 120% at 8% 0%,
+            color-mix(in oklch, var(--accent) 36%, transparent) 0%, transparent 60%),
+        radial-gradient(circle at 1px 1px,
+            color-mix(in oklch, var(--paper) 15%, transparent) 1px, transparent 1.6px) 0 0 / 24px 24px,
+        linear-gradient(115deg,
+            var(--accent-dark) 0%,
+            color-mix(in oklch, var(--accent-dark) 72%, var(--ink)) 100%);
+}
+
 .hero-home-banner {
     --hero-img: url("images/hero-banner.jpg");
     --hero-pos: center 34%;
@@ -613,12 +693,15 @@ main {
     min-height: clamp(420px, 48vh, 560px);
     overflow: visible;
     background:
+        /* a soft counter-glow in the empty bottom-right so the field isn't dead on that side */
+        radial-gradient(60% 90% at 100% 100%,
+            color-mix(in oklch, var(--accent-soft) 24%, transparent) 0%, transparent 55%),
         /* soft top-left glow for depth */
         radial-gradient(80% 120% at 8% 0%,
             color-mix(in oklch, var(--accent) 36%, transparent) 0%, transparent 60%),
-        /* faint light dot-grid texture so the field never reads as a flat block */
+        /* light dot-grid texture so the field never reads as a flat block */
         radial-gradient(circle at 1px 1px,
-            color-mix(in oklch, var(--paper) 15%, transparent) 1px, transparent 1.6px) 0 0 / 24px 24px,
+            color-mix(in oklch, var(--paper) 22%, transparent) 1px, transparent 1.6px) 0 0 / 20px 20px,
         /* the accent colour field itself, deepened toward ink on the right */
         linear-gradient(115deg,
             var(--accent-dark) 0%,
@@ -651,8 +734,24 @@ main {
 .hero-actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: var(--space-sm);
     margin-top: var(--space-md);
+}
+
+/* Quiet third action on the photo hero: a real text link (underline-on-hover only), so the eye
+   reads primary → secondary → quiet instead of three competing pills. */
+.hero-actions .hero-link {
+    color: var(--paper);
+    font-family: var(--font-label);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-decoration: none;
+    padding-inline: var(--space-xs);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+.hero-actions .hero-link:hover {
+    text-decoration: underline;
 }
 
 .hero-proof {
@@ -826,6 +925,7 @@ main {
 .card-description,
 .team-bio {
     color: var(--muted);
+    text-wrap: pretty;
 }
 
 .feature-box {
@@ -847,7 +947,7 @@ main {
     border-bottom: 1px solid var(--line);
 }
 
-/* Editorial stat row: drop the card chrome, let big Fraunces numerals carry it, hairline dividers. */
+/* Editorial stat row: drop the card chrome, let big numerals carry it. */
 .impact-band .stat-card {
     background: transparent;
     border: 0;
@@ -855,16 +955,19 @@ main {
     box-shadow: none;
     min-height: 0;
     padding: var(--space-xs) var(--space-lg);
-    border-left: 2px solid color-mix(in oklch, var(--accent) 36%, var(--line));
-}
-.impact-band .stats-grid > .stat-card:first-child {
-    border-left: 0;
-    padding-left: 0;
 }
 
 .impact-band .stats-grid {
     grid-template-columns: repeat(5, minmax(150px, 1fr));
     gap: var(--space-sm);
+}
+
+/* Hairline dividers only in the horizontal 5-up row; on stacked/2-col layouts the green
+   numeral carries the accent (a left spine on a stacked card reads as a decorative bar). */
+@media (min-width: 901px) {
+    .impact-band .stat-card:not(:first-child) {
+        border-left: 2px solid color-mix(in oklch, var(--accent) 36%, var(--line));
+    }
 }
 
 .stat-card {
@@ -883,6 +986,8 @@ main {
     line-height: 0.9;
     font-weight: 900;
     letter-spacing: -0.02em;
+    /* Lock digit advance width so the count-up animation doesn't jitter and stacked figures align. */
+    font-variant-numeric: tabular-nums;
 }
 
 @supports (font-size: 1cqi) {
@@ -1165,9 +1270,13 @@ main {
     align-items: center;
     width: fit-content;
     min-height: 30px;
-    padding: 0.24rem 0.62rem;
-    border-radius: var(--radius-md);
-    font-size: 0.84rem;
+    padding: 0.24rem 0.7rem;
+    /* True pill + label typography, matching the .drive-status pill and CTA language. */
+    border-radius: 999px;
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.78rem;
     font-weight: 900;
 }
 
@@ -1357,6 +1466,15 @@ main {
 .chapter-card strong {
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+/* Cap the body at 3 lines so directory/preview cards don't stretch to wildly uneven heights
+   from variable description length (the "View chapter" link is already pinned to the bottom). */
+.chapter-card-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
 }
 
 .chapter-card-header {
@@ -1664,10 +1782,10 @@ main {
 .gallery-locations {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2xl);
+    gap: var(--space-xl);
 }
 .gallery-location-head {
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-sm);
 }
 .gallery-location-title {
     margin: 0;
@@ -1695,6 +1813,7 @@ main {
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--muted);
+    font-variant-numeric: tabular-nums;
 }
 
 .photo-gallery-grid {
@@ -1743,9 +1862,27 @@ main {
 .photo-gallery-grid .g-tile:hover figcaption,
 .photo-gallery-grid .g-tile:focus-within figcaption { opacity: 1; }
 
+/* Touch devices can't hover: surface the date as a small persistent corner chip instead of the
+   full-width gradient (which would paint a heavy wash over every tile in the dense mosaic). */
+@media (hover: none) {
+    .photo-gallery-grid figcaption {
+        opacity: 1;
+        left: auto;
+        right: var(--space-xs);
+        bottom: var(--space-xs);
+        padding: 0.28rem 0.5rem;
+        font-size: 0.68rem;
+        line-height: 1;
+        background: color-mix(in oklch, var(--ink) 64%, transparent);
+        border-radius: 999px;
+        backdrop-filter: blur(2px);
+    }
+}
+
 @media (max-width: 760px) {
     .photo-gallery-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; }
-    .photo-gallery-grid .g-feature { grid-column: span 2; grid-row: span 2; }
+    /* Keep the feature tile full-width but NOT double-tall, so it stops becoming a tall banner. */
+    .photo-gallery-grid .g-feature { grid-column: span 2; grid-row: span 1; }
 }
 
 .chapter-officer-list {
@@ -1900,9 +2037,9 @@ main {
     min-height: inherit;
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
-    /* Prevent iOS/Safari white-flash/blank-face bugs during 3D transforms. */
+    /* Prevent iOS/Safari white-flash/blank-face bugs during 3D transforms (translateZ already
+       primes the 3D layer; a permanent will-change would keep a compositor layer alive for nothing). */
     transform: translateZ(0);
-    will-change: transform;
     transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -2285,6 +2422,7 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
+    overscroll-behavior: contain;
 }
 
 .lightbox-content img,
@@ -2479,6 +2617,10 @@ main {
         transition-duration: 1ms !important;
         animation-duration: 1ms !important;
     }
+    /* The looping flip-hint pulse would still flicker at 1ms; stop it outright and render statically. */
+    .flip-hint {
+        animation: none !important;
+    }
 }
 
 /* ===== RESPONSIVE ===== */
@@ -2578,7 +2720,6 @@ main {
 	}
 
 @media (max-width: 900px) {
-    .impact-band .stats-grid,
     .officer-grid,
     .chapter-summary,
     .chapter-officer-item,
@@ -2588,6 +2729,11 @@ main {
     .chapter-detail-grid,
     .footer-content {
         grid-template-columns: 1fr;
+    }
+
+    /* Stat band steps 5 → 3 on tablet (not straight to 1-up, which left huge numerals stacked). */
+    .impact-band .stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .chapter-model {
@@ -2623,6 +2769,11 @@ main {
     .hero {
         height: auto;
         min-height: clamp(380px, 64vh, 520px);
+    }
+    /* Photo-less interior heroes have less to show, so give them a shorter floor (must come AFTER
+       the .hero rule above so equal-specificity source order wins). */
+    .hero-editorial {
+        min-height: clamp(320px, 46vh, 420px);
     }
 
     .home-hero h1 {
@@ -2713,8 +2864,10 @@ main {
 }
 
 @media (max-width: 440px) {
+    /* Keep a 2-up editorial row on the smallest phones (the container-query numeral scaling stops
+       overflow) instead of one tall single column. */
     .impact-band .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .world-map {
@@ -2784,10 +2937,19 @@ main {
 .form-group textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid var(--gray);
+    border: 1px solid color-mix(in oklch, var(--line) 74%, var(--ink));
     border-radius: var(--radius-md);
+    background: var(--paper);
     font-family: inherit;
     resize: vertical;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+/* Accent focus affordance: swap the global ring for a crisp accent border + soft halo on the field. */
+.form-group input:focus-visible,
+.form-group textarea:focus-visible {
+    outline: none;
+    border-color: var(--accent-dark);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 35%, transparent);
 }
 .form-status {
     margin-top: 1rem;
@@ -2813,7 +2975,13 @@ main {
     border-radius: var(--radius-xl);
     cursor: pointer;
     position: relative;
-    outline: none;
+}
+
+/* The card is role="button" tabindex="0": no ring on mouse press, clear ring on keyboard focus. */
+.flip-card:focus { outline: none; }
+.flip-card:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
 }
 
 .flip-card-inner {
@@ -2829,7 +2997,6 @@ main {
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--line);
-    will-change: transform;
 }
 
 .flip-card.is-flipped .flip-card-inner {
@@ -2839,6 +3006,8 @@ main {
 @media (hover: hover) and (pointer: fine) {
     .flip-card:hover .flip-card-inner,
     .flip-card:focus-within .flip-card-inner {
+        /* Promote the layer only while the card is actively engaged, not permanently. */
+        will-change: transform;
         transform: translateZ(0) rotateY(180deg);
     }
 }
@@ -3222,6 +3391,16 @@ main {
     box-shadow: var(--shadow-md);
 }
 
+/* Quiet card label so the split reads as two titled halves (no kicker, bar, or hover). */
+.contact-form-title {
+    margin: 0 0 var(--space-md);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.2rem;
+    line-height: 1.2;
+    color: var(--ink);
+}
+
 .contact-form-note {
     margin: var(--space-md) 0 0;
     color: var(--muted);
@@ -3398,14 +3577,19 @@ main {
     inset: 0;
     background-repeat: no-repeat;
     background-size: 100% 100%;
-    opacity: 0.3;
+    opacity: 0.42;
 }
 .hero-locator-dot {
     position: absolute;
-    width: 11px;
-    height: 11px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
-    background: color-mix(in oklch, white 62%, transparent);
+    /* Solid paper dot with an accent ring + halo so the location reads clearly over a busy photo. */
+    background: var(--paper);
+    border: 2px solid color-mix(in oklch, var(--accent-dark) 70%, white);
+    box-shadow:
+        0 0 0 4px color-mix(in oklch, var(--accent-dark) 35%, transparent),
+        0 1px 4px color-mix(in oklch, var(--ink) 45%, transparent);
     transform: translate(-50%, -50%);
     z-index: 1;
 }

@@ -225,6 +225,7 @@
 
     function initRender() {
         initVercelAnalytics();
+        ensureSkipLink();
         renderNavigation();
         initNavDropdowns();
         renderFooter();
@@ -297,6 +298,11 @@
             // Ignore (Netlify/GitHub Pages/etc).
         };
         document.head.appendChild(script);
+    }
+
+    // "smooth" normally, but "auto" (instant) when the user prefers reduced motion.
+    function scrollBehavior() {
+        return (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
     }
 
     function escapeHTML(value) {
@@ -924,9 +930,8 @@
         const pageHref = chapterPublicHref(chapter);
         const leadNames = chapterLeadPeopleText(chapter);
         const featureCls = isExecutiveChapter(chapter) ? " chapter-card--feature" : "";
-        const edgeCls = " " + statusClass(chapter.status).replace("status-", "card-edge-");
         return `
-            <a class="chapter-card${featureCls}${edgeCls}" href="${escapeHTML(safeUrl(pageHref))}" aria-label="View ${escapeHTML(chapter.name)}">
+            <a class="chapter-card${featureCls}" href="${escapeHTML(safeUrl(pageHref))}" aria-label="View ${escapeHTML(chapter.name)}">
                 <div class="chapter-card-header">
                     <div>
                         <h3>${escapeHTML(chapter.name)}</h3>
@@ -1048,14 +1053,22 @@
         // a faint monogram — so chapter pages stop sharing one identical hero.
         const heroEl = document.querySelector(".chapter-hero");
         const firstPhoto = chapter.photos && chapter.photos[0] ? chapter.photos[0] : "";
-        if (heroEl && firstPhoto && hasRealPhoto(firstPhoto)) {
-            heroEl.style.setProperty("--hero-img", `url("${firstPhoto}")`);
-            const heroPos = chapter.id === "cypress"
-                ? "center 68%"
-                : (chapter.heroPos ? String(chapter.heroPos) : "");
-            if (heroPos) {
-                heroEl.style.setProperty("--hero-pos", heroPos);
-                heroEl.style.backgroundPosition = heroPos;
+        if (heroEl) {
+            if (firstPhoto && hasRealPhoto(firstPhoto)) {
+                heroEl.classList.remove("chapter-hero--editorial");
+                heroEl.style.setProperty("--hero-img", `url("${firstPhoto}")`);
+                const heroPos = chapter.id === "cypress"
+                    ? "center 68%"
+                    : (chapter.heroPos ? String(chapter.heroPos) : "");
+                if (heroPos) {
+                    heroEl.style.setProperty("--hero-pos", heroPos);
+                    heroEl.style.backgroundPosition = heroPos;
+                }
+            } else {
+                // No real chapter photo → don't fall back to the shared banner (its printed wordmark
+                // bleeds through the light chapter-hero wash). Use a photo-less accent colour-field;
+                // the locator map below still carries the chapter's identity.
+                heroEl.classList.add("chapter-hero--editorial");
             }
         }
         const markEl = document.querySelector("#chapter-hero-mark");
@@ -1091,10 +1104,11 @@
         const actionsEl = document.querySelector("#chapter-page-actions");
         if (actionsEl) {
             const actions = [
-                `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener" class="btn btn-primary">Support this Chapter</a>`
+                `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Support this Chapter</a>`
             ];
             if (chapter.joinUrl) {
-                actions.push(`<a href="${escapeHTML(safeUrl(chapter.joinUrl))}" target="_blank" rel="noopener" class="btn btn-primary">Get Involved</a>`);
+                // Quiet supporting action so a single primary CTA ("Support this Chapter") leads the hero.
+                actions.push(`<a href="${escapeHTML(safeUrl(chapter.joinUrl))}" target="_blank" rel="noopener noreferrer" class="btn btn-quiet">Get Involved</a>`);
             }
             if (chapter.instagram) {
                 actions.push(`<a href="${escapeHTML(safeUrl(chapter.instagram))}" target="_blank" rel="noopener noreferrer" class="btn btn-quiet">Instagram</a>`);
@@ -1689,7 +1703,7 @@
 
         initImageFallbacks(detailRoot);
         if (shouldScroll) {
-            detailRoot.scrollIntoView({ behavior: "smooth", block: "start" });
+            detailRoot.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
         }
     }
 
@@ -2035,6 +2049,25 @@
         card.setAttribute("aria-pressed", flipped ? "true" : "false");
     }
 
+    // Page-level a11y/meta basics injected once per page (DRY across every static shell since the
+    // site is fully JS-driven): a skip link, an id on <main>, and the mobile theme-color.
+    function ensureSkipLink() {
+        const main = document.querySelector("main");
+        if (main && !main.id) main.id = "main-content";
+        if (!document.querySelector('meta[name="theme-color"]')) {
+            const meta = document.createElement("meta");
+            meta.name = "theme-color";
+            meta.content = "#4F7A46"; // --green-dark: the navbar/CTA brand colour users see at the top
+            document.head.appendChild(meta);
+        }
+        if (document.querySelector(".skip-link")) return;
+        const link = document.createElement("a");
+        link.className = "skip-link";
+        link.href = "#" + (main && main.id ? main.id : "main-content");
+        link.textContent = "Skip to main content";
+        document.body.insertBefore(link, document.body.firstChild);
+    }
+
     function initMobileNavigation() {
         const hamburger = document.querySelector(".hamburger");
         const navMenu = document.querySelector(".nav-menu");
@@ -2066,7 +2099,7 @@
                 const target = document.querySelector(anchor.getAttribute("href"));
                 if (!target) return;
                 event.preventDefault();
-                target.scrollIntoView({ behavior: "smooth", block: "start" });
+                target.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
             });
         });
     }
@@ -2250,16 +2283,32 @@
         const caption = lightbox.querySelector(".lightbox-caption");
         let galleryItems = [];
         let currentIndex = 0;
+        let lastFocused = null;
+
+        function openLightboxFrom(media) {
+            const group = media.closest(".carousel-container, [data-lightbox-group]");
+            galleryItems = group ? Array.from(group.querySelectorAll(".clickable-image")) : [media];
+            currentIndex = Math.max(0, galleryItems.indexOf(media));
+            lastFocused = document.activeElement;
+            showLightbox();
+            closeButton.focus();
+        }
 
         document.querySelectorAll(".clickable-image").forEach(function (media) {
             if (media.dataset.lightboxBound) return;
             media.dataset.lightboxBound = "true";
+            // Make the bare <img>/<video> tile a real keyboard-operable control (matches the flip-card pattern).
+            if (!media.hasAttribute("role")) media.setAttribute("role", "button");
+            if (!media.hasAttribute("tabindex")) media.setAttribute("tabindex", "0");
+            if (!media.getAttribute("aria-label")) media.setAttribute("aria-label", "Enlarge image" + (media.alt ? ": " + media.alt : ""));
             media.addEventListener("click", function (event) {
                 event.stopPropagation();
-                const group = media.closest(".carousel-container, [data-lightbox-group]");
-                galleryItems = group ? Array.from(group.querySelectorAll(".clickable-image")) : [media];
-                currentIndex = Math.max(0, galleryItems.indexOf(media));
-                showLightbox();
+                openLightboxFrom(media);
+            });
+            media.addEventListener("keydown", function (event) {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault(); // stop Space from scrolling the page
+                openLightboxFrom(media);
             });
         });
 
@@ -2306,6 +2355,9 @@
             document.body.classList.remove("modal-open");
             const video = lightbox.querySelector("video");
             if (video) video.pause();
+            // Return focus to the tile that opened the lightbox.
+            if (lastFocused && typeof lastFocused.focus === "function") lastFocused.focus();
+            lastFocused = null;
         }
 
         function nextImage() {
@@ -2329,6 +2381,15 @@
             if (event.key === "Escape") closeLightbox();
             if (event.key === "ArrowRight" && galleryItems.length > 1) nextImage();
             if (event.key === "ArrowLeft" && galleryItems.length > 1) prevImage();
+            if (event.key === "Tab") {
+                // Trap Tab within the dialog's visible controls (prev/next are hidden for single items).
+                const focusables = [closeButton, prevButton, nextButton].filter(function (b) { return b.offsetParent !== null; });
+                if (!focusables.length) return;
+                const firstF = focusables[0];
+                const lastF = focusables[focusables.length - 1];
+                if (event.shiftKey && document.activeElement === firstF) { lastF.focus(); event.preventDefault(); }
+                else if (!event.shiftKey && document.activeElement === lastF) { firstF.focus(); event.preventDefault(); }
+            }
         });
     }
 
@@ -2337,6 +2398,7 @@
         const counters = document.querySelectorAll('.animated-counter');
         if (!counters.length) return;
 
+        const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         const formatCache = new Map();
         function formatValue(value, decimals) {
             const key = String(decimals);
@@ -2363,6 +2425,13 @@
                 const prefix = el.getAttribute('data-prefix') || "";
                 const suffix = el.getAttribute('data-suffix') || "";
                 const decimals = parseInt(el.getAttribute('data-decimals'), 10) || 0;
+
+                // Respect reduced-motion: skip the count-up and show the final value immediately.
+                if (reduceMotion) {
+                    el.textContent = prefix + formatValue(target, decimals) + suffix;
+                    return;
+                }
+
                 const duration = 2000;
                 const startTime = performance.now();
 
@@ -2412,7 +2481,7 @@
 
         function scrollStep(direction) {
             const step = Math.max(220, Math.floor(viewport.clientWidth * 0.8));
-            viewport.scrollBy({ left: direction * step, behavior: "smooth" });
+            viewport.scrollBy({ left: direction * step, behavior: scrollBehavior() });
         }
 
         prevButton.addEventListener("click", function () { scrollStep(-1); });
@@ -2435,15 +2504,37 @@
     }
 })();
 
+let emailModalTrigger = null;
+
 window.openEmailModal = function() {
     const modal = document.getElementById("email-modal");
-    if (modal) modal.classList.add("active");
+    if (!modal) return;
+    emailModalTrigger = document.activeElement;
+    modal.classList.add("active");
+    document.body.classList.add("modal-open");
+    const first = document.getElementById("sender-email");
+    if (first) first.focus();
 };
 
 window.closeEmailModal = function() {
     const modal = document.getElementById("email-modal");
-    if (modal) modal.classList.remove("active");
+    if (!modal) return;
+    modal.classList.remove("active");
+    document.body.classList.remove("modal-open");
+    // Restore focus to whatever opened the dialog.
+    if (emailModalTrigger && typeof emailModalTrigger.focus === "function") emailModalTrigger.focus();
+    emailModalTrigger = null;
 };
+
+// Escape and backdrop click close the email modal (bound once, like the lightbox).
+document.addEventListener("keydown", function (e) {
+    const m = document.getElementById("email-modal");
+    if (m && m.classList.contains("active") && e.key === "Escape") window.closeEmailModal();
+});
+document.addEventListener("click", function (e) {
+    const m = document.getElementById("email-modal");
+    if (m && m.classList.contains("active") && e.target === m) window.closeEmailModal();
+});
 
 const EMAIL_FORM_COOLDOWN_MS = 60 * 1000; // 1 message/min/browser — basic anti-spam throttle
 const EMAIL_MESSAGE_MAX = 4000;
@@ -2451,13 +2542,14 @@ const EMAIL_MESSAGE_MAX = 4000;
 window.submitEmailForm = async function(event) {
     event.preventDefault();
     const btn = document.getElementById("submit-email-btn");
+    const originalBtnLabel = btn.textContent; // each page keeps its own label ("Send Message"/"Send Email")
     const status = document.getElementById("email-status");
     const email = document.getElementById("sender-email").value;
     const message = document.getElementById("sender-message").value;
     // Honeypot: a hidden field real users never see. Bots fill it → silently drop (pretend success).
     const honeypotEl = document.getElementById("company-website");
     if (honeypotEl && honeypotEl.value) {
-        status.style.color = "var(--green)";
+        status.style.color = "var(--green-dark)";
         status.textContent = "Email sent successfully! We will get back to you soon.";
         document.getElementById("email-form").reset();
         setTimeout(closeEmailModal, 3000);
@@ -2469,20 +2561,20 @@ window.submitEmailForm = async function(event) {
         const last = Number(localStorage.getItem("bfblEmailFormLast") || 0);
         const wait = EMAIL_FORM_COOLDOWN_MS - (Date.now() - last);
         if (last && wait > 0) {
-            status.style.color = "var(--red)";
+            status.style.color = "var(--danger)";
             status.textContent = "Please wait " + Math.ceil(wait / 1000) + "s before sending another message.";
             return;
         }
     } catch (e) { /* localStorage blocked — skip throttle */ }
 
     if (message && message.length > EMAIL_MESSAGE_MAX) {
-        status.style.color = "var(--red)";
+        status.style.color = "var(--danger)";
         status.textContent = "Message is too long (max " + EMAIL_MESSAGE_MAX + " characters).";
         return;
     }
 
     btn.disabled = true;
-    btn.textContent = "Sending...";
+    btn.textContent = "Sending…";
     status.textContent = "";
 
     try {
@@ -2503,7 +2595,7 @@ window.submitEmailForm = async function(event) {
 
         if (response.ok) {
             try { localStorage.setItem("bfblEmailFormLast", String(Date.now())); } catch (e) { /* ignore */ }
-            status.style.color = "var(--green)";
+            status.style.color = "var(--green-dark)";
             status.textContent = "Email sent successfully! We will get back to you soon.";
             document.getElementById("email-form").reset();
             setTimeout(closeEmailModal, 3000);
@@ -2513,10 +2605,10 @@ window.submitEmailForm = async function(event) {
         }
     } catch (error) {
         console.error(error);
-        status.style.color = "var(--red)";
+        status.style.color = "var(--danger)";
         status.textContent = "Failed to send email. Please try again or email us directly.";
     } finally {
         btn.disabled = false;
-        btn.textContent = "Send Email";
+        btn.textContent = originalBtnLabel;
     }
 };

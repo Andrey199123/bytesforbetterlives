@@ -37,7 +37,7 @@
         <section class="section">
             <div class="container">
                 <div class="section-header">
-                    <p class="section-kicker">Team</p>
+                    <p class="section-kicker">Governance</p>
                     <h2 class="section-title">Board of Directors</h2>
                     <p class="section-description">The board of directors coordinates BFBL programs, partnerships, fundraising, and chapter standards.</p>
                 </div>
@@ -49,7 +49,7 @@
         <section class="section band--ink">
             <div class="container text-center">
                 <p class="band-figure">40+</p>
-                <p class="section-description" style="margin-inline:auto;">student volunteers leading senior tech help, digital-literacy lessons, and donation drives across 7 chapters.</p>
+                <p class="section-description" style="margin-inline:auto;">student volunteers leading senior tech help, digital-literacy lessons, and donation drives across 8 chapters.</p>
             </div>
         </section>
 
@@ -81,22 +81,22 @@
 
         <!-- Email Modal (opened by the "Start a Chapter" button in the Chapter leadership section) -->
         <div id="email-modal" class="modal-overlay">
-            <div class="modal-content">
-                <button class="modal-close" onclick="closeEmailModal()">&times;</button>
-                <h2>Start a Chapter</h2>
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="email-modal-title">
+                <button class="modal-close" type="button" onclick="closeEmailModal()" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h2 id="email-modal-title">Start a Chapter</h2>
                 <form id="email-form" onsubmit="submitEmailForm(event)">
                     <!-- Honeypot: hidden from humans; bots that fill it get silently dropped. -->
                     <input type="text" id="company-website" name="company-website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
                     <div class="form-group">
                         <label for="sender-email">Your Email Address</label>
-                        <input type="email" id="sender-email" maxlength="254" required>
+                        <input type="email" id="sender-email" name="email" autocomplete="email" inputmode="email" spellcheck="false" maxlength="254" required placeholder="you@example.com">
                     </div>
                     <div class="form-group">
                         <label for="sender-message">Message</label>
-                        <textarea id="sender-message" rows="5" maxlength="4000" required placeholder="Include your name, school or organization, city, country, proposed leadership team, and the service projects you want to start first."></textarea>
+                        <textarea id="sender-message" name="message" rows="5" maxlength="4000" required placeholder="Include your name, school or organization, city, country, proposed leadership team, and the service projects you want to start first."></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary w-100" id="submit-email-btn">Send Email</button>
-                    <p id="email-status" class="form-status"></p>
+                    <p id="email-status" class="form-status" role="status" aria-live="polite"></p>
                 </form>
             </div>
         </div>

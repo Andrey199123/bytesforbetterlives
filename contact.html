@@ -70,21 +70,22 @@
                         </div>
                     </div>
                     <div class="contact-form-card">
+                        <h3 class="contact-form-title">Send a Message</h3>
                         <!-- Reuses the same handler + anti-spam as the Start-a-Chapter form (script.js submitEmailForm). -->
                         <form id="email-form" onsubmit="submitEmailForm(event)">
                             <input type="text" id="company-website" name="company-website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
                             <div class="form-group">
                                 <label for="sender-email">Your Email Address</label>
-                                <input type="email" id="sender-email" maxlength="254" required>
+                                <input type="email" id="sender-email" name="email" autocomplete="email" inputmode="email" spellcheck="false" maxlength="254" required placeholder="you@example.com">
                             </div>
                             <div class="form-group">
                                 <label for="sender-message">Message</label>
-                                <textarea id="sender-message" rows="6" maxlength="4000" required placeholder="Tell us how we can help — questions, partnership ideas, or how you'd like to get involved."></textarea>
+                                <textarea id="sender-message" name="message" rows="6" maxlength="4000" required placeholder="Tell us how we can help — questions, partnership ideas, or how you’d like to get involved."></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary w-100" id="submit-email-btn">Send Message</button>
-                            <p id="email-status" class="form-status"></p>
+                            <p id="email-status" class="form-status" role="status" aria-live="polite"></p>
                         </form>
-                        <p class="contact-form-note">Prefer email? Write to us directly and we'll pick it up the same way.</p>
+                        <p class="contact-form-note">Prefer email? Write to us directly and we’ll pick it up the same way.</p>
                     </div>
                 </div>
             </div>
@@ -119,7 +120,7 @@
                         <span class="help-index" aria-hidden="true">03</span>
                         <div>
                             <h3>Start a Chapter</h3>
-                            <p>Bring Bytes for Better Lives to your school or town — we'll help you launch it.</p>
+                            <p>Bring Bytes for Better Lives to your school or town — we’ll help you launch it.</p>
                         </div>
                         <a href="chapters.html#start-chapter" class="btn btn-secondary">Learn More</a>
                     </div>
