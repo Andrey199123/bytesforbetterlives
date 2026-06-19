@@ -95,7 +95,7 @@ contain spaces.
 
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
-`chapters.html`, `chapter-{ahs,coral-springs,cypress,gainesville,new-york,virginia,russia,turkey}.html`,
+`chapters.html`, `chapter-{ahs,coral-springs,cypress,gainesville,miami,new-york,virginia,russia,turkey}.html`,
 `contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery → lightbox).
 Admin (noindex, not in navbar): `admin.html` (chapter-picker login landing), `members-admin.html`,
 `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `initiatives-admin.html`,
@@ -223,11 +223,12 @@ intentional/editorial, not AI-template.
 
 ## Current content snapshot
 - Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,
-  **8** chapters (`stats` array in `script.js`). Chapters (registry order): AHS, Cypress Bay,
-  Gainesville, Coral Springs, New York, Virginia, Russia, Turkey.
+  **9** chapters (`stats` array in `script.js`). Chapters (registry order): AHS, Cypress Bay,
+  Gainesville, Coral Springs, Miami, New York, Virginia, Russia, Turkey.
 - Chapter cities (for map dots): AHS→Plantation FL, Cypress Bay→Weston/Cypress Bay FL,
-  Gainesville→Gainesville FL, Coral Springs→Coral Springs FL, New York→NYC, Virginia→Virginia Beach VA,
-  Russia→Moscow, Turkey→Istanbul.
+  Gainesville→Gainesville FL, Coral Springs→Coral Springs FL, Miami→Miami FL, New York→NYC,
+  Virginia→Virginia Beach VA, Russia→Moscow, Turkey→Istanbul. (Miami = MAST @ FIU students, not an
+  official school club; public page is Miami-only. Chapter admin: adina.t.brody09@gmail.com.)
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## Git / workflow
@@ -354,7 +355,20 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
   inline `<code>` text in one `<span>`.
   - **Generated from `chapter-admin.html`** via:
     `for f in chapter-*.html; do b=${f#chapter-}; b=${b%.html}; case "$b" in admin|pages-admin|*-admin) continue;; esac; sed -e "s|<body>|<body data-admin-chapter=\"$b\">|" chapter-admin.html > "chapter-$b-admin.html"; done`
-    A NEW chapter needs its `chapter-<id>-admin.html` generated (re-run) + a public `chapter-<id>.html`.
+    **Full checklist to add a NEW chapter `<id>`** (all surfaces — miss one and the chapter half-exists):
+    (1) public `chapter-<id>.html` stub (copy a sibling; set `data-chapter-id` + title + canonical
+    subdomain); (2) `chapter-<id>-admin.html` (re-run the sed loop above); (3) Firestore registry entry
+    `{id,pageHref}` in `site/content.chapters` AND a `chapterContent/<id>` doc `{page,members}` (use
+    `tools/firestore.mjs`); (4) map pin — FL chapters → `FLORIDA_MAP_PINS` + `chapterLocatorConfig` FL
+    table in `script.js`; others → `WORLD_MAP_PINS` + a region SVG; (5) bump the `stats` "Chapters"
+    `raw` count in `script.js` AND any hardcoded count prose (e.g. `index.html`, `team.html`);
+    (6) `sitemap.xml` `<loc>` for the subdomain; (7) `vercel.json` subdomain redirect PAIR (.net + .org)
+    — without it the canonical/sitemap subdomain URL just redirects to the homepage; (8) add the chapter
+    lead to the chapter doc's members + `page.leadPeople`; (9) optional: mirror into the `data.js` seed
+    fallback. Grant a chapter admin via `site/content.chapterAdmins` (key = the **lowercased** Google
+    email, to match `firestore.rules`); add that email to `storage.rules` too ONLY if they must upload
+    photos (existing chapter admins are NOT in `storage.rules`, so they can edit text/members but not
+    upload files).
 
 ### Rules & security
 - **Rules** — `firestore.rules`/`storage.rules` (wired into `firebase.json`). Deploy

@@ -689,7 +689,7 @@
             { raw: 2350, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
             { raw: 1500, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
             { raw: 3500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
-            { raw: 8, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
+            { raw: 9, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
         ];
 
         root.innerHTML = `
@@ -869,7 +869,8 @@
         { id: "gainesville", x: 61, y: 25 },
         { id: "coral-springs", x: 83, y: 68, side: "left" },
         { id: "ahs", x: 85, y: 72.5, side: "left" },
-        { id: "cypress", x: 81.5, y: 77, side: "left" }
+        { id: "cypress", x: 81.5, y: 77, side: "left" },
+        { id: "miami", x: 85, y: 82, side: "left" }
     ];
     const WORLD_MAP_PINS = [
         { id: "ahs", label: "Florida", x: 31, y: 40, side: "left" },
@@ -883,7 +884,7 @@
     // %s line up with FLORIDA_MAP_PINS); everyone else shows the world map with their dot. Both fill
     // the box, so left:X%/top:Y% == X%/Y% of the map. (Dot %s mirror the directory map tables.)
     function chapterLocatorConfig(id) {
-        const FL = { gainesville: [61, 25], "coral-springs": [83, 68], ahs: [85, 72.5], cypress: [81.5, 77] };
+        const FL = { gainesville: [61, 25], "coral-springs": [83, 68], ahs: [85, 72.5], cypress: [81.5, 77], miami: [85, 82] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         // Each chapter shows its OWN state/country outline (extracted from the US-states + world SVGs);
         // dot % is the chapter city within that shape (hand-calibrated).

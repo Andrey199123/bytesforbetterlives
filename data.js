@@ -306,6 +306,30 @@ window.BFBL_DATA = {
             ]
         },
         {
+            id: "miami",
+            subdomain: "miami",
+            pageHref: "chapter-miami.html",
+            name: "Miami Chapter",
+            location: "Miami, FL, USA",
+            status: "Launching",
+            leadName: "Adina Brody",
+            leadTitle: "Chapter President",
+            leadPhoto: "images/logo.avif",
+            leadPeople: [
+                {
+                    name: "Adina Brody",
+                    title: "Chapter President",
+                    photo: "images/logo.avif"
+                }
+            ],
+            leadBio: "Adina leads the Miami Chapter's senior tech help, digital literacy education, and community outreach.",
+            coordinates: { lat: 25.7617, lng: -80.1918 },
+            description: "Launching chapter expanding BFBL senior tech help, online safety education, and children's donation drives in Miami.",
+            photos: [
+                "images/logo.avif"
+            ]
+        },
+        {
             id: "russia",
             subdomain: "russia",
             pageHref: "chapter-russia.html",
