@@ -858,41 +858,43 @@
         root.innerHTML = (data.chapters || []).map(chapterDirectoryCardMarkup).join("");
     }
 
-    // Pin positions for the chapters-page maps. Coordinates are PERCENTAGES of the map frame
-    // (left%, top%), hand-calibrated to images/maps/florida.svg and world.svg — chapters carry no
-    // geo data, so position lives here (like the hardcoded `stats`/`FOUNDERS`). A chapter id with no
-    // entry simply gets no pin (graceful), and each pin's name/status/href are still resolved live
-    // from data.chapters. World pins collapse the South-Florida cluster into one "Florida" marker.
-    // The three South-Florida chapters sit within ~15 mi of each other, so their dots cluster on the
-    // SE coast — labels point LEFT (inland) and the dots are staggered in y so the labels don't pile up.
+    // Pin positions for the chapters-page maps, as PERCENTAGES of the map frame (left%, top%).
+    // These are PROJECTED from each city's real lat/lng — not eyeballed. florida.svg is treated as
+    // equirectangular over Florida's bounding box; world.svg is a Miller cylindrical projection
+    // (verified by reproducing the russia.svg/turkey.svg crop latitudes to within ~2px). Chapters
+    // carry no geo data, so positions live here (like the hardcoded `stats`/`FOUNDERS`); a chapter id
+    // with no entry simply gets no pin, and each pin's name/status/href still resolve live from
+    // data.chapters. World pins collapse the four South-Florida chapters into one "Florida" marker.
+    // The SE-Florida chapters are only ~40 mi apart, so on the Florida map their dots correctly sit
+    // close together on the SE coast — labels float LEFT (inland) to stay legible.
     const FLORIDA_MAP_PINS = [
-        { id: "gainesville", x: 61, y: 25 },
-        { id: "coral-springs", x: 83, y: 68, side: "left" },
-        { id: "ahs", x: 85, y: 72.5, side: "left" },
-        { id: "cypress", x: 81.5, y: 77, side: "left" },
-        { id: "miami", x: 85, y: 82, side: "left" }
+        { id: "gainesville", x: 67.6, y: 24.2 },
+        { id: "coral-springs", x: 91.9, y: 70.7, side: "left" },
+        { id: "ahs", x: 93.4, y: 72.8, side: "left" },
+        { id: "cypress", x: 90.4, y: 73.1, side: "left" },
+        { id: "miami", x: 92.8, y: 77.8, side: "left" }
     ];
     const WORLD_MAP_PINS = [
-        { id: "ahs", label: "Florida", x: 31, y: 40, side: "left" },
-        { id: "new-york", label: "New York", x: 33, y: 27, side: "left" },
-        { id: "virginia", label: "Virginia", x: 32.5, y: 30, side: "left" },
-        { id: "russia", label: "Russia", x: 60, y: 18 },
-        { id: "turkey", label: "Türkiye", x: 58.5, y: 27 }
+        { id: "ahs", label: "Florida", x: 24.5, y: 41.4, side: "left" },
+        { id: "new-york", label: "New York", x: 26.6, y: 34.3 },
+        { id: "virginia", label: "Virginia", x: 26.0, y: 36.5, side: "left" },
+        { id: "russia", label: "Russia", x: 57.9, y: 25.0 },
+        { id: "turkey", label: "Türkiye", x: 55.5, y: 34.2 }
     ];
 
-    // Chapter-hero locator map: Florida chapters show the Florida outline (edge-to-edge, so the dot
-    // %s line up with FLORIDA_MAP_PINS); everyone else shows the world map with their dot. Both fill
-    // the box, so left:X%/top:Y% == X%/Y% of the map. (Dot %s mirror the directory map tables.)
+    // Chapter-hero locator map: Florida chapters show the Florida outline (so the dot %s line up with
+    // FLORIDA_MAP_PINS); everyone else shows their OWN state/country outline. Dots are PROJECTED from
+    // each city's real lat/lng — FL/NY/VA equirectangular over the shape's bounding box; russia/turkey
+    // use the same Miller projection as world.svg (those SVGs are crops of it). Each SVG fills the box,
+    // so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
     function chapterLocatorConfig(id) {
-        const FL = { gainesville: [61, 25], "coral-springs": [83, 68], ahs: [85, 72.5], cypress: [81.5, 77], miami: [85, 82] };
+        const FL = { gainesville: [67.6, 24.2], "coral-springs": [91.9, 70.7], ahs: [93.4, 72.8], cypress: [90.4, 73.1], miami: [92.8, 77.8] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
-        // Each chapter shows its OWN state/country outline (extracted from the US-states + world SVGs);
-        // dot % is the chapter city within that shape (hand-calibrated).
         const R = {
-            "new-york": { map: "images/maps/new-york.svg", x: 78, y: 88, aspect: "1.279" },
-            "virginia": { map: "images/maps/virginia.svg", x: 88.5, y: 74, aspect: "1.679" },
-            "russia":   { map: "images/maps/russia.svg",   x: 13, y: 54, aspect: "1.714" },
-            "turkey":   { map: "images/maps/turkey.svg",   x: 20, y: 25, aspect: "2.088" }
+            "new-york": { map: "images/maps/new-york.svg", x: 70.7, y: 89.9, aspect: "1.279" },
+            "virginia": { map: "images/maps/virginia.svg", x: 87.5, y: 83.4, aspect: "1.679" },
+            "russia":   { map: "images/maps/russia.svg",   x: 13.3, y: 68.7, aspect: "1.714" },
+            "turkey":   { map: "images/maps/turkey.svg",   x: 18.9, y: 23.1, aspect: "2.088" }
         };
         return R[id] || null;
     }

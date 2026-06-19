@@ -152,8 +152,9 @@ intentional/editorial, not AI-template.
   `.chapter-hero-locator`/`.hero-locator-map`/`.hero-locator-dot`, hidden on mobile) shows each
   chapter's OWN region outline from `images/maps/`: FL chapters→`florida.svg` (dot %s mirror
   `FLORIDA_MAP_PINS`); `new-york.svg`/`virginia.svg` (US-state outlines); `russia.svg`/`turkey.svg`
-  (country paths). Each region SVG fills the box edge-to-edge so `left/top:%`==map %; dot % is the city
-  hand-calibrated; container `aspect-ratio` matches the SVG's bbox.
+  (country paths). Each region SVG fills the box edge-to-edge so `left/top:%`==map %; dot % is
+  **projected from the city's real lat/lng** (see map-projection note below); container `aspect-ratio`
+  matches the SVG's bbox.
 - Base `.hero` (accent wash + ink + scrim + `--hero-img`, fixed `height:clamp(560px,62vh,700px)`,
   mobile→auto) backs `.home-hero`/`.chapter-hero`; `.hero-editorial` overrides background/height. Plain
   `.hero` falls back to `images/hero-bg.avif`.
@@ -191,11 +192,19 @@ intentional/editorial, not AI-template.
 - **Chapter location maps** (chapters.html "Where We Are"): two self-contained inline-SVG maps with
   status-coloured pins — `images/maps/florida.svg` and `images/maps/world.svg` (both PD, recoloured
   mint). **No third-party map lib/tiles → no CSP change, same-origin** (deliberately NOT
-  Google/Mapbox/Leaflet). `renderChapterMaps()` renders pins from hand-calibrated percent tables
+  Google/Mapbox/Leaflet). `renderChapterMaps()` renders pins from percent tables
   `FLORIDA_MAP_PINS`/`WORLD_MAP_PINS` (chapters carry no geo in Firestore, so hardcoded like
   `stats`/`FOUNDERS`); each pin resolves name/status/href LIVE via `chapterById()`. Image fills
   `.map-frame` edge-to-edge so `left:X%`==X% of map. Pin classes **`.geo-pin`/`.geo-pin-dot`/`.geo-pin-label`**
   — MUST NOT reuse `.map-pin` (dead legacy teardrop component ~line 1198+ that hijacks markup).
+  - **Map-projection note (how pin %s are derived):** pin positions are PROJECTED from each city's real
+    lat/lng, not eyeballed. `florida.svg` (+ `new-york.svg`/`virginia.svg`) are equirectangular over the
+    region's bounding box → `x%=(lng-lngW)/(lngE-lngW)`, `y%=(latN-lat)/(latN-latS)`, then mapped into the
+    SVG via its path bbox vs viewBox (each has ~5% padding). `world.svg` (and its crops `russia.svg`/
+    `turkey.svg`, which share its coordinate space) is **Miller cylindrical**: `x=X0+mx·lng`,
+    `y=Y0−k·millerY(lat)` where `millerY(lat)=1.25·ln(tan(π/4+0.4·lat))`. To add/move a pin, compute the
+    %s this way and visually verify against the silhouette; the four SE-Florida chapters legitimately
+    cluster on the SE coast (~40 mi apart), so their labels float left and a couple of dots overlap.
   `.pin-active`=green, `.pin-launching`=gold; `.geo-pin--left` floats label inland.
 - **Member rosters**: leadership as cards, volunteers as `.roster-chip` pills (`personChipMarkup`) — on
   chapter profiles and Team volunteers grid.
