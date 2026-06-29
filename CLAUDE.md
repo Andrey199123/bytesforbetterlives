@@ -214,7 +214,7 @@ intentional/editorial, not AI-template.
 - **Social icons = monochrome inline SVG** (`SOCIAL_ICONS` const in `script.js`, duplicated inline in
   `contact.html`); `.social-link` = 42px quiet icon button inheriting currentColor. The old full-colour
   raster logos in `images/contact us logo/` are unused (kept only by stale test files). Footer quick
-  links deliberately do NOT include Admin (reach it via `/admin.html` directly).
+  links include an **Admin** link (`admin.html`) alongside the nav pages (`renderFooter` `quickLinks`).
 - Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Nunito. Responsive hamburger
   (`initMobileNavigation`, sets `aria-label`/`aria-expanded`). `--muted` darkened (~40% L) for AA;
   interior `.hero h1` + `.section-title`/`h2` get a mobile clamp + `overflow-wrap`.

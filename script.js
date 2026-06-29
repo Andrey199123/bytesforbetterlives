@@ -626,7 +626,8 @@
             ["Impact", "impact.html"],
             ["Initiatives", "ongoing-initiatives.html"],
             ["Team", "team.html"],
-            ["Chapters", "chapters.html"]
+            ["Chapters", "chapters.html"],
+            ["Admin", "admin.html"]
         ];
 
         const programLinks = [
