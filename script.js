@@ -2532,10 +2532,29 @@ window.closeEmailModal = function() {
     emailModalTrigger = null;
 };
 
-// Escape and backdrop click close the email modal (bound once, like the lightbox).
+// Escape and backdrop click close the email modal; Tab is trapped inside it while open
+// (bound once, like the lightbox).
 document.addEventListener("keydown", function (e) {
     const m = document.getElementById("email-modal");
-    if (m && m.classList.contains("active") && e.key === "Escape") window.closeEmailModal();
+    if (!m || !m.classList.contains("active")) return;
+    if (e.key === "Escape") {
+        window.closeEmailModal();
+        return;
+    }
+    if (e.key !== "Tab") return;
+    const focusables = Array.from(m.querySelectorAll(
+        'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'
+    )).filter(function (el) { return el.offsetParent !== null && !el.disabled && el.tabIndex >= 0; });
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && (document.activeElement === first || !m.contains(document.activeElement))) {
+        e.preventDefault();
+        last.focus();
+    } else if (!e.shiftKey && (document.activeElement === last || !m.contains(document.activeElement))) {
+        e.preventDefault();
+        first.focus();
+    }
 });
 document.addEventListener("click", function (e) {
     const m = document.getElementById("email-modal");

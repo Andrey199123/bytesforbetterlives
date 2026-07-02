@@ -2905,15 +2905,23 @@ li:has(> .dropdown-link--all) {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    /* Above the sticky navbar (3000) — a dialog must cover ALL page chrome. */
+    z-index: 4000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 200ms ease;
+    /* visibility:hidden removes the closed dialog from the tab order and the
+       accessibility tree (opacity alone left invisible focus stops on the page).
+       The 200ms visibility delay only applies on CLOSE (so the fade-out stays
+       visible); .active zeroes it so the dialog is focusable the instant it opens. */
+    visibility: hidden;
+    transition: opacity 200ms ease, visibility 0s linear 200ms;
     backdrop-filter: blur(4px);
 }
 .modal-overlay.active {
     opacity: 1;
     pointer-events: auto;
+    visibility: visible;
+    transition: opacity 200ms ease, visibility 0s;
 }
 .modal-content {
     background: var(--paper);
@@ -2922,7 +2930,7 @@ li:has(> .dropdown-link--all) {
     width: 90%;
     max-width: 500px;
     position: relative;
-    box-shadow: var(--shadow-xl);
+    box-shadow: var(--shadow-lg);
     transform: translateY(20px);
     transition: transform 300ms ease;
 }
