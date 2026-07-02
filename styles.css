@@ -1469,14 +1469,16 @@ li:has(> .dropdown-link--all) {
     color: var(--ink);
     cursor: pointer;
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
 }
 
 .chapter-card h3,
 .chapter-card p,
 .chapter-card strong {
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    /* break-word (not anywhere): long URLs/emails still wrap, but names never
+       shatter mid-word ("Andre-y Vasily-ev" on the founding card's lead row). */
+    overflow-wrap: break-word;
+    word-break: normal;
 }
 
 /* Cap the body at 3 lines so directory/preview cards don't stretch to wildly uneven heights
@@ -1505,12 +1507,15 @@ li:has(> .dropdown-link--all) {
    direct <div> child). Matching it too gave avatars flex:1, splitting the row 50/50 and pushing
    the "Led by" text to the horizontal midpoint (big gap on the wide feature card). */
 .chapter-lead > div:not(.chapter-lead-avatars) {
-    min-width: 0;
+    min-width: min(12ch, 100%);
     flex: 1;
 }
 
 .chapter-lead {
     display: flex;
+    /* Wrap the names block onto its own full-width line when the avatar cluster
+       leaves it too narrow (multi-lead founding card) — never squeeze words apart. */
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--space-sm);
 }
