@@ -181,6 +181,13 @@
             return typeof im === "string" ? { src: im } : (im || {});
         });
 
+        // Empty state: data.js carries no gallery seed, so if Firestore is empty/unreachable the
+        // page body would be blank under the hero. Say so instead of rendering nothing.
+        if (!imgs.length) {
+            root.innerHTML = '<p class="gallery-empty">Photos from our latest events are on the way — check back soon.</p>';
+            return;
+        }
+
         // Time anchors = located photos; they pull in nearby-in-time photos that lost their GPS.
         var anchors = [];
         imgs.forEach(function (im) {
@@ -693,6 +700,15 @@
         `;
     }
 
+    // GLOBAL RULE: never render an empty section — when a data-driven grid has nothing to
+    // show, hide its whole <section> (no bare headings over empty grids).
+    function hideSectionWhenEmpty(selector) {
+        const root = document.querySelector(selector);
+        if (!root) return;
+        const section = root.closest("section.section");
+        if (section) section.style.display = root.children.length ? "" : "none";
+    }
+
     function renderHomePage() {
         renderHomeStats();
         renderWhatWeDo();
@@ -700,6 +716,9 @@
         renderOfficerGrid("#executive-board-preview", (data.execBoard || []).map(withDisplayTitle), true);
         renderChapterPreview();
         renderGalleryPreview();
+        hideSectionWhenEmpty("#executive-board-preview");
+        hideSectionWhenEmpty("#chapters-preview-grid");
+        hideSectionWhenEmpty("#gallery-preview-grid");
     }
 
     function renderHomeStats() {
@@ -885,6 +904,7 @@
         const root = document.querySelector("#chapters-directory-grid");
         if (!root) return;
         root.innerHTML = (data.chapters || []).map(chapterDirectoryCardMarkup).join("");
+        hideSectionWhenEmpty("#chapters-directory-grid");
     }
 
     // Pin positions for the chapters-page maps, as PERCENTAGES of the map frame (left%, top%).

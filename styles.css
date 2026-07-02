@@ -3513,6 +3513,13 @@ li:has(> .dropdown-link--all) {
     text-wrap: balance;
 }
 
+/* Gallery empty state (no photos in Firestore / fetch failed) — never a blank page body. */
+.gallery-empty {
+    max-width: 60ch;
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+}
+
 /* "Our Story" timeline — numbered nodes on an accent rail, reads as progression not a card row. */
 .story-rail {
     list-style: none;
