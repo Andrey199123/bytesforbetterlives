@@ -1800,13 +1800,21 @@
         }
 
         // Current initiatives — aggregated from every chapter's `initiatives` (pulled from the clubs).
+        // An initiative whose title matches a fundraiser above is skipped here: the fundraiser card
+        // already presents the same project with a Donate CTA, and showing both read as a mistake.
+        // (Chapter profile pages still show it — no fundraiser list there.)
+        const fundraiserTitles = new Set(fundraisers.map(function (f) {
+            return String((f && f.title) || "").trim().toLowerCase();
+        }).filter(Boolean));
         const initiativesGrid = document.querySelector("#current-initiatives-grid");
         const initiativesSection = document.querySelector("#current-initiatives-section");
         if (initiativesGrid) {
             const cards = [];
             (Array.isArray(data.chapters) ? data.chapters : []).forEach(function (ch) {
                 (Array.isArray(ch.initiatives) ? ch.initiatives : []).forEach(function (it) {
-                    if (it && (it.title || it.description)) cards.push(initiativeCardMarkup(it, ch));
+                    if (!it || (!it.title && !it.description)) return;
+                    if (fundraiserTitles.has(String(it.title || "").trim().toLowerCase())) return;
+                    cards.push(initiativeCardMarkup(it, ch));
                 });
             });
             initiativesGrid.innerHTML = cards.join("");

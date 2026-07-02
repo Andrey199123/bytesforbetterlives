@@ -351,7 +351,9 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
   (copies every chapter field except `id`). **Initiatives appear in TWO places**: (1) "Current
   initiatives" first section on the chapter profile (`#chapter-initiatives-section`,
   `initiativeCardMarkup(it,chapter,{hideChapter:true})`, hidden when none); (2) aggregated across clubs
-  on `ongoing-initiatives.html` (`renderInitiativesPage`, each tagged with club name). Cards show flyer
+  on `ongoing-initiatives.html` (`renderInitiativesPage`, each tagged with club name; an initiative
+  whose TITLE matches a fundraiser's is SKIPPED there — the fundraiser card already presents it with a
+  Donate CTA — but still shows on its chapter profile). Cards show flyer
   (clickable→lightbox) + schedule line (`initiativeWhen`, e.g. "Jun 14, 2026 – Jun 16, 2026 · 3:00 PM –
   5:30 PM").
 - **Initiatives** (`initiatives-admin.html`, full) — structured add/edit/remove for a club's
