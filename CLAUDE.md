@@ -41,8 +41,8 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
 - **Founders are HARDCODED** in the `FOUNDERS` const at top of `script.js` — intentionally NOT in
   `data.people`/Firestore/admin. `deriveRoles()` sets `data.founders = FOUNDERS`. No `"founder"` role exists.
 - `script.js` derives `data.officers`/`data.design`/`data.volunteers`/`data.execBoard` from
-  `data.people` by role at startup. Homepage "All Members" roster was removed (`[data-members-slider]`
-  renderer is null-guarded).
+  `data.people` by role at startup. Homepage "All Members" roster was removed (the
+  `[data-members-slider]` renderer + its CSS were deleted in the 2026-07 dead-code sweep).
 - **Public display title** = `memberDisplayTitle(person)`: exec-board (`person.execBoard`) show
   `execTitle`; others show **"Title ⋅ Chapter Name"** when they have a `chapter` (else just title). Via
   `withDisplayTitle()`. **EXCEPTION: chapter profile pages show plain `person.title`** (already in that
@@ -113,7 +113,7 @@ generated from the `chapter-admin.html` template (which also works as `?c=<id>` 
   eyebrow on directory); `turkey` = "Turkey Chapter" (IG handle `bfbl_turkiye`).
 - **`impact.html` is consolidated**: former "work with seniors/kids", "donations", "partners" as
   in-page sections (`#seniors`,`#kids`,`#donations`,`#partners`). Old `#gallery` section REMOVED
-  (`renderGalleryPage()` null-guarded → no-op); Home "View Full Gallery" → `gallery.html`.
+  (its `renderGalleryPage()` was deleted in the dead-code sweep); Home "View Full Gallery" → `gallery.html`.
 - ⚠️ **Do NOT recreate** `donations.html`, `work-with-seniors.html`, `work-with-kids.html`,
   `our-impact.html` — intentionally merged into `impact.html`.
 - `test-image-loading.html`, `test-preservation.html`, `test-preservation.js`, `test-image-paths.js`
@@ -204,7 +204,7 @@ intentional/editorial, not AI-template.
   `FLORIDA_MAP_PINS`/`WORLD_MAP_PINS` (chapters carry no geo in Firestore, so hardcoded like
   `stats`/`FOUNDERS`); each pin resolves name/status/href LIVE via `chapterById()`. Image fills
   `.map-frame` edge-to-edge so `left:X%`==X% of map. Pin classes **`.geo-pin`/`.geo-pin-dot`/`.geo-pin-label`**
-  — MUST NOT reuse `.map-pin` (dead legacy teardrop component ~line 1198+ that hijacks markup).
+  (the legacy `.map-pin` teardrop component that used to hijack markup was deleted in the dead-code sweep).
   - **Map-projection note (how pin %s are derived):** pin positions are PROJECTED from each city's real
     lat/lng, not eyeballed. `florida.svg` (+ `new-york.svg`/`virginia.svg`) are equirectangular over the
     region's bounding box → `x%=(lng-lngW)/(lngE-lngW)`, `y%=(latN-lat)/(latN-latS)`, then mapped into the
