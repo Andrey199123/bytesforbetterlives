@@ -82,7 +82,10 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
   highlights** (`chapter.photos`). **Optional, hidden via `display:none` when empty**: **Impact stats**
   (`chapter.stats=[{value,label}]`→`#chapter-stats-section`), **Community partners**
   (`chapter.partners=[string]`→`#chapter-partners-section`), **Current initiatives** (see admin
-  Initiatives). Hero CTAs build conditionally: always "Support this Chapter" (`chapterSupportUrl()`),
+  Initiatives). A closing **"Get involved" dark CTA band** (`#chapter-cta-section`, `band--ink`) is
+  ALWAYS shown once the chapter resolves — so thin chapters (no initiatives/photos yet) still end with
+  a beat; its buttons: Support (always), Email-the-chapter OR Contact-Us fallback, Join when `joinUrl`.
+  Hero CTAs build conditionally: always "Support this Chapter" (`chapterSupportUrl()`),
   plus "Get Involved" (`chapter.joinUrl`), Instagram (`chapter.instagram`), "Email the Chapter"
   (`chapter.contactEmail`) when set. These fields live on `chapterContent/{id}.page`.
 

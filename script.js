@@ -1194,6 +1194,32 @@
                 partnersSection.style.display = "none";
             }
         }
+
+        // Closing "Get involved" band — always shown once the chapter resolves, so thin pages
+        // (no initiatives/photos yet) still end with a beat instead of trailing off after a
+        // lone members card. Never empty: the support URL always resolves (chapter fundraiser
+        // or the site-wide donate link).
+        const ctaSection = document.querySelector("#chapter-cta-section");
+        if (ctaSection) {
+            const ctaTitle = document.querySelector("#chapter-cta-title");
+            if (ctaTitle) ctaTitle.textContent = `Get involved with the ${chapter.name.replace(/\s*Chapter$/i, "")} chapter.`;
+            const ctaActions = document.querySelector("#chapter-cta-actions");
+            if (ctaActions) {
+                const ctas = [
+                    `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Support this Chapter</a>`
+                ];
+                if (chapter.contactEmail) {
+                    ctas.push(`<a href="${escapeHTML(safeUrl("mailto:" + chapter.contactEmail))}" class="btn btn-secondary">Email the Chapter</a>`);
+                } else {
+                    ctas.push(`<a href="contact.html" class="btn btn-secondary">Contact Us</a>`);
+                }
+                if (chapter.joinUrl) {
+                    ctas.push(`<a href="${escapeHTML(safeUrl(chapter.joinUrl))}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">Join the Chapter</a>`);
+                }
+                ctaActions.innerHTML = ctas.join("");
+            }
+            ctaSection.style.display = "";
+        }
     }
 
     function ensureChapterProfileLayout() {
@@ -1270,6 +1296,23 @@
                         <p class="section-description">Organizations this chapter works with to serve the community.</p>
                     </div>
                     <div class="chapter-partners-grid" id="chapter-partners" aria-label="Community partners"></div>
+                </div>
+            </section>
+
+            <section class="section band--ink" id="chapter-cta-section" style="display: none;">
+                <div class="container">
+                    <div class="split-section">
+                        <div class="section-header">
+                            <p class="section-kicker">Get Involved</p>
+                            <h2 class="section-title" id="chapter-cta-title">Get involved with this chapter.</h2>
+                            <p class="section-description">Volunteer at a service day, propose a partnership, or support a drive — every bit helps this chapter serve its community.</p>
+                        </div>
+                        <div class="impact-card">
+                            <h3>Ready to help?</h3>
+                            <p>Reach out and the chapter&rsquo;s student leaders will get back to you.</p>
+                            <div class="btn-row mt-2" id="chapter-cta-actions"></div>
+                        </div>
+                    </div>
                 </div>
             </section>
         `;
