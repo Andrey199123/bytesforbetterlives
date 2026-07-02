@@ -225,7 +225,6 @@
 
     function initRender() {
         initVercelAnalytics();
-        ensureSkipLink();
         renderNavigation();
         initNavDropdowns();
         renderFooter();
@@ -239,6 +238,9 @@
         renderChapterDirectoryPage();
         renderChapterMaps();
         renderChapterProfilePage();
+        // After renderChapterProfilePage: chapter stubs only get their <main> injected there,
+        // and the skip link needs that <main> to exist so its #main-content target is real.
+        ensureSkipLink();
         initMobileNavigation();
         initImageFallbacks();
         initCarousels();
@@ -2102,10 +2104,19 @@
     function initSmoothScroll() {
         document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
             anchor.addEventListener("click", function (event) {
-                const target = document.querySelector(anchor.getAttribute("href"));
+                const href = anchor.getAttribute("href");
+                if (!href || href === "#") return; // safeUrl() fallback links — nothing to scroll to
+                let target = null;
+                try { target = document.querySelector(href); } catch (err) { return; }
                 if (!target) return;
                 event.preventDefault();
                 target.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
+                // Keep the URL in sync so anchors deep-link and :target styles apply.
+                if (window.history && history.pushState) history.pushState(null, "", href);
+                // Move keyboard focus with the visual jump — without this the skip link
+                // scrolled but left focus in the navbar, defeating its purpose.
+                if (target.tabIndex < 0 && !target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+                target.focus({ preventScroll: true });
             });
         });
     }
