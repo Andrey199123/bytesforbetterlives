@@ -3467,27 +3467,38 @@ li:has(> .dropdown-link--all) {
     .contact-layout { grid-template-columns: 1fr; }
 }
 
-/* Partner logos as a quiet grayscale ribbon, not 10 bordered card boxes. (!important overrides the
-   inline box styles on the existing .card elements so only one container class needs changing.) */
+/* Partner logos as a quiet full-colour ribbon with name captions — logos alone were too small
+   to recognize (script wordmarks were illegible), and the caption names the partner even when
+   its mark doesn't. Not links, so no hover change. */
 .partner-strip {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(1.5rem, 4vw, 3.5rem);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--space-xl) var(--space-md);
+    align-items: start;
     margin-top: var(--space-xl);
 }
-.partner-strip .card {
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    min-height: 0 !important;
-    display: block !important;
+.partner-strip .partner {
+    margin: 0;
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    gap: var(--space-sm);
+    text-align: center;
 }
-/* Partner logos are not links — shown full-colour, with no hover change. */
-.partner-strip .card img {
-    max-height: 56px !important;
+.partner-strip .partner img {
+    height: 84px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+}
+.partner-strip .partner figcaption {
+    font-family: var(--font-label);
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    text-wrap: balance;
 }
 
 /* "Our Story" timeline — numbered nodes on an accent rail, reads as progression not a card row. */

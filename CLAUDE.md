@@ -209,7 +209,9 @@ intentional/editorial, not AI-template.
 - **Member rosters**: leadership as cards, volunteers as `.roster-chip` pills (`personChipMarkup`) — on
   chapter profiles and Team volunteers grid.
 - **About** "Our Story" = numbered `.story-rail` timeline; **Impact** partners = `.partner-strip`
-  ribbon (full-colour); **Contact** = `.contact-layout` split (left: section-header + `.contact-channel`
+  grid of `<figure class="partner">` (84px full-colour logo + uppercase `figcaption` name — captions
+  because several marks are illegible small; imgs use `alt=""`, the caption carries the name);
+  **Contact** = `.contact-layout` split (left: section-header + `.contact-channel`
   rows for email/IG/LinkedIn; right: `.contact-form-card` email form) + `.help-list` "Get Involved" band.
 - **Social icons = monochrome inline SVG** (`SOCIAL_ICONS` const in `script.js`, duplicated inline in
   `contact.html`); `.social-link` = 42px quiet icon button inheriting currentColor. The old full-colour
