@@ -2625,6 +2625,16 @@ li:has(> .dropdown-link--all) {
     transform: translateY(0);
 }
 
+/* Print (and any context where IntersectionObserver never fires): content must never stay
+   opacity:0 waiting for a scroll reveal — a printed page would show blank sections. */
+@media print {
+    .reveal-ready {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
