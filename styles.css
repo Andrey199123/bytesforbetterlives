@@ -1055,13 +1055,21 @@ li:has(> .dropdown-link--all) {
 
 /* (Removed the top accent strip on service cards — no decorative top/left bars on blocks.) */
 
-.service-number {
-    display: inline-block;
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(2.2rem, 4vw, 3.2rem);
-    line-height: 1;
+/* Program icon chip: soft tile-colour wash + stroke icon (replaces the 01-05 numerals,
+   which implied a sequence the programs don't have). */
+.service-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-md);
+    background: var(--tile-soft);
     color: var(--tile);
+}
+.service-icon svg {
+    width: 28px;
+    height: 28px;
 }
 
 .service-card h3 {

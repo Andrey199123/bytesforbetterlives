@@ -175,8 +175,10 @@ intentional/editorial, not AI-template.
   array. Dividers (`border-left`) are scoped to the desktop 5-up row (`@media min-width:901px`) — on
   stacked/2-col layouts the numeral carries the accent (a left spine there would break the no-lines
   HARD rule). Grid laddering: 5 (≥901px) → 3 (≤900) → 2 (≤680 and ≤440); never 1-col.
-- **Program tiles** (`.service-card` in `.service-grid`): coloured `.service-number` (bare oversized
-  numeral) cycling green/gold/coral/teal via `:nth-child(4n+…)`; 3-up desktop.
+- **Program tiles** (`.service-card` in `.service-grid`): `.service-icon` chip (soft tile-colour wash +
+  program-specific stroke SVG, defined inline in `renderWhatWeDo`) cycling green/gold/coral/teal via
+  `:nth-child(4n+…)`; 3-up desktop. (Replaced the 01-05 numerals — they implied a sequence the programs
+  don't have; numbered markers stay only where order is real, e.g. About's story rail.)
 - **`.cards-grid--feature`**: UNIFORM grid (`auto-fit minmax(300px,1fr)`, equal width/height; cards
   flex-column). Used on Home chapters preview, Impact Seniors/Kids/Donations, Initiatives
   `#fundraiser-grid`, Past-events.

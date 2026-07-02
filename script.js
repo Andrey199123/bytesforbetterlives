@@ -724,33 +724,40 @@
         const root = document.querySelector("#what-we-do-grid");
         if (!root) return;
 
+        // Program-specific line icons (same monochrome stroke style as SOCIAL_ICONS) — the old
+        // 01-05 numerals implied a sequence the programs don't have (unlike About's real timeline).
         const services = [
             {
                 title: "Senior Tech Help",
-                text: "Patient, hands-on help with phones, iPads, laptops, video calls, email, settings, photos, and everyday digital tasks."
+                text: "Patient, hands-on help with phones, iPads, laptops, video calls, email, settings, photos, and everyday digital tasks.",
+                icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M12 15.2c-1.9-1.5-2.9-2.5-2.9-3.7a1.7 1.7 0 0 1 2.9-1.1 1.7 1.7 0 0 1 2.9 1.1c0 1.2-1 2.2-2.9 3.7z"/></svg>'
             },
             {
                 title: "Digital Literacy Presentations",
-                text: "Clear lessons that teach students, families, and community members how to use technology with confidence."
+                text: "Clear lessons that teach students, families, and community members how to use technology with confidence.",
+                icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3.5" width="18" height="12.5" rx="2"/><path d="m7.5 12 3-3 2 2 3.5-3.5"/><path d="M12 16v4.5M8.5 20.5h7"/></svg>'
             },
             {
                 title: "Online Safety Education",
-                text: "Practical presentations that help seniors recognize scams, phishing, unsafe links, and privacy risks."
+                text: "Practical presentations that help seniors recognize scams, phishing, unsafe links, and privacy risks.",
+                icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.8 19 5.6v5.2c0 4.5-3 7.8-7 9.4-4-1.6-7-4.9-7-9.4V5.6z"/><path d="m9 11.6 2.1 2.1L15.2 9.6"/></svg>'
             },
             {
                 title: "iPad and Board Game Donations",
-                text: "Donation projects that put useful devices, learning tools, and screen-free activities into the hands of children and families."
+                text: "Donation projects that put useful devices, learning tools, and screen-free activities into the hands of children and families.",
+                icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12v9H4v-9"/><rect x="2.5" y="7" width="19" height="5" rx="1"/><path d="M12 21.5V7"/><path d="M12 7H7.8a2.4 2.4 0 0 1 0-4.8C10.8 2.2 12 7 12 7z"/><path d="M12 7h4.2a2.4 2.4 0 0 0 0-4.8C13.2 2.2 12 7 12 7z"/></svg>'
             },
             {
                 title: "Chapter Expansion",
-                text: "A responsible chapter model that lets student leaders bring BFBL service projects to new communities with clear status labels."
+                text: "A responsible chapter model that lets student leaders bring BFBL service projects to new communities with clear status labels.",
+                icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="6" r="2.4"/><circle cx="18.5" cy="6" r="2.4"/><circle cx="12" cy="18.5" r="2.4"/><path d="M7 8.1 10.7 16M17 8.1 13.3 16M7.9 6h8.2"/></svg>'
             }
         ];
 
-        root.innerHTML = services.map(function (service, index) {
+        root.innerHTML = services.map(function (service) {
             return `
                 <article class="service-card">
-                    <span class="service-number">${String(index + 1).padStart(2, "0")}</span>
+                    <span class="service-icon" aria-hidden="true">${service.icon}</span>
                     <h3>${escapeHTML(service.title)}</h3>
                     <p>${escapeHTML(service.text)}</p>
                 </article>
