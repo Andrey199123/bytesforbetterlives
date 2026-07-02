@@ -2638,6 +2638,10 @@ main {
 	        z-index: 2990;
 	        display: flex;
 	        flex-direction: column;
+	        /* The desktop row layout justifies flex-end; in this scrollable column that makes
+	           overflowing items spill ABOVE the drawer's top edge where scrolling can never reach
+	           (the first links vanish under the navbar). Column must start at the top. */
+	        justify-content: flex-start;
 	        align-items: flex-end;
 	        gap: var(--space-xs);
 	        /* Size the drawer to its content so there's no empty band on the left. */
