@@ -204,7 +204,9 @@ intentional/editorial, not AI-template.
     `turkey.svg`, which share its coordinate space) is **Miller cylindrical**: `x=X0+mx·lng`,
     `y=Y0−k·millerY(lat)` where `millerY(lat)=1.25·ln(tan(π/4+0.4·lat))`. To add/move a pin, compute the
     %s this way and visually verify against the silhouette; the four SE-Florida chapters legitimately
-    cluster on the SE coast (~40 mi apart), so their labels float left and a couple of dots overlap.
+    cluster on the SE coast (~40 mi apart), so their labels float left and a couple of dots overlap;
+    per-pin `dy`/`dx` (px) stagger the clustered labels into a readable inland column
+    (`--label-dy`/`--label-dx` on `.geo-pin-label`).
   `.pin-active`=green, `.pin-launching`=gold; `.geo-pin--left` floats label inland.
 - **Member rosters**: leadership as cards, volunteers as `.roster-chip` pills (`personChipMarkup`) — on
   chapter profiles and Team volunteers grid.

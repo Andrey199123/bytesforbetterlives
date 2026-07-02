@@ -878,12 +878,14 @@
     // data.chapters. World pins collapse the four South-Florida chapters into one "Florida" marker.
     // The SE-Florida chapters are only ~40 mi apart, so on the Florida map their dots correctly sit
     // close together on the SE coast — labels float LEFT (inland) to stay legible.
+    // dy = vertical label offset (px): the four SE-coast dots sit within ~2% of each other, so
+    // their labels are staggered into an evenly spaced inland column instead of overlapping.
     const FLORIDA_MAP_PINS = [
         { id: "gainesville", x: 67.6, y: 24.2 },
-        { id: "coral-springs", x: 91.9, y: 70.7, side: "left" },
-        { id: "ahs", x: 93.4, y: 72.8, side: "left" },
-        { id: "cypress", x: 90.4, y: 73.1, side: "left" },
-        { id: "miami", x: 92.8, y: 77.8, side: "left" }
+        { id: "coral-springs", x: 91.9, y: 70.7, side: "left", dy: -16 },
+        { id: "ahs", x: 93.4, y: 72.8, side: "left", dx: 26 },
+        { id: "cypress", x: 90.4, y: 73.1, side: "left", dy: 18 },
+        { id: "miami", x: 92.8, y: 77.8, side: "left", dy: 14 }
     ];
     const WORLD_MAP_PINS = [
         { id: "ahs", label: "Florida", x: 24.5, y: 41.4, side: "left" },
@@ -924,8 +926,10 @@
         const label = pin.label || String(chapter.name || "").replace(/\s*Chapter$/i, "");
         const pinCls = statusClass(status).replace("status-", "pin-")
             + (pin.side === "left" ? " geo-pin--left" : "");
+        const labelDy = typeof pin.dy === "number" && pin.dy !== 0 ? `--label-dy:${pin.dy}px;` : "";
+        const labelDx = typeof pin.dx === "number" && pin.dx !== 0 ? `--label-dx:${7 + pin.dx}px;` : "";
         return `
-            <a class="geo-pin ${pinCls}" style="left:${pin.x}%;top:${pin.y}%"
+            <a class="geo-pin ${pinCls}" style="left:${pin.x}%;top:${pin.y}%;${labelDy}${labelDx}"
                href="${escapeHTML(safeUrl(href))}" title="${escapeHTML(chapter.name)} — ${escapeHTML(status)}">
                 <span class="geo-pin-dot"></span>
                 <span class="geo-pin-label">${escapeHTML(label)}</span>

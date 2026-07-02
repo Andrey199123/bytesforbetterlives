@@ -3740,7 +3740,8 @@ li:has(> .dropdown-link--all) {
     position: absolute;
     top: 50%;
     left: calc(100% + 7px);
-    transform: translateY(-50%);
+    /* --label-dy staggers clustered labels (SE-Florida pins) into a readable column. */
+    transform: translateY(calc(-50% + var(--label-dy, 0px)));
     font-family: var(--font-label);
     font-weight: 700;
     font-size: 0.74rem;
@@ -3755,7 +3756,8 @@ li:has(> .dropdown-link--all) {
 }
 .geo-pin--left .geo-pin-label {
     left: auto;
-    right: calc(100% + 7px);
+    /* --label-dx pushes a label further inland, past neighbouring dots in the SE cluster. */
+    right: calc(100% + var(--label-dx, 7px));
 }
 .geo-pin.pin-active .geo-pin-dot { background: var(--green-dark); }
 .geo-pin.pin-launching .geo-pin-dot { background: var(--gold-dark); }
