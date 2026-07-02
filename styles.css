@@ -711,14 +711,16 @@ li:has(> .dropdown-link--all) {
             color-mix(in oklch, var(--accent-soft) 24%, transparent) 0%, transparent 55%),
         /* soft top-left glow for depth */
         radial-gradient(80% 120% at 8% 0%,
-            color-mix(in oklch, var(--accent) 36%, transparent) 0%, transparent 60%),
+            color-mix(in oklch, var(--accent) 42%, transparent) 0%, transparent 60%),
         /* light dot-grid texture so the field never reads as a flat block */
         radial-gradient(circle at 1px 1px,
             color-mix(in oklch, var(--paper) 22%, transparent) 1px, transparent 1.6px) 0 0 / 20px 20px,
-        /* the accent colour field itself, deepened toward ink on the right */
+        /* the accent colour field itself, deepened toward ink on the right. The start mixes in
+           the mid accent for chroma — pure accent-dark to ink read muddy olive/maroon on the
+           gold and coral pages and the four heroes all converged on "dark tinted band". */
         linear-gradient(115deg,
-            var(--accent-dark) 0%,
-            color-mix(in oklch, var(--accent-dark) 72%, var(--ink)) 100%);
+            color-mix(in oklch, var(--accent-dark) 76%, var(--accent)) 0%,
+            color-mix(in oklch, var(--accent-dark) 78%, var(--ink)) 100%);
     color: var(--paper);
 }
 
