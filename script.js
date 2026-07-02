@@ -2319,8 +2319,12 @@
 
         document.querySelectorAll(".clickable-image").forEach(function (media) {
             if (media.dataset.lightboxBound) return;
+            // Videos keep their native controls inline — the click/role=button hijack made
+            // taps on play/pause open the lightbox instead. (They stay reachable through a
+            // group's prev/next navigation, where the lightbox renders them with controls.)
+            if (media.tagName === "VIDEO") return;
             media.dataset.lightboxBound = "true";
-            // Make the bare <img>/<video> tile a real keyboard-operable control (matches the flip-card pattern).
+            // Make the bare <img> tile a real keyboard-operable control (matches the flip-card pattern).
             if (!media.hasAttribute("role")) media.setAttribute("role", "button");
             if (!media.hasAttribute("tabindex")) media.setAttribute("tabindex", "0");
             if (!media.getAttribute("aria-label")) media.setAttribute("aria-label", "Enlarge image" + (media.alt ? ": " + media.alt : ""));
