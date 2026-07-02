@@ -2158,18 +2158,9 @@
             if (img.dataset.fallbackReady) return;
             img.dataset.fallbackReady = "true";
 
-            function syncStoryCardAspect() {
-                const card = img.closest(".story-card");
-                if (!card || !img.closest(".story-front")) return;
-                if (!img.naturalWidth || !img.naturalHeight) return;
-                const ratio = `${img.naturalWidth} / ${img.naturalHeight}`;
-                card.style.aspectRatio = ratio;
-                const inner = card.querySelector(".story-card-inner");
-                if (inner) inner.style.aspectRatio = ratio;
-            }
-
-            img.addEventListener("load", syncStoryCardAspect, { once: true });
-            if (img.complete) syncStoryCardAspect();
+            // (Story cards keep the uniform CSS 4:3 aspect — cards previously adopted each
+            // photo's natural ratio, which made the Photo Stories row read ragged: a short
+            // landscape sandwiched between two tall portraits. object-fit:cover crops instead.)
 
             function handleError() {
                 const current = img.getAttribute("src") || "";
