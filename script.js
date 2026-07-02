@@ -901,7 +901,7 @@
         { id: "new-york", label: "New York", x: 26.6, y: 34.3 },
         { id: "virginia", label: "Virginia", x: 26.0, y: 36.5, side: "left" },
         { id: "russia", label: "Russia", x: 57.9, y: 25.0 },
-        { id: "turkey", label: "Türkiye", x: 55.5, y: 34.2 }
+        { id: "turkey", label: "Turkey", x: 55.5, y: 34.2 }
     ];
 
     // Chapter-hero locator map: Florida chapters show the Florida outline (so the dot %s line up with
