@@ -278,7 +278,8 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
 
 **Live source of truth = Firestore, split across two collections (merged on read):**
 - **`site/content`** — SHARED, full-admin write only: `categories`, `titles`, `galleryImages`,
-  `gallery` [stories], `fundraisers`, `contactEmail`, `donateUrl`, `socialLinks`, a **chapters
+  `gallery` [stories], `fundraisers`, `drives` (no admin editor yet — set via `tools/firestore.mjs`;
+  `firebase-data.js` DOES fetch it), `contactEmail`, `donateUrl`, `socialLinks`, a **chapters
   registry** (`[{id,pageHref}]`), unassigned `people`, `chapterAdmins` (`email→chapterId`).
 - **`chapterContent/{chapterId}`** — one doc per chapter `{ page:{…detail+photos…}, members:[…] }`.
   Writable by full admins OR that chapter's approved admin (rules check `chapterAdmins`).

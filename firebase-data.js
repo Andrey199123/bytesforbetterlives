@@ -55,7 +55,7 @@
 
             if (json && json.fields) {
                 var content = decodeFields(json.fields);
-                ["people", "chapters", "gallery", "galleryImages", "categories", "titles", "fundraisers", "contactEmail", "donateUrl", "socialLinks"]
+                ["people", "chapters", "gallery", "galleryImages", "categories", "titles", "fundraisers", "drives", "contactEmail", "donateUrl", "socialLinks"]
                     .forEach(function (key) {
                         if (content[key] != null) window.BFBL_DATA[key] = content[key];
                     });
