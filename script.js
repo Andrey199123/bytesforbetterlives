@@ -530,8 +530,9 @@
         if (!menus.length) return;
 
         function chaptersDropdownMarkup(item) {
-            // The "Chapters" button itself opens chapters.html; the dropdown lists only specific
-            // chapters (no "All Chapters" entry — the button serves that purpose).
+            // On touch devices the "Chapters" toggle only opens/closes the menu (it never
+            // navigates), so the directory needs its own entry inside the dropdown.
+            const allLink = `<li><a href="${escapeHTML(safeUrl(item.href))}" class="dropdown-link dropdown-link--all${page === item.href ? " active" : ""}">All Chapters</a></li>`;
             const chapterLinks = (data.chapters || []).map(function (chapter) {
                 const localHref = chapter.pageHref || `chapter-${chapter.id}.html`;
                 const href = chapterPublicHref(chapter);
@@ -546,6 +547,7 @@
                         ${escapeHTML(item.label)} <span class="dropdown-caret" aria-hidden="true">▾</span>
                     </a>
                     <ul class="dropdown-menu" aria-label="Chapter pages">
+                        ${allLink}
                         ${chapterLinks}
                     </ul>
                 </li>

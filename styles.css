@@ -501,6 +501,17 @@ main {
     color: var(--blue-dark);
 }
 
+/* Directory entry — the toggle never navigates on touch, so this is the only route there. */
+.dropdown-link--all {
+    font-weight: 800;
+    color: var(--green-dark);
+}
+li:has(> .dropdown-link--all) {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--space-2xs);
+    margin-bottom: var(--space-2xs);
+}
+
 .btn-donate {
     display: inline-flex;
     align-items: center;
