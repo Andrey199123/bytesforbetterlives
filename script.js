@@ -225,11 +225,20 @@
         }).join("");
     }
 
+    // Static pages carry a seed GoFundMe href on their Donate CTAs; re-point them at the live
+    // Firestore donateUrl so an admin change reaches EVERY donate button, not just navbar/footer.
+    function syncDonateLinks() {
+        document.querySelectorAll("[data-donate-url]").forEach(function (link) {
+            link.href = safeUrl(donateUrl);
+        });
+    }
+
     function initRender() {
         initVercelAnalytics();
         renderNavigation();
         initNavDropdowns();
         renderFooter();
+        syncDonateLinks();
         renderHomePage();
 
         renderChaptersPage();
