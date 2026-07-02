@@ -638,16 +638,18 @@ li:has(> .dropdown-link--all) {
     --hero-img: url("images/hero-banner.jpg");
     --hero-pos: center 34%;
     /* Lighter treatment than the base .hero: much less green wash and a gentler ink layer so the
-       photo reads clearly, while the left side keeps enough darkening for the white hero text. */
+       photo reads clearly, while the left side keeps enough darkening for the white hero text.
+       The mid stops run deeper than the edges because the banner's own printed wordmark sits in
+       the photo's middle band, right behind the headline — it has to dissolve there. */
     background:
         linear-gradient(95deg,
             color-mix(in oklch, var(--accent-dark) 58%, transparent) 0%,
-            color-mix(in oklch, var(--accent-dark) 20%, transparent) 42%,
-            transparent 70%),
+            color-mix(in oklch, var(--accent-dark) 30%, transparent) 50%,
+            transparent 80%),
         linear-gradient(95deg,
-            color-mix(in oklch, var(--ink) 50%, transparent) 0%,
-            color-mix(in oklch, var(--ink) 28%, transparent) 50%,
-            color-mix(in oklch, var(--ink) 16%, transparent) 100%),
+            color-mix(in oklch, var(--ink) 56%, transparent) 0%,
+            color-mix(in oklch, var(--ink) 50%, transparent) 58%,
+            color-mix(in oklch, var(--ink) 12%, transparent) 100%),
         linear-gradient(180deg, transparent 58%, color-mix(in oklch, var(--ink) 52%, transparent) 100%),
         var(--hero-img) var(--hero-pos) / cover no-repeat;
 }
@@ -740,6 +742,22 @@ li:has(> .dropdown-link--all) {
 
 .home-hero .hero-content {
     padding-top: clamp(0rem, 2vw, 1.5rem);
+}
+
+/* Soft-masked backdrop blur behind the hero copy: the banner photo's own printed wordmark
+   sits exactly behind the headline, and no full-hero gradient can dissolve legible green text
+   on a white banner without crushing the rest of the photo. This blurs/darkens ONLY the text
+   zone, feathered so it never reads as a panel. (No backdrop-filter support → current look.) */
+.home-hero .hero-content::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -3rem -8% -3rem -14%;
+    backdrop-filter: blur(10px) brightness(0.9) saturate(0.94);
+    -webkit-backdrop-filter: blur(10px) brightness(0.9) saturate(0.94);
+    -webkit-mask-image: radial-gradient(78% 88% at 32% 50%, #000 38%, transparent 70%);
+    mask-image: radial-gradient(78% 88% at 32% 50%, #000 38%, transparent 70%);
+    pointer-events: none;
 }
 
 .hero-actions {
