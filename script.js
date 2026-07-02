@@ -574,7 +574,7 @@
             return `<li><a href="${escapeHTML(safeUrl(item.href))}" class="nav-link${isActive ? " active" : ""}">${escapeHTML(item.label)}</a></li>`;
         }).join("");
 
-        const donateItem = `<li><a href="${escapeHTML(safeUrl(donateUrl))}" target="_blank" rel="noopener" class="btn-donate">Donate</a></li>`;
+        const donateItem = `<li><a href="${escapeHTML(safeUrl(donateUrl))}" target="_blank" rel="noopener noreferrer" class="btn-donate">Donate</a></li>`;
         menus.forEach(function (menu) {
             menu.innerHTML = items + donateItem;
         });
@@ -676,7 +676,7 @@
                     ${programLinks.map(function (link) {
                         return `<a href="${link[1]}">${link[0]}</a>`;
                     }).join("")}
-                    <a href="${escapeHTML(safeUrl(donateUrl))}" target="_blank" rel="noopener">Donate</a>
+                    <a href="${escapeHTML(safeUrl(donateUrl))}" target="_blank" rel="noopener noreferrer">Donate</a>
                 </div>
                 <div class="footer-section">
                     <h3>Contact</h3>
