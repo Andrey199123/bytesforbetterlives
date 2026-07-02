@@ -90,7 +90,10 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
   (`chapter.contactEmail`) when set. These fields live on `chapterContent/{id}.page`.
 
 ### `styles.css`
-Single stylesheet. Colors are **OKLCH custom properties** in `:root`.
+Single stylesheet. Colors are **OKLCH custom properties** in `:root`. **Fonts load via
+`<link rel="preconnect">`+`<link rel="stylesheet">` in every page `<head>`** (public + admin), NOT via
+CSS `@import` (that serialized HTML→styles.css→fonts-CSS→woff2 and blocked first paint) — a new page
+shell must copy the three font `<link>`s.
 
 ### `images/`
 Subfolders (e.g. `images/work with seniors/`, `images/donations/`, `images/team/`); some names

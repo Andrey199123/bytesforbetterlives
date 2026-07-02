@@ -1,4 +1,6 @@
-@import url("https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap");
+/* Fonts (Mulish + Nunito) load via <link rel="preconnect">+<link rel="stylesheet"> in every
+   page's <head> — NOT an @import here, which serialized HTML -> styles.css -> fonts CSS -> woff2
+   and blocked first paint behind the whole chain. */
 
 /* ===== BYTES FOR BETTER LIVES DESIGN SYSTEM ===== */
 *,
