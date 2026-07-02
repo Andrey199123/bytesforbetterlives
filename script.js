@@ -610,6 +610,12 @@
                 dropdown.addEventListener("mouseenter", function () { setExpanded(true); });
                 dropdown.addEventListener("mouseleave", function () { setExpanded(false); });
                 toggle.addEventListener("focus", function () { setExpanded(true); });
+                // Close when keyboard focus leaves the whole dropdown — without this the
+                // menu stayed painted open (stale aria-expanded) after tabbing through it.
+                dropdown.addEventListener("focusout", function (event) {
+                    if (dropdown.contains(event.relatedTarget)) return;
+                    setExpanded(false);
+                });
             }
         });
     }
