@@ -12,6 +12,9 @@
     <link rel="preconnect" href="https://firestore.googleapis.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap">
     <link rel="stylesheet" href="styles.css">
+    <!-- The hero banner is the LCP element but lives in CSS background-image, which the
+         preload scanner can't see — without this it only starts after styles.css parses. -->
+    <link rel="preload" as="image" href="images/hero-banner.jpg" fetchpriority="high">
 
     <meta name="google-site-verification" content="zX6BUNOBV4yH4PZD7fEVflyBRPSL3XbNYfznUh8AgJU" />
 </head>
