@@ -2135,7 +2135,9 @@
         if (!document.querySelector('meta[name="theme-color"]')) {
             const meta = document.createElement("meta");
             meta.name = "theme-color";
-            meta.content = "#4F7A46"; // --green-dark: the navbar/CTA brand colour users see at the top
+            // --paper as sRGB hex: theme-color must match the page/navbar background — the old
+            // dark green painted a dark band of browser chrome over a near-white page on mobile.
+            meta.content = "#FCFAF5";
             document.head.appendChild(meta);
         }
         if (document.querySelector(".skip-link")) return;
