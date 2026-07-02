@@ -500,7 +500,7 @@ main {
 .dropdown-link:hover,
 .dropdown-link.active {
     background: var(--green-soft);
-    color: var(--blue-dark);
+    color: var(--green-dark);
 }
 
 /* Directory entry — the toggle never navigates on touch, so this is the only route there. */
@@ -632,7 +632,7 @@ li:has(> .dropdown-link--all) {
 .hero-subtitle {
     max-width: 760px;
     font-size: clamp(1.1rem, 2vw, 1.45rem);
-    color: color-mix(in oklch, var(--paper) 88%, var(--blue-soft));
+    color: color-mix(in oklch, var(--paper) 88%, var(--accent-soft));
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 0, 0, 0.6);
 }
 
@@ -891,7 +891,7 @@ li:has(> .dropdown-link--all) {
 .impact-card,
 .chapter-summary-card,
 .person-card {
-    background: color-mix(in oklch, var(--paper) 96%, var(--blue-soft));
+    background: color-mix(in oklch, var(--paper) 96%, var(--green-soft));
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
@@ -1234,9 +1234,9 @@ li:has(> .dropdown-link--all) {
     min-height: 26px;
     padding: 0.18rem 0.52rem;
     border-radius: var(--radius-md);
-    background: color-mix(in oklch, var(--blue-soft) 70%, var(--paper));
-    color: var(--blue-dark);
-    border: 1px solid color-mix(in oklch, var(--blue) 18%, var(--line));
+    background: color-mix(in oklch, var(--accent-soft) 70%, var(--paper));
+    color: var(--accent-dark);
+    border: 1px solid color-mix(in oklch, var(--accent) 18%, var(--line));
     font-weight: 900;
     font-size: 0.82rem;
 }
@@ -1333,8 +1333,8 @@ li:has(> .dropdown-link--all) {
 }
 
 .status-prospective {
-    background: var(--blue-soft);
-    color: var(--blue-dark);
+    background: var(--teal-soft);
+    color: var(--teal-deep);
 }
 
 .map-layout {
@@ -1561,7 +1561,7 @@ li:has(> .dropdown-link--all) {
 
 /* Team page "Chapter leadership" — one info block per chapter (informational, no hover lift). */
 .chapter-leadership-card {
-    background: color-mix(in oklch, var(--paper) 96%, var(--blue-soft));
+    background: color-mix(in oklch, var(--paper) 96%, var(--green-soft));
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
@@ -1646,7 +1646,7 @@ li:has(> .dropdown-link--all) {
     gap: 0.3rem;
     padding: var(--space-lg);
     text-align: center;
-    background: color-mix(in oklch, var(--paper) 96%, var(--blue-soft));
+    background: color-mix(in oklch, var(--paper) 96%, var(--green-soft));
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
@@ -1675,7 +1675,7 @@ li:has(> .dropdown-link--all) {
     padding: 0.6rem 1.1rem;
     font-weight: 700;
     color: var(--ink);
-    background: color-mix(in oklch, var(--paper) 96%, var(--blue-soft));
+    background: color-mix(in oklch, var(--paper) 96%, var(--green-soft));
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
     border-radius: 999px;
 }
@@ -1984,7 +1984,7 @@ li:has(> .dropdown-link--all) {
 }
 
 .chapter-officer-people {
-    color: var(--blue-dark);
+    color: var(--green-dark);
     font-weight: 800;
 }
 
@@ -2212,7 +2212,7 @@ li:has(> .dropdown-link--all) {
 
 .tap-copy {
     margin-top: auto;
-    color: var(--blue-dark);
+    color: var(--accent-dark);
     font-weight: 800;
 }
 
@@ -2590,7 +2590,7 @@ li:has(> .dropdown-link--all) {
 
 .footer-section p,
 .footer-section a {
-    color: color-mix(in oklch, var(--paper) 78%, var(--blue-soft));
+    color: color-mix(in oklch, var(--paper) 78%, var(--green-soft));
 }
 
 .footer-section a:hover {
@@ -2640,7 +2640,7 @@ li:has(> .dropdown-link--all) {
     margin-top: var(--space-xl);
     padding-top: var(--space-lg);
     border-top: 1px solid color-mix(in oklch, var(--paper) 14%, transparent);
-    color: color-mix(in oklch, var(--paper) 70%, var(--blue-soft));
+    color: color-mix(in oklch, var(--paper) 70%, var(--green-soft));
 }
 
 /* ===== REVEALS AND MOTION ===== */
@@ -2708,7 +2708,7 @@ li:has(> .dropdown-link--all) {
 	        min-height: calc(100vh - var(--nav-height));
 	        min-height: calc(100dvh - var(--nav-height));
 	        padding: var(--space-md) max(var(--space-md), env(safe-area-inset-right)) calc(var(--space-3xl) + env(safe-area-inset-bottom)) var(--space-sm);
-	        background: color-mix(in oklch, var(--paper) 98%, var(--blue-soft));
+	        background: color-mix(in oklch, var(--paper) 98%, var(--green-soft));
 	        opacity: 0;
 	        pointer-events: none;
 	        visibility: hidden;
