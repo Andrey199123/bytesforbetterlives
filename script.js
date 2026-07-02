@@ -504,7 +504,7 @@
         return `
             <div class="chapter-lead-avatars${modifierClass ? ` ${escapeHTML(modifierClass)}` : ""}" aria-label="${escapeHTML(label)}">
                 ${people.map(function (person) {
-                    return personPhotoMarkup(person.name, person.photo || chapter.leadPhoto, "chapter-lead-photo", "eager");
+                    return personPhotoMarkup(person.name, person.photo || chapter.leadPhoto, "chapter-lead-photo");
                 }).join("")}
             </div>
         `;
@@ -775,7 +775,7 @@
         return `
             <article class="officer-card">
                 <div class="portrait-frame">
-                    ${personPhotoMarkup(officer.name, officer.photo, "", "eager", "high")}
+                    ${personPhotoMarkup(officer.name, officer.photo, "")}
                 </div>
                 <div>
                     <h3>${escapeHTML(officer.name)}</h3>
@@ -1498,7 +1498,7 @@
     function personCardMarkup(person) {
         return `
             <article class="person-card">
-                ${personPhotoMarkup(person.name, person.photo, "person-avatar", "eager")}
+                ${personPhotoMarkup(person.name, person.photo, "person-avatar")}
                 <div class="person-meta">
                     <div class="person-header">
                         <h3>${escapeHTML(person.name)}</h3>
