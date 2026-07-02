@@ -119,7 +119,9 @@
     // without GPS are folded into a location section when their `takenAt` is within ±2 days
     // of a located photo (same event, location stripped on share); anything left lands in a
     // final "No location" section.
-    var GALLERY_NO_LOCATION = "No location";
+    // Human heading for the catch-all bucket (photos with no locationName and no nearby-dated
+    // located photo). "No location" leaked an internal data label into the UI.
+    var GALLERY_NO_LOCATION = "More moments";
 
     function galleryLocationFor(im, anchors) {
         if (im.locationName) return im.locationName;        // has its own GPS-derived location

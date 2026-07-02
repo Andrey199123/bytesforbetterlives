@@ -291,8 +291,9 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
   EXIF date), `gps{lat,lng}`, `camera`, full flattened `exif`, `locationName` (reverse-geocoded). Legacy
   bare path strings still normalized. Public render needs only `src`/`alt`/`takenAt`/`locationName`.
 - **Grouped into LOCATION SECTIONS**: bucket by `locationName`; a no-`locationName` photo folds into a
-  section when its `takenAt` is within **±2 days** of a located photo (closest wins), else a final "No
-  location" section. Newest-event-first; each section is one `[data-lightbox-group]`.
+  section when its `takenAt` is within **±2 days** of a located photo (closest wins), else a final
+  catch-all section headed **"More moments"** (`GALLERY_NO_LOCATION`). Newest-event-first; each section
+  is one `[data-lightbox-group]`.
   `.gallery-location`/`-title`/`-meta`.
 - **Tooling** (Node, key-less ADC like `tools/firestore.mjs`; deps `sharp`+`exifr`, not deployed; all
   default to dry-run, add `--commit`):
