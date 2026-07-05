@@ -19,7 +19,8 @@ service firebase.storage {
           "bytesforbetterlives@gmail.com",
           "petr1264k@gmail.com",
           "lakeqiao3805@gmail.com",
-          "js1154539@gmail.com"
+          "js1154539@gmail.com",
+          "bayleeeffendi@gmail.com"      // Coral Springs chapter admin — photo uploads only
         ];
     }
 
