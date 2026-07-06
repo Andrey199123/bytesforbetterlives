@@ -57,7 +57,13 @@
                 var content = decodeFields(json.fields);
                 ["people", "chapters", "gallery", "galleryImages", "categories", "titles", "fundraisers", "drives", "contactEmail", "donateUrl", "socialLinks"]
                     .forEach(function (key) {
-                        if (content[key] != null) window.BFBL_DATA[key] = content[key];
+                        if (content[key] != null) {
+                            // Keep the local seed roster when Firestore's people array is empty.
+                            // That lets the site still show chapter officers / members without
+                            // requiring Firestore writes for every new person.
+                            if (key === "people" && Array.isArray(content[key]) && content[key].length === 0) return;
+                            window.BFBL_DATA[key] = content[key];
+                        }
                     });
             }
 

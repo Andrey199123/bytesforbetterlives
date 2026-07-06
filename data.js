@@ -160,6 +160,8 @@ window.BFBL_DATA = {
         { name: "Troye Kim", title: "Chapter President", detail: "", photo: "images/team/troye-kim.jpg", fallbackPhoto: "images/team/troye-kim.jpg", bio: "", roles: ["volunteer"] },
         { name: "Aashvik Garimella", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
         { name: "Baylee Effendi", title: "Chapter President", detail: "", photo: "images/team/baylee-effendi.jpg", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
+        { name: "Maxim Kravchuk", title: "Secretary", chapter: "miami", detail: "", photo: "https://firebasestorage.googleapis.com/v0/b/project-686d62b7-14f5-43c7-acc.firebasestorage.app/o/people%2Fmaxim-kravchuk.jpg?alt=media", fallbackPhoto: "images/logo.avif", bio: "", roles: ["leadership"] },
+        { name: "Sophia Butori", title: "Vice President", chapter: "miami", detail: "", photo: "https://firebasestorage.googleapis.com/v0/b/project-686d62b7-14f5-43c7-acc.firebasestorage.app/o/people%2Fsophia-butori.jpg?alt=media", fallbackPhoto: "images/logo.avif", bio: "", roles: ["leadership"] },
         { name: "Jamal Shaer", title: "Chapter President", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] }
     ],
 
@@ -314,12 +316,12 @@ window.BFBL_DATA = {
             status: "Launching",
             leadName: "Adina Brody",
             leadTitle: "Chapter President",
-            leadPhoto: "images/logo.avif",
+            leadPhoto: "https://firebasestorage.googleapis.com/v0/b/project-686d62b7-14f5-43c7-acc.firebasestorage.app/o/people%2FPhoto%20on%207-5-26%20at%2011.21%E2%80%AFAM.jpeg?alt=media&token=ad77394f-1566-4d58-b86e-f7099da167d3",
             leadPeople: [
                 {
                     name: "Adina Brody",
                     title: "Chapter President",
-                    photo: "images/logo.avif"
+                    photo: "https://firebasestorage.googleapis.com/v0/b/project-686d62b7-14f5-43c7-acc.firebasestorage.app/o/people%2FPhoto%20on%207-5-26%20at%2011.21%E2%80%AFAM.jpeg?alt=media&token=ad77394f-1566-4d58-b86e-f7099da167d3"
                 }
             ],
             leadBio: "Adina leads the Miami Chapter's senior tech help, digital literacy education, and community outreach.",

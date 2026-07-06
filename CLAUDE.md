@@ -26,8 +26,9 @@ education, donations, a growing chapter network).
 
 ## Architecture — content is data-driven
 HTML pages are thin shells with **empty containers** that `script.js` fills at runtime. Edit
-data/logic, not rendered markup. **Live content = Firestore** (see Firebase section); `data.js` is the
-**seed/offline fallback** — editing it alone does NOT change the live site.
+data/logic, not rendered markup. **Live content = Firestore** (see Firebase section) for most fields;
+`data.js` is the **seed/offline fallback**, and `firebase-data.js` preserves the seed `people`
+roster when Firestore's people array is empty.
 
 ### `data.js` keys & the people model
 Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, `people`, `chapters`, `gallery`.
