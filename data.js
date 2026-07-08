@@ -160,7 +160,7 @@ window.BFBL_DATA = {
         { name: "Troye Kim", title: "Chapter President", detail: "", photo: "images/team/troye-kim.jpg", fallbackPhoto: "images/team/troye-kim.jpg", bio: "", roles: ["volunteer"] },
         { name: "Aashvik Garimella", title: "Volunteer", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
         { name: "Baylee Effendi", title: "Chapter President", detail: "", photo: "images/team/baylee-effendi.jpg", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] },
-        { name: "Maxim Kravchuk", title: "Secretary", chapter: "miami", detail: "", photo: "https://firebasestorage.googleapis.com/v0/b/project-686d62b7-14f5-43c7-acc.firebasestorage.app/o/people%2Fmaxim-kravchuk.jpg?alt=media", fallbackPhoto: "images/logo.avif", bio: "", roles: ["leadership"] },
+        { name: "Maksim Kravchuk", title: "Secretary", chapter: "miami", detail: "", photo: "https://firebasestorage.googleapis.com/v0/b/project-686d62b7-14f5-43c7-acc.firebasestorage.app/o/people%2Fmaxim-kravchuk.jpg?alt=media", fallbackPhoto: "images/logo.avif", bio: "", roles: ["leadership"] },
         { name: "Sophia Butori", title: "Vice President", chapter: "miami", detail: "", photo: "https://firebasestorage.googleapis.com/v0/b/project-686d62b7-14f5-43c7-acc.firebasestorage.app/o/people%2Fsophia-butori.jpg?alt=media", fallbackPhoto: "images/logo.avif", bio: "", roles: ["leadership"] },
         { name: "Jamal Shaer", title: "Chapter President", detail: "", photo: "images/logo.avif", fallbackPhoto: "images/logo.avif", bio: "", roles: ["volunteer"] }
     ],

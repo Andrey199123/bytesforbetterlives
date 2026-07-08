@@ -31,6 +31,32 @@
         return out;
     }
 
+    function personKey(person) {
+        var name = person && person.name ? String(person.name).trim().toLowerCase() : "";
+        if (!name) return "";
+        var chapter = person && person.chapter ? String(person.chapter).trim().toLowerCase() : "";
+        return chapter + "|" + name;
+    }
+
+    function dedupePeople(list) {
+        var byKey = {};
+        var order = [];
+        (list || []).forEach(function (person) {
+            if (!person) return;
+            var key = personKey(person);
+            if (!key) return;
+            if (Object.prototype.hasOwnProperty.call(byKey, key)) {
+                var existingIndex = order.indexOf(key);
+                if (existingIndex !== -1) {
+                    order.splice(existingIndex, 1);
+                }
+            }
+            order.push(key);
+            byKey[key] = person;
+        });
+        return order.map(function (key) { return byKey[key]; });
+    }
+
     function fetchChapterDocs() {
         return fetch(CHAPTERS_URL)
             .then(function (r) { return r.ok ? r.json() : null; })
@@ -92,7 +118,7 @@
                         sitePeople.push(Object.assign({}, m, { chapter: cd.id }));
                     });
                 });
-                window.BFBL_DATA.people = sitePeople;
+                window.BFBL_DATA.people = dedupePeople(sitePeople);
             }
         }).catch(function () { /* offline / blocked → keep data.js */ });
     }
