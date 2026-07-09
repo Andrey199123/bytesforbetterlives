@@ -45,6 +45,7 @@
     const data = Object.assign({}, fallbackData, window.BFBL_DATA || {});
     let donateUrl = data.donateUrl || fallbackData.donateUrl;
     let contactEmail = data.contactEmail || fallbackData.contactEmail;
+    const donateHubUrl = "donate.html";
 
     // Founders are hardcoded here on purpose — they never change, so they are NOT stored in
     // Firestore / data.people and are NOT editable in the admin. Edit this list to update them.
@@ -232,11 +233,13 @@
         }).join("");
     }
 
-    // Static pages carry a seed GoFundMe href on their Donate CTAs; re-point them at the live
-    // Firestore donateUrl so an admin change reaches EVERY donate button, not just navbar/footer.
+    // Static pages carry a seed donate-hub href on their Donate CTAs; re-point them at the hub so
+    // the site-wide buttons all land on the same give page.
     function syncDonateLinks() {
         document.querySelectorAll("[data-donate-url]").forEach(function (link) {
-            link.href = safeUrl(donateUrl);
+            link.href = safeUrl(donateHubUrl);
+            link.removeAttribute("target");
+            link.removeAttribute("rel");
         });
     }
 
@@ -265,6 +268,8 @@
         initRevealEffects();
         initSmoothScroll();
         initCounters();
+        renderDonatePage();
+        initDonateNudges();
     }
 
     // Render once the live content (firebase-data.js, if present) has loaded — falling back to
@@ -563,7 +568,7 @@
             return `<li><a href="${escapeHTML(safeUrl(item.href))}" class="nav-link${isActive ? " active" : ""}">${escapeHTML(item.label)}</a></li>`;
         }).join("");
 
-        const donateItem = `<li><a href="${escapeHTML(safeUrl(donateUrl))}" target="_blank" rel="noopener noreferrer" class="btn-donate">Donate</a></li>`;
+        const donateItem = `<li><a href="${escapeHTML(safeUrl(donateHubUrl))}" class="btn-donate">Donate</a></li>`;
         menus.forEach(function (menu) {
             menu.innerHTML = items + donateItem;
         });
@@ -665,7 +670,7 @@
                     ${programLinks.map(function (link) {
                         return `<a href="${link[1]}">${link[0]}</a>`;
                     }).join("")}
-                    <a href="${escapeHTML(safeUrl(donateUrl))}" target="_blank" rel="noopener noreferrer">Donate</a>
+                    <a href="${escapeHTML(safeUrl(donateHubUrl))}">Donate</a>
                 </div>
                 <div class="footer-section">
                     <h3>Contact</h3>
@@ -965,13 +970,13 @@
     }
 
     // "Support this Chapter" CTA: use the chapter's own fundraiser link if it has one,
-    // otherwise fall back to the site-wide donate URL.
+    // otherwise fall back to the site-wide donate hub.
     function chapterSupportUrl(chapter) {
         const fundraisers = Array.isArray(data.fundraisers) ? data.fundraisers : [];
         const chapterFundraiser = fundraisers.find(function (item) {
             return item && item.chapterId === chapter.id && item.url && String(item.url).trim() && String(item.url).trim() !== "#";
         });
-        return (chapterFundraiser && String(chapterFundraiser.url).trim()) || donateUrl;
+        return (chapterFundraiser && String(chapterFundraiser.url).trim()) || donateHubUrl;
     }
 
     // Human-readable label for a member category (role) id, from data.categories when available.
@@ -1115,8 +1120,10 @@
 
         const actionsEl = document.querySelector("#chapter-page-actions");
         if (actionsEl) {
+            const supportUrl = chapterSupportUrl(chapter);
+            const supportAttrs = supportUrl === donateHubUrl ? "" : ' target="_blank" rel="noopener noreferrer"';
             const actions = [
-                `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Support this Chapter</a>`
+                `<a href="${escapeHTML(safeUrl(supportUrl))}"${supportAttrs} class="btn btn-primary">Support this Chapter</a>`
             ];
             if (chapter.joinUrl) {
                 // Quiet supporting action so a single primary CTA ("Support this Chapter") leads the hero.
@@ -1199,8 +1206,10 @@
             if (ctaTitle) ctaTitle.textContent = `Get involved with the ${chapter.name.replace(/\s*Chapter$/i, "")} chapter.`;
             const ctaActions = document.querySelector("#chapter-cta-actions");
             if (ctaActions) {
+                const supportUrl = chapterSupportUrl(chapter);
+                const supportAttrs = supportUrl === donateHubUrl ? "" : ' target="_blank" rel="noopener noreferrer"';
                 const ctas = [
-                    `<a href="${escapeHTML(safeUrl(chapterSupportUrl(chapter)))}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Support this Chapter</a>`
+                    `<a href="${escapeHTML(safeUrl(supportUrl))}"${supportAttrs} class="btn btn-primary">Support this Chapter</a>`
                 ];
                 if (chapter.contactEmail) {
                     ctas.push(`<a href="${escapeHTML(safeUrl("mailto:" + chapter.contactEmail))}" class="btn btn-secondary">Email the Chapter</a>`);
@@ -1446,14 +1455,12 @@
     function fundraiserCardMarkup(fundraiser) {
         const url = (fundraiser && fundraiser.url ? String(fundraiser.url) : "").trim();
         const hasUrl = url && url !== "#" && url.toLowerCase() !== "tbd";
-        // No specific GoFundMe yet → fall back to the org's main donate link instead of a dead,
+        // No specific GoFundMe yet → fall back to the org's donate hub instead of a dead,
         // permanently-disabled "Coming Soon" button.
-        const donate = (data.donateUrl ? String(data.donateUrl) : "").trim();
+        const donate = donateHubUrl;
         const cta = hasUrl
             ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(url))}" target="_blank" rel="noopener noreferrer">Donate</a>`
-            : (donate
-                ? `<a class="btn btn-primary" href="${escapeHTML(safeUrl(donate))}" target="_blank" rel="noopener noreferrer">Donate</a>`
-                : "");
+            : `<a class="btn btn-primary" href="${escapeHTML(safeUrl(donate))}">Donate</a>`;
 
         return `
             <article class="card">
@@ -1981,6 +1988,230 @@
                 else if (!event.shiftKey && document.activeElement === lastF) { firstF.focus(); event.preventDefault(); }
             }
         });
+    }
+
+    // "Ways to give" hub (donate.html): renders one tile per payment method into #donate-methods.
+    // Methods are hardcoded here (like `stats`/FOUNDERS) — they're not part of the Firestore model.
+    // The GoFundMe tile uses the LIVE donateUrl; Zelle/PayPal are marked `pending` until their
+    // QR/link is added, and render as a clean "Coming soon" card (public-safe, never broken).
+    function renderDonatePage() {
+        var root = document.getElementById("donate-methods");
+        if (!root) return;
+        root.innerHTML = donateMethods().map(donateMethodMarkup).join("");
+    }
+
+    function donateMethods() {
+        return [
+            {
+                id: "gofundme", name: "GoFundMe", tag: "Card · Apple Pay · Google Pay",
+                blurb: "Give securely online and help us reach the goal — every gift shows on our public fundraiser.",
+                type: "link", url: donateUrl, cta: "Donate on GoFundMe"
+            },
+            {
+                id: "zelle", name: "Zelle", tag: "Bank-to-bank · zero fees",
+                blurb: "We’ll add our Zelle QR here soon so you can send straight from your banking app with no processing fees.",
+                type: "qr", qr: "", handle: "", pending: true
+            },
+            {
+                id: "paypal", name: "PayPal", tag: "PayPal balance or any card",
+                blurb: "We’ll add our PayPal link here soon so you can give with your PayPal account or a debit/credit card.",
+                type: "link", url: "", cta: "Donate with PayPal", pending: true
+            }
+        ];
+    }
+
+    function donateQrGlyph() {
+        // Decorative stand-in for a real QR while a method is pending.
+        return '<svg viewBox="0 0 48 48" width="52" height="52" aria-hidden="true" focusable="false" fill="currentColor">' +
+            '<path d="M6 6h14v14H6V6zm3 3v8h8V9H9zm3 3h2v2h-2v-2zM28 6h14v14H28V6zm3 3v8h8V9h-8zm3 3h2v2h-2v-2zM6 28h14v14H6V28zm3 3v8h8v-8H9zm3 3h2v2h-2v-2zM28 28h4v4h-4v-4zm6 0h4v4h-4v-4zm4 4h4v4h-4v-4zm-10 0h4v4h-4v-4zm0 6h4v4h-4v-4zm6 0h4v4h-4v-4zm4 0h4v4h-4v-4z"/>' +
+            '</svg>';
+    }
+
+    function donateMethodMarkup(m) {
+        var pending = !!m.pending;
+        var typeClass = m.type ? " donate-method--" + m.type : "";
+        var foot;
+        if (m.type === "qr") {
+            if (pending || !m.qr) {
+                foot = '<div class="donate-qr donate-qr--placeholder">' + donateQrGlyph() + '</div>' +
+                    '<p class="donate-method-note">We’ll add the Zelle QR here soon.</p>';
+            } else {
+                foot = '<div class="donate-qr"><img src="' + escapeHTML(m.qr) + '" alt="Zelle QR code to donate to Bytes for Better Lives" loading="lazy"></div>' +
+                    (m.handle ? '<p class="donate-method-handle">' + escapeHTML(m.handle) + '</p>' : "") +
+                    '<p class="donate-method-note">Scan with your banking app to send via Zelle.</p>';
+            }
+        } else {
+            if (pending || !m.url) {
+                foot = '<span class="donate-method-cta is-pending" role="text">Coming soon</span>';
+            } else {
+                foot = '<a class="btn btn-donate donate-method-cta" href="' + escapeHTML(safeUrl(m.url)) + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(m.cta || "Donate") + '</a>';
+            }
+        }
+        return '<article class="card donate-method' + typeClass + (pending ? " donate-method--pending" : "") + '">' +
+            '<div class="donate-method-head">' +
+                '<h3 class="donate-method-name">' + escapeHTML(m.name) + '</h3>' +
+                (pending ? '<span class="donate-method-badge">Coming soon</span>' : "") +
+            '</div>' +
+            (m.tag ? '<p class="donate-method-tag">' + escapeHTML(m.tag) + '</p>' : "") +
+            (m.blurb ? '<p class="donate-method-blurb">' + escapeHTML(m.blurb) + '</p>' : "") +
+            '<div class="donate-method-foot">' + foot + '</div>' +
+        '</article>';
+    }
+
+    // Donation nudges: a dismissable bottom ribbon (persistent until dismissed) + a one-time
+    // welcome modal (shown once per visitor). Both are gentle, Wikipedia/Khan-style asks — never a
+    // takeover — and lead to the donate hub (donate.html). localStorage keys are versioned so the
+    // ask can be re-run later (bump the suffix) without every past visitor being re-counted.
+    var DONATE_MODAL_SEEN_KEY = "bfbl_donate_modal_seen_v1";
+    var DONATE_BANNER_DISMISSED_KEY = "bfbl_donate_banner_dismissed_v1";
+
+    function donateFlagGet(key) {
+        try { return localStorage.getItem(key); } catch (e) { return null; } // private mode → best effort
+    }
+    function donateFlagSet(key) {
+        try { localStorage.setItem(key, "1"); } catch (e) { /* localStorage blocked — skip */ }
+    }
+
+    function initDonateNudges() {
+        // Public pages only. Admin pages load admin.js (not this file), but guard defensively anyway.
+        var pathname = String(location.pathname || "").toLowerCase();
+        if (/admin/.test(pathname) || document.body.classList.contains("page-donate")) return;
+        var href = escapeHTML(safeUrl(donateHubUrl));
+        initDonateBanner(href);
+        initDonateModal(href);
+    }
+
+    function initDonateBanner(href) {
+        if (document.querySelector(".donate-banner")) return;
+        if (donateFlagGet(DONATE_BANNER_DISMISSED_KEY)) return;
+
+        document.body.insertAdjacentHTML("beforeend",
+            '<div class="donate-banner" role="region" aria-label="Support Bytes for Better Lives">' +
+                '<div class="donate-banner-inner">' +
+                    '<svg class="donate-banner-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 21s-7.6-4.7-10.1-9.4C.3 8.2 2 4.8 5.3 4.8c2 0 3.4 1.2 4.1 2.4.7-1.2 2.1-2.4 4.1-2.4 3.3 0 5 3.4 3.4 6.8C19.4 16.3 12 21 12 21z" fill="currentColor"/></svg>' +
+                    '<p class="donate-banner-text">Help fund devices for local schools and seniors — it takes 30 seconds.</p>' +
+                    '<a class="donate-banner-cta" href="' + href + '">Donate</a>' +
+                    '<button class="donate-banner-close" type="button" aria-label="Dismiss donation banner"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></button>' +
+                '</div>' +
+            '</div>');
+
+        var banner = document.querySelector(".donate-banner");
+        var bodyObserver = window.MutationObserver ? new MutationObserver(syncBannerSpace) : null;
+
+        // Reserve exactly the banner's height at the page bottom so the fixed bar never hides the
+        // footer — measured (not a hardcoded value) because the ribbon wraps to two lines on mobile.
+        function syncBannerSpace() {
+            var hiddenByNav = document.body.classList.contains("nav-open");
+            document.body.style.paddingBottom = banner.classList.contains("is-visible") && !hiddenByNav ? (banner.offsetHeight + "px") : "";
+        }
+        // Force a reflow so the off-screen start state is committed, THEN reveal in the same tick —
+        // this triggers the slide-in transition reliably even in a backgrounded tab (where
+        // requestAnimationFrame is paused), unlike an rAF-gated reveal.
+        void banner.getBoundingClientRect();
+        banner.classList.add("is-visible");
+        syncBannerSpace();
+        window.addEventListener("resize", syncBannerSpace);
+        if (bodyObserver) bodyObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+
+        function dismissBanner() {
+            banner.classList.remove("is-visible");
+            document.body.style.paddingBottom = "";
+            donateFlagSet(DONATE_BANNER_DISMISSED_KEY);
+            if (bodyObserver) bodyObserver.disconnect();
+            window.setTimeout(function () { if (banner.parentNode) banner.parentNode.removeChild(banner); }, 320);
+        }
+        banner.querySelector(".donate-banner-close").addEventListener("click", dismissBanner);
+        // Clicking through to donate counts as engaging — don't nag on the next visit.
+        banner.querySelector(".donate-banner-cta").addEventListener("click", function () {
+            donateFlagSet(DONATE_BANNER_DISMISSED_KEY);
+        });
+    }
+
+    function initDonateModal(href) {
+        if (document.getElementById("donate-modal")) return;
+        if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) return;
+
+        document.body.insertAdjacentHTML("beforeend",
+            '<div class="donate-modal" id="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title" aria-describedby="donate-modal-body">' +
+                '<div class="donate-modal-card">' +
+                    '<button class="donate-modal-close" type="button" aria-label="Close"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></button>' +
+                    '<p class="donate-modal-kicker">Support the mission</p>' +
+                    '<h2 class="donate-modal-title" id="donate-modal-title">A small gift bridges the digital divide</h2>' +
+                    '<p class="donate-modal-body" id="donate-modal-body">Bytes for Better Lives is student-led and volunteer-run. A gift as small as <strong>$5</strong> helps put a tablet in a senior’s hands and devices in local classrooms — and every dollar goes straight to the work.</p>' +
+                    '<div class="donate-modal-actions">' +
+                        '<a class="btn btn-donate donate-modal-cta" href="' + href + '">Donate in 30 seconds</a>' +
+                        '<button class="btn btn-secondary donate-modal-dismiss" type="button">Maybe later</button>' +
+                    '</div>' +
+                    '<p class="donate-modal-fineprint">100% volunteer-run · a registered nonprofit (EIN 42-2241292)</p>' +
+                '</div>' +
+            '</div>');
+
+        var modal = document.getElementById("donate-modal");
+        var modalCard = modal.querySelector(".donate-modal-card");
+        var opener = null;
+        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var openTimer = null;
+        modal.setAttribute("tabindex", "-1");
+
+        function openModal() {
+            if (modal.classList.contains("active")) return;
+            donateFlagSet(DONATE_MODAL_SEEN_KEY); // once per visitor, whether or not they act
+            opener = document.activeElement;
+            modal.classList.add("active");
+            document.body.classList.add("modal-open");
+            if (modalCard) {
+                modalCard.setAttribute("tabindex", "-1");
+                modalCard.focus();
+            } else {
+                modal.focus();
+            }
+        }
+        function closeModal() {
+            modal.classList.remove("active");
+            document.body.classList.remove("modal-open");
+            if (openTimer) {
+                window.clearTimeout(openTimer);
+                openTimer = null;
+            }
+            if (opener && typeof opener.focus === "function") opener.focus();
+            window.setTimeout(function () { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 320);
+        }
+        function hasBlockingDialog() {
+            return !modal.classList.contains("active") && document.body.classList.contains("modal-open");
+        }
+        function tryOpenModal() {
+            if (modal.classList.contains("active")) return;
+            if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) return;
+            if (hasBlockingDialog()) {
+                openTimer = window.setTimeout(tryOpenModal, 600);
+                return;
+            }
+            openTimer = null;
+            openModal();
+        }
+
+        modal.querySelector(".donate-modal-close").addEventListener("click", closeModal);
+        modal.querySelector(".donate-modal-dismiss").addEventListener("click", closeModal);
+        // The Donate link navigates to the hub; dismiss the modal behind it.
+        modal.querySelector(".donate-modal-cta").addEventListener("click", closeModal);
+        modal.addEventListener("click", function (event) { if (event.target === modal) closeModal(); });
+        document.addEventListener("keydown", function (event) {
+            if (!modal.classList.contains("active")) return;
+            if (event.key === "Escape") { closeModal(); return; }
+            if (event.key !== "Tab") return;
+            var focusables = Array.from(modal.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'))
+                .filter(function (el) { return el.offsetParent !== null && !el.disabled && el.tabIndex >= 0; });
+            if (!focusables.length) return;
+            var first = focusables[0];
+            var last = focusables[focusables.length - 1];
+            if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
+        });
+
+        // A short beat before the ask feels less like a takeover; if another dialog is open, wait
+        // until it closes before showing the donation modal.
+        if (reduce) window.setTimeout(tryOpenModal, 0);
+        else window.setTimeout(tryOpenModal, 1200);
     }
 
     function initCounters() {

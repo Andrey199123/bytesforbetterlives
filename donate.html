@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Donate to Bytes for Better Lives — a student-led South Florida nonprofit bridging the digital divide. Give through GoFundMe now, with Zelle and PayPal coming soon; every dollar funds devices and programs for seniors and students.">
+    <title>Donate | Bytes for Better Lives</title>
+    <link rel="icon" type="image/avif" href="images/logo.avif">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="canonical" href="https://www.bytesforbetterlives.org/donate.html">
+
+
+    <!-- Social share preview (Open Graph + Twitter) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bytes for Better Lives">
+    <meta property="og:title" content="Donate | Bytes for Better Lives">
+    <meta property="og:description" content="Give to Bytes for Better Lives — GoFundMe is live now, and Zelle and PayPal are coming soon. Every dollar funds devices and digital-literacy programs for seniors and students across South Florida.">
+    <meta property="og:url" content="https://www.bytesforbetterlives.org/donate.html">
+    <meta property="og:image" content="https://www.bytesforbetterlives.org/images/hero-banner.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="google-site-verification" content="zX6BUNOBV4yH4PZD7fEVflyBRPSL3XbNYfznUh8AgJU" />
+</head>
+<body class="page-donate">
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.avif" alt="Bytes for Better Lives logo" width="460" height="462">
+            </a>
+            <button class="hamburger" type="button" aria-label="Open navigation menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu"></ul>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero hero-editorial">
+            <div class="hero-content">
+                <p class="eyebrow">Support the mission</p>
+                <h1>Give a little. Change a lot.</h1>
+                <p class="hero-subtitle">Bytes for Better Lives is student-led and 100% volunteer-run, so your gift goes straight to the work — a tablet in a senior’s hands, devices in a local classroom, a digital-literacy workshop. A gift as small as $5 makes a real difference.</p>
+            </div>
+        </section>
+
+        <!-- Ways to give -->
+        <section class="section">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Ways to give</p>
+                    <h2 class="section-title">Choose how you’d like to help.</h2>
+                    <p class="section-description">Pick whichever way is easiest for you — GoFundMe is live now, and Zelle and PayPal are coming soon.</p>
+                </div>
+                <!-- Filled by renderDonatePage() in script.js -->
+                <div class="cards-grid cards-grid--feature donate-methods" id="donate-methods"></div>
+                <p class="donate-reassure">
+                    <span>Bytes for Better Lives Corporation is a registered nonprofit · EIN 42-2241292.</span>
+                    <span>Questions about giving? <a href="contact.html">Contact us</a> and we’ll help.</span>
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container"></div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="firebase-data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

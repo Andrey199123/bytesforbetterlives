@@ -2672,6 +2672,172 @@ li:has(> .dropdown-link--all) {
 .cards-grid--feature > .card { display: flex; flex-direction: column; }
 .cards-grid--feature > .card > .card-content { flex: 1 1 auto; }
 
+/* Donate hub tiles: three simple ways to give, styled to feel like one family. */
+.donate-methods {
+    margin-top: var(--space-md);
+}
+
+.donate-method {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: clamp(1.4rem, 4vw, 2rem);
+    background: linear-gradient(180deg,
+        color-mix(in oklch, var(--paper) 98%, var(--green-soft)),
+        color-mix(in oklch, var(--paper) 94%, var(--accent-soft)));
+}
+
+.donate-method--pending {
+    border-style: dashed;
+    background: linear-gradient(180deg,
+        color-mix(in oklch, var(--paper) 98%, var(--gold-soft)),
+        color-mix(in oklch, var(--paper) 94%, var(--green-soft)));
+}
+
+.donate-method-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-sm);
+}
+
+.donate-method-name {
+    margin: 0;
+    color: var(--ink);
+    font-size: 1.35rem;
+}
+
+.donate-method-tag {
+    margin: 0;
+    color: var(--green-deep);
+    font-family: var(--font-label);
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.donate-method-blurb {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+    text-wrap: pretty;
+}
+
+.donate-method-foot {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: auto;
+}
+
+.donate-method--link .donate-method-foot,
+.donate-method--pending .donate-method-foot {
+    justify-items: start;
+    text-align: left;
+}
+
+.donate-method--qr .donate-method-foot {
+    justify-items: center;
+    text-align: center;
+}
+
+.donate-method-cta {
+    align-self: flex-start;
+    width: fit-content;
+}
+
+.donate-method--qr .donate-method-cta {
+    width: 100%;
+    align-self: stretch;
+}
+
+.donate-method-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: var(--gold-soft);
+    color: var(--gold-dark);
+    font-family: var(--font-label);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.donate-method-cta.is-pending {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 1.2rem;
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--paper) 90%, var(--ink));
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-family: var(--font-label);
+    font-weight: 800;
+}
+
+.donate-qr {
+    display: grid;
+    place-items: center;
+    width: min(100%, 190px);
+    aspect-ratio: 1;
+    margin-inline: auto;
+    padding: var(--space-sm);
+    border-radius: var(--radius-lg);
+    background: color-mix(in oklch, var(--green-soft) 50%, var(--paper));
+    border: 1px solid color-mix(in oklch, var(--green-dark) 18%, var(--line));
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--paper) 60%, transparent);
+    color: var(--green-dark);
+}
+
+.donate-qr img,
+.donate-qr svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.donate-qr--placeholder svg {
+    width: 72%;
+    height: 72%;
+}
+
+.donate-method-handle {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--font-label);
+    font-weight: 800;
+}
+
+.donate-method-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.donate-reassure {
+    margin: var(--space-lg) 0 0;
+    display: grid;
+    gap: 0.35rem;
+    justify-items: center;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+.donate-reassure a {
+    color: var(--green-dark);
+    font-weight: 800;
+}
+
 /* Oversized, faint editorial word/number bleeding off the hero — one per page, adds identity. */
 
 /* Editorial pull-quote (use inside a .band--ink or .surface-band beat). */
@@ -3175,4 +3341,197 @@ li:has(> .dropdown-link--all) {
 @media (max-width: 760px) {
     .map-grid { grid-template-columns: 1fr; gap: 2rem; align-items: stretch; }
     .geo-pin-label { font-size: 0.68rem; }
+}
+
+/* ============================================================================
+   Donation nudges — a dismissable bottom ribbon + a one-time welcome modal
+   (injected by initDonateNudges in script.js). Gentle Wikipedia/Khan-style
+   asks, not a takeover; on-brand tokens only.
+   ========================================================================= */
+
+/* -- Bottom ribbon (persistent until dismissed; JS reserves body padding-bottom
+      equal to its height so it never hides the footer) -- */
+.donate-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3500; /* above content, below the modal (4000) */
+    background: color-mix(in oklch, var(--paper) 93%, var(--green));
+    border-top: 1px solid color-mix(in oklch, var(--green-dark) 24%, transparent);
+    box-shadow: 0 -10px 30px color-mix(in oklch, var(--ink) 12%, transparent);
+    padding-bottom: env(safe-area-inset-bottom); /* clear the iOS home indicator */
+    transform: translateY(110%);
+    transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.donate-banner.is-visible { transform: translateY(0); }
+
+body.nav-open .donate-banner {
+    transform: translateY(110%);
+    pointer-events: none;
+}
+
+.donate-banner-inner {
+    width: min(1200px, calc(100% - 32px));
+    margin-inline: auto;
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 2vw, 18px);
+    padding: 12px 0;
+}
+.donate-banner-icon { flex: none; color: var(--green-dark); }
+.donate-banner-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+    font-weight: 700;
+    font-size: 0.98rem;
+    color: var(--ink);
+    text-wrap: pretty;
+}
+.donate-banner-cta {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 1.4rem;
+    border-radius: 999px;
+    background: var(--green-dark);
+    color: var(--paper);
+    font-family: var(--font-label);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    box-shadow: 0 6px 16px color-mix(in oklch, var(--green-dark) 30%, transparent);
+    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+.donate-banner-cta:hover {
+    transform: translateY(-2px);
+    background: color-mix(in oklch, var(--green-dark) 88%, black);
+    box-shadow: 0 10px 24px color-mix(in oklch, var(--green-dark) 42%, transparent);
+}
+.donate-banner-close {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease;
+}
+.donate-banner-close:hover {
+    background: color-mix(in oklch, var(--ink) 8%, transparent);
+    color: var(--ink);
+}
+.donate-banner-close svg { display: block; }
+
+@media (max-width: 560px) {
+    /* Compact stack: message on its own row, then Donate + close together — keeps the ribbon
+       to ~two text lines instead of squeezing the sentence into a narrow middle column. */
+    .donate-banner-inner { flex-wrap: wrap; row-gap: 8px; padding: 9px 0; column-gap: 10px; }
+    .donate-banner-icon { display: none; } /* decorative heart — drop it to save vertical space */
+    .donate-banner-text { order: 1; flex: 1 1 100%; font-size: 0.86rem; }
+    .donate-banner-cta { order: 2; flex: 1 1 auto; }
+    .donate-banner-close { order: 3; flex: none; }
+}
+
+/* -- One-time welcome modal (shown once per visitor via localStorage) -- */
+.donate-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 4000; /* over the sticky navbar (3000) and the ribbon (3500) */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(16px, 5vw, 48px);
+    background: color-mix(in oklch, var(--ink) 55%, transparent);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+.donate-modal.active { display: flex; }
+
+.donate-modal-card {
+    position: relative;
+    width: min(94vw, 480px);
+    padding: clamp(1.75rem, 5vw, 2.75rem);
+    background: var(--paper);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+    transition: transform 300ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 300ms ease;
+}
+.donate-modal.active .donate-modal-card {
+    opacity: 1;
+    transform: none;
+}
+.donate-modal-kicker {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-label);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--green-deep);
+}
+.donate-modal-title {
+    margin: 0 0 0.75rem;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.5rem, 4vw, 1.9rem);
+    line-height: 1.15;
+    color: var(--ink);
+    text-wrap: balance;
+}
+.donate-modal-body {
+    max-width: 34ch;
+    margin: 0 auto 1.5rem;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+.donate-modal-body strong { color: var(--green-dark); }
+.donate-modal-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+}
+.donate-modal-actions .btn { width: 100%; }
+.donate-modal-fineprint {
+    margin: 1.1rem 0 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+}
+.donate-modal-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease;
+}
+.donate-modal-close:hover {
+    background: color-mix(in oklch, var(--ink) 8%, transparent);
+    color: var(--ink);
+}
+.donate-modal-close svg { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+    .donate-banner,
+    .donate-modal-card { transition: none; }
 }
