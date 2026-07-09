@@ -46,6 +46,7 @@
     let donateUrl = data.donateUrl || fallbackData.donateUrl;
     let contactEmail = data.contactEmail || fallbackData.contactEmail;
     const donateHubUrl = "donate.html";
+    const peruFundraiserUrl = "https://www.gofundme.com/f/help-children-gain-access-education-tools-in-peru";
 
     // Founders are hardcoded here on purpose — they never change, so they are NOT stored in
     // Firestore / data.people and are NOT editable in the admin. Edit this list to update them.
@@ -2004,7 +2005,7 @@
             {
                 id: "gofundme", name: "GoFundMe", tag: "Card · Apple Pay · Google Pay",
                 blurb: "Give securely online and help us reach the goal — every gift shows on our public fundraiser.",
-                type: "link", url: donateUrl, cta: "Donate on GoFundMe"
+                type: "link", url: peruFundraiserUrl, cta: "Donate on GoFundMe"
             },
             {
                 id: "zelle", name: "Zelle", tag: "Bank-to-bank · zero fees",
@@ -2057,7 +2058,7 @@
         '</article>';
     }
 
-    // Donation nudges: a dismissable bottom ribbon (persistent until dismissed) + a one-time
+    // Donation nudges: a dismissable bottom ribbon for returning visitors + a one-time
     // welcome modal (shown once per visitor). Both are gentle, Wikipedia/Khan-style asks — never a
     // takeover — and lead to the donate hub (donate.html). localStorage keys are versioned so the
     // ask can be re-run later (bump the suffix) without every past visitor being re-counted.
@@ -2076,7 +2077,7 @@
         var pathname = String(location.pathname || "").toLowerCase();
         if (/admin/.test(pathname) || document.body.classList.contains("page-donate")) return;
         var href = escapeHTML(safeUrl(donateHubUrl));
-        initDonateBanner(href);
+        if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) initDonateBanner(href);
         initDonateModal(href);
     }
 
