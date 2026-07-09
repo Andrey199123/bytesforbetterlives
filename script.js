@@ -677,7 +677,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; ${new Date().getFullYear()} Bytes for Better Lives Corporation.</p>
+                <p>&copy; ${new Date().getFullYear()} Bytes for Better Lives Corporation. EIN 42-2241292.</p>
             </div>
         `;
     }
