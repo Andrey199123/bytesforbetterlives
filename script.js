@@ -2010,16 +2010,14 @@
             {
                 id: "zelle", name: "Zelle", tag: "Bank-to-bank · zero fees",
                 blurb: "Scan the QR code to send straight from your banking app with no processing fees.",
-                type: "qr", qr: "images/donate/zelle-qr.png", handle: "j*****9@gmail.com", pending: false,
-                alt: "Zelle QR code to donate to Bytes for Better Lives",
-                note: "Scan with your banking app to send via Zelle."
+                type: "qr", qr: "images/donate/zelle-qr.png", pending: false,
+                alt: "Zelle QR code to donate to Bytes for Better Lives"
             },
             {
                 id: "paypal", name: "PayPal", tag: "PayPal balance or any card",
                 blurb: "Scan the QR code to give through PayPal.",
                 type: "qr", qr: "images/donate/paypal-qr.png", pending: false,
-                alt: "PayPal QR code to pay Inna Tkachenko",
-                note: "Scan to pay Inna Tkachenko with PayPal."
+                alt: "PayPal QR code to pay Inna Tkachenko"
             }
         ];
     }
@@ -2036,15 +2034,12 @@
         var typeClass = m.type ? " donate-method--" + m.type : "";
         var foot;
         if (m.type === "qr") {
-            var qrNote = m.note || (pending ? "We’ll add the QR code here soon." : "Scan with your banking app.");
             var qrAlt = m.alt || (m.name ? m.name + " QR code" : "Donation QR code");
             if (pending || !m.qr) {
                 foot = '<div class="donate-qr donate-qr--placeholder">' + donateQrGlyph() + '</div>' +
-                    '<p class="donate-method-note">' + escapeHTML(qrNote) + '</p>';
+                    '<p class="donate-method-note">We’ll add the QR code here soon.</p>';
             } else {
-                foot = '<div class="donate-qr"><img src="' + escapeHTML(m.qr) + '" alt="' + escapeHTML(qrAlt) + '" loading="lazy"></div>' +
-                    (m.handle ? '<p class="donate-method-handle">' + escapeHTML(m.handle) + '</p>' : "") +
-                    '<p class="donate-method-note">' + escapeHTML(qrNote) + '</p>';
+                foot = '<div class="donate-qr"><img src="' + escapeHTML(m.qr) + '" alt="' + escapeHTML(qrAlt) + '" loading="lazy"></div>';
             }
         } else {
             if (pending || !m.url) {
