@@ -1993,7 +1993,7 @@
 
     // "Ways to give" hub (donate.html): renders one tile per payment method into #donate-methods.
     // Methods are hardcoded here (like `stats`/FOUNDERS) — they're not part of the Firestore model.
-    // GoFundMe and Zelle are live; PayPal stays marked `pending` until its link is added.
+    // GoFundMe, Zelle, and PayPal are live.
     function renderDonatePage() {
         var root = document.getElementById("donate-methods");
         if (!root) return;
@@ -2010,12 +2010,16 @@
             {
                 id: "zelle", name: "Zelle", tag: "Bank-to-bank · zero fees",
                 blurb: "Scan the QR code to send straight from your banking app with no processing fees.",
-                type: "qr", qr: "images/donate/zelle-qr.png", handle: "j*****9@gmail.com", pending: false
+                type: "qr", qr: "images/donate/zelle-qr.png", handle: "j*****9@gmail.com", pending: false,
+                alt: "Zelle QR code to donate to Bytes for Better Lives",
+                note: "Scan with your banking app to send via Zelle."
             },
             {
                 id: "paypal", name: "PayPal", tag: "PayPal balance or any card",
-                blurb: "We’ll add our PayPal link here soon so you can give with your PayPal account or a debit/credit card.",
-                type: "link", url: "", cta: "Donate with PayPal", pending: true
+                blurb: "Scan the QR code to give through PayPal.",
+                type: "qr", qr: "images/donate/paypal-qr.png", pending: false,
+                alt: "PayPal QR code to pay Inna Tkachenko",
+                note: "Scan to pay Inna Tkachenko with PayPal."
             }
         ];
     }
@@ -2032,13 +2036,15 @@
         var typeClass = m.type ? " donate-method--" + m.type : "";
         var foot;
         if (m.type === "qr") {
+            var qrNote = m.note || (pending ? "We’ll add the QR code here soon." : "Scan with your banking app.");
+            var qrAlt = m.alt || (m.name ? m.name + " QR code" : "Donation QR code");
             if (pending || !m.qr) {
                 foot = '<div class="donate-qr donate-qr--placeholder">' + donateQrGlyph() + '</div>' +
-                    '<p class="donate-method-note">We’ll add the Zelle QR here soon.</p>';
+                    '<p class="donate-method-note">' + escapeHTML(qrNote) + '</p>';
             } else {
-                foot = '<div class="donate-qr"><img src="' + escapeHTML(m.qr) + '" alt="Zelle QR code to donate to Bytes for Better Lives" loading="lazy"></div>' +
+                foot = '<div class="donate-qr"><img src="' + escapeHTML(m.qr) + '" alt="' + escapeHTML(qrAlt) + '" loading="lazy"></div>' +
                     (m.handle ? '<p class="donate-method-handle">' + escapeHTML(m.handle) + '</p>' : "") +
-                    '<p class="donate-method-note">Scan with your banking app to send via Zelle.</p>';
+                    '<p class="donate-method-note">' + escapeHTML(qrNote) + '</p>';
             }
         } else {
             if (pending || !m.url) {
@@ -2137,7 +2143,7 @@
                     '<button class="donate-modal-close" type="button" aria-label="Close"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></button>' +
                     '<p class="donate-modal-kicker">Support the mission</p>' +
                     '<h2 class="donate-modal-title" id="donate-modal-title">A small gift bridges the digital divide</h2>' +
-                    '<p class="donate-modal-body" id="donate-modal-body">Bytes for Better Lives is student-led and volunteer-run. A gift as small as <strong>$5</strong> helps put a tablet in a senior’s hands and devices in local classrooms — and every dollar goes straight to the work.</p>' +
+                    '<p class="donate-modal-body" id="donate-modal-body">Bytes for Better Lives is student-led and volunteer-run. A gift as small as <strong>$5</strong> helps put a tablet in a senior’s hands and devices in local classrooms, and every dollar goes straight to the work.</p>' +
                     '<div class="donate-modal-actions">' +
                         '<a class="btn btn-donate donate-modal-cta" href="' + href + '">Donate in 30 seconds</a>' +
                         '<button class="btn btn-secondary donate-modal-dismiss" type="button">Maybe later</button>' +
