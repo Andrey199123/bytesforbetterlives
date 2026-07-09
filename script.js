@@ -1992,8 +1992,7 @@
 
     // "Ways to give" hub (donate.html): renders one tile per payment method into #donate-methods.
     // Methods are hardcoded here (like `stats`/FOUNDERS) — they're not part of the Firestore model.
-    // The GoFundMe tile uses the LIVE donateUrl; Zelle/PayPal are marked `pending` until their
-    // QR/link is added, and render as a clean "Coming soon" card (public-safe, never broken).
+    // GoFundMe and Zelle are live; PayPal stays marked `pending` until its link is added.
     function renderDonatePage() {
         var root = document.getElementById("donate-methods");
         if (!root) return;
@@ -2009,8 +2008,8 @@
             },
             {
                 id: "zelle", name: "Zelle", tag: "Bank-to-bank · zero fees",
-                blurb: "We’ll add our Zelle QR here soon so you can send straight from your banking app with no processing fees.",
-                type: "qr", qr: "", handle: "", pending: true
+                blurb: "Scan the QR code to send straight from your banking app with no processing fees.",
+                type: "qr", qr: "images/donate/zelle-qr.png", handle: "j*****9@gmail.com", pending: false
             },
             {
                 id: "paypal", name: "PayPal", tag: "PayPal balance or any card",
