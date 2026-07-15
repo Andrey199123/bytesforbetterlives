@@ -718,7 +718,7 @@
             { raw: 2350, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
             { raw: 1500, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
             { raw: 3500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
-            { raw: 9, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
+            { raw: 10, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
         ];
 
         root.innerHTML = `
@@ -885,7 +885,8 @@
         { id: "coral-springs", x: 91.9, y: 70.7, side: "left", dy: -16 },
         { id: "ahs", x: 93.4, y: 72.8, side: "left", dx: 26 },
         { id: "cypress", x: 90.4, y: 73.1, side: "left", dy: 18 },
-        { id: "miami", x: 92.8, y: 77.8, side: "left", dy: 14 }
+        { id: "miami", x: 92.8, y: 77.8, side: "left", dy: 14 },
+        { id: "doral", x: 90.9, y: 77.0, side: "left", dy: 46 }
     ];
     const WORLD_MAP_PINS = [
         { id: "ahs", label: "Florida", x: 24.5, y: 41.4, side: "left" },
@@ -901,7 +902,7 @@
     // use the same Miller projection as world.svg (those SVGs are crops of it). Each SVG fills the box,
     // so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
     function chapterLocatorConfig(id) {
-        const FL = { gainesville: [67.6, 24.2], "coral-springs": [91.9, 70.7], ahs: [93.4, 72.8], cypress: [90.4, 73.1], miami: [92.8, 77.8] };
+        const FL = { gainesville: [67.6, 24.2], "coral-springs": [91.9, 70.7], ahs: [93.4, 72.8], cypress: [90.4, 73.1], miami: [92.8, 77.8], doral: [90.9, 77.0] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         const R = {
             "new-york": { map: "images/maps/new-york.svg", x: 70.7, y: 89.9, aspect: "1.279" },

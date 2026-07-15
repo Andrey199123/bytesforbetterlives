@@ -20,6 +20,8 @@
     { "source": "/", "has": [{ "type": "host", "value": "coral-springs.bytesforbetterlives.org" }], "destination": "/chapter-coral-springs.html", "permanent": false },
     { "source": "/", "has": [{ "type": "host", "value": "miami.bytesforbetterlives.net" }], "destination": "/chapter-miami.html", "permanent": false },
     { "source": "/", "has": [{ "type": "host", "value": "miami.bytesforbetterlives.org" }], "destination": "/chapter-miami.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "doral.bytesforbetterlives.net" }], "destination": "/chapter-doral.html", "permanent": false },
+    { "source": "/", "has": [{ "type": "host", "value": "doral.bytesforbetterlives.org" }], "destination": "/chapter-doral.html", "permanent": false },
     { "source": "/", "has": [{ "type": "host", "value": "russia.bytesforbetterlives.net" }], "destination": "/chapter-russia.html", "permanent": false },
     { "source": "/", "has": [{ "type": "host", "value": "russia.bytesforbetterlives.org" }], "destination": "/chapter-russia.html", "permanent": false },
     { "source": "/", "has": [{ "type": "host", "value": "turkey.bytesforbetterlives.net" }], "destination": "/chapter-turkey.html", "permanent": false },

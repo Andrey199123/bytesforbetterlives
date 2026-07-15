@@ -102,7 +102,7 @@ contain spaces.
 
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
-`chapters.html`, `chapter-{ahs,coral-springs,cypress,gainesville,miami,new-york,virginia,russia,turkey}.html`,
+`chapters.html`, `chapter-{ahs,coral-springs,cypress,doral,gainesville,miami,new-york,virginia,russia,turkey}.html`,
 `contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery → lightbox).
 Admin (noindex, not in navbar): `admin.html` (chapter-picker login landing), `members-admin.html`,
 `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `initiatives-admin.html`,
@@ -245,12 +245,14 @@ intentional/editorial, not AI-template.
 
 ## Current content snapshot
 - Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,
-  **9** chapters (`stats` array in `script.js`). Chapters (registry order): AHS, Cypress Bay,
-  Gainesville, Coral Springs, Miami, New York, Virginia, Russia, Turkey.
+  **10** chapters (`stats` array in `script.js`). Chapters (registry order): AHS, Cypress Bay,
+  Gainesville, Coral Springs, Miami, Doral, New York, Virginia, Russia, Turkey.
 - Chapter cities (for map dots): AHS→Plantation FL, Cypress Bay→Weston/Cypress Bay FL,
-  Gainesville→Gainesville FL, Coral Springs→Coral Springs FL, Miami→Miami FL, New York→NYC,
-  Virginia→Virginia Beach VA, Russia→Moscow, Turkey→Istanbul. (Miami = MAST @ FIU students, not an
-  official school club; public page is Miami-only. Chapter admin: adina.t.brody09@gmail.com.)
+  Gainesville→Gainesville FL, Coral Springs→Coral Springs FL, Miami→Miami FL, Doral→Doral FL,
+  New York→NYC, Virginia→Virginia Beach VA, Russia→Moscow, Turkey→Istanbul. (Miami = MAST @ FIU
+  students, not an official school club; public page is Miami-only. Chapter admin:
+  adina.t.brody09@gmail.com.) Doral = independent chapter (2026–2027 officer cohort), President
+  Asvika Prakash; FL map pin at x:90.9,y:77.0.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## Git / workflow
