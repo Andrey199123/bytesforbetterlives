@@ -246,6 +246,7 @@
 
     function initRender() {
         initVercelAnalytics();
+        initPlausible();
         renderNavigation();
         initNavDropdowns();
         renderFooter();
@@ -304,6 +305,28 @@
         script.src = "/_vercel/insights/script.js";
         script.onerror = function () {
             // Ignore (Netlify/GitHub Pages/etc).
+        };
+        document.head.appendChild(script);
+    }
+
+    function initPlausible() {
+        // Plausible Analytics (cookie-less, no consent banner needed). data-domain is the ONE
+        // dashboard site: every serving host (www/apex/.net/chapter subdomains) reports into it.
+        // The outbound-links variant also records clicks on external links (GoFundMe/PayPal donate
+        // CTAs). Plausible's script no-ops on localhost, so local dev never records visits.
+        if (window.__bfblPlausible) return;
+        window.__bfblPlausible = true;
+        if (/admin/.test(String(location.pathname || "").toLowerCase())) return; // no admin traffic
+        // Official queue stub so plausible("event") custom calls are safe before the script loads.
+        window.plausible = window.plausible || function () {
+            (window.plausible.q = window.plausible.q || []).push(arguments);
+        };
+        const script = document.createElement("script");
+        script.defer = true;
+        script.setAttribute("data-domain", "bytesforbetterlives.org");
+        script.src = "https://plausible.io/js/script.outbound-links.js";
+        script.onerror = function () {
+            // Blocked/offline — analytics is best-effort.
         };
         document.head.appendChild(script);
     }

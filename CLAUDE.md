@@ -61,6 +61,11 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
 ### `script.js` — rendering + behavior
 - `navItems` (~line 21) = navbar links. Impact **stat numbers** = `stats` array (~line 366/501),
   *here, not data.js*.
+- **Analytics** = two injectors in `initRender`: `initVercelAnalytics()` (Vercel Web Analytics) and
+  `initPlausible()` (Plausible, cookie-less; `data-domain="bytesforbetterlives.org"` = the ONE
+  dashboard site all hosts/subdomains report into; `script.outbound-links.js` variant so external
+  donate-link clicks are tracked; skips `/admin` paths; no-ops on localhost). Dashboard:
+  plausible.io — the site must exist there under that exact domain for events to record.
 - **Avatars**: `personPhotoMarkup(name,photo,…)` → portrait or initials on brand green
   (`.avatar-initials`) when no real photo. `hasRealPhoto()` treats missing photo OR `logo.avif`
   placeholder as "no photo"; `initImageFallbacks` swaps 404'd `<img>` for initials (also catches images
@@ -425,8 +430,15 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
     excluded). `admin.js` mirrors via `isRasterImage()`/`notRasterImage()`.
 - **HTTP security headers** (`firebase.json` `headers` on `**`): CSP, `X-Frame-Options:DENY`,
   `X-Content-Type-Options:nosniff`, `Referrer-Policy`, HSTS, `Permissions-Policy`. CSP allowlists
-  `gstatic`/`apis.google.com`, `*.googleapis.com`/`*.firebasestorage.app`, `formsubmit.co`, Firebase-Auth/Google
-  hosts — keep in sync when adding any third-party script/endpoint. `frame-ancestors 'none'`.
+  `gstatic`/`apis.google.com`, `*.googleapis.com`/`*.firebasestorage.app`, `formsubmit.co`,
+  `plausible.io` (script+connect), Firebase-Auth/Google hosts — keep in sync when adding any
+  third-party script/endpoint. `frame-ancestors 'none'`.
+  - ⚠️ **These headers are currently DORMANT in production** (discovered 2026-07-19): they're
+    Firebase-Hosting config, but the site is served by VERCEL and `vercel.json` has NO `headers`
+    block — live responses carry only Vercel's own HSTS. Still keep `firebase.json` in sync (it's
+    the intended policy). Do NOT copy it into `vercel.json` as-is: `style-src`/`font-src` predate the
+    Google-Fonts `<link>` setup (no `fonts.googleapis.com`/`fonts.gstatic.com`) and would break all
+    fonts — porting needs those hosts added and a full page-by-page check first.
 - **URL/XSS** — `escapeHTML()` for HTML/attr; for any data-driven `href` use **`safeUrl()`** (scheme
   allowlist http(s)/mailto, else `#`) wrapped in `escapeHTML`. Blocks `javascript:`/`data:` in
   admin-set fields. All `target="_blank"` carry `rel="noopener noreferrer"`.
