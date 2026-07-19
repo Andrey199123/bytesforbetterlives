@@ -3309,12 +3309,26 @@ li:has(> .dropdown-link--all) {
 .geo-pin.pin-active .geo-pin-dot { background: var(--green-dark); }
 .geo-pin.pin-launching .geo-pin-dot { background: var(--gold-dark); }
 .geo-pin.pin-prospective .geo-pin-dot { background: var(--muted); }
+/* Outreach dots are HOLLOW rings (vs solid chapter dots) so the two categories differ by shape as
+   well as colour — green/coral at near-equal lightness is a red-green CVD confusion pair. */
+.geo-pin.pin-outreach .geo-pin-dot {
+    background: var(--paper);
+    border: 4px solid var(--coral-dark);
+}
 .geo-pin:hover { z-index: 5; }
 .geo-pin:hover .geo-pin-dot { transform: scale(1.25); }
 .geo-pin:hover .geo-pin-label,
 .geo-pin:focus-visible .geo-pin-label {
     background: var(--ink);
     color: var(--paper);
+}
+/* Static pins (home-map outreach markers) are informational, not links — hover means clickable, so
+   they must not react. Overrides undo the shared .geo-pin hover treatment. */
+.geo-pin--static { cursor: default; }
+.geo-pin--static:hover .geo-pin-dot { transform: none; }
+.geo-pin--static:hover .geo-pin-label {
+    background: color-mix(in oklch, var(--paper) 90%, transparent);
+    color: var(--ink);
 }
 /* Legend */
 .map-legend {
@@ -3337,10 +3351,16 @@ li:has(> .dropdown-link--all) {
 }
 .map-dot.pin-active { background: var(--green-dark); }
 .map-dot.pin-launching { background: var(--gold-dark); }
+.map-dot.pin-outreach { background: var(--paper); border: 3.5px solid var(--coral-dark); }
+/* Home "Our Reach" map (#global-reach on index.html): one full-width world map instead of the
+   chapters-page two-map grid — capped so it doesn't tower on desktop. */
+.reach-map { max-width: 900px; margin-inline: auto; }
 
 @media (max-width: 760px) {
     .map-grid { grid-template-columns: 1fr; gap: 2rem; align-items: stretch; }
     .geo-pin-label { font-size: 0.68rem; }
+    /* Long label suffixes (home map's "Florida · N chapters") clip off the frame edge on phones. */
+    .geo-pin-label-note { display: none; }
 }
 
 /* ============================================================================

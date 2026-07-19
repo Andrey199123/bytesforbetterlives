@@ -895,6 +895,15 @@
         { id: "russia", label: "Russia", x: 57.9, y: 25.0 },
         { id: "turkey", label: "Turkey", x: 55.5, y: 34.2 }
     ];
+    // Home "Our Reach" map only: countries where BFBL outreach/donation drives have reached, NOT
+    // chapters — so no id/status/href; they render as static (non-link) red pins. Same Miller
+    // projection as WORLD_MAP_PINS (country centroids: Haiti 18.97,-72.29 · Peru -9.19,-75.02 ·
+    // India 20.59,78.96).
+    const WORLD_OUTREACH_PINS = [
+        { label: "Haiti", x: 27.1, y: 45.8, cls: "pin-outreach" },
+        { label: "Peru", x: 26.3, y: 59.5, cls: "pin-outreach" },
+        { label: "India", x: 69.5, y: 45.0, cls: "pin-outreach" }
+    ];
 
     // Chapter-hero locator map: Florida chapters show the Florida outline (so the dot %s line up with
     // FLORIDA_MAP_PINS); everyone else shows their OWN state/country outline. Dots are PROJECTED from
@@ -919,30 +928,67 @@
         }) || null;
     }
 
-    function mapPinMarkup(pin) {
-        const chapter = chapterById(pin.id);
-        if (!chapter) return "";
-        const href = chapterPublicHref(chapter);
-        const status = (chapter.status && String(chapter.status).trim()) || "Active";
-        const label = pin.label || String(chapter.name || "").replace(/\s*Chapter$/i, "");
-        const pinCls = statusClass(status).replace("status-", "pin-")
-            + (pin.side === "left" ? " geo-pin--left" : "");
+    function mapPinMarkup(pin, forceStatus) {
         const labelDy = typeof pin.dy === "number" && pin.dy !== 0 ? `--label-dy:${pin.dy}px;` : "";
         const labelDx = typeof pin.dx === "number" && pin.dx !== 0 ? `--label-dx:${7 + pin.dx}px;` : "";
-        return `
-            <a class="geo-pin ${pinCls}" style="left:${pin.x}%;top:${pin.y}%;${labelDy}${labelDx}"
-               href="${escapeHTML(safeUrl(href))}" title="${escapeHTML(chapter.name)} — ${escapeHTML(status)}">
+        const pos = `left:${pin.x}%;top:${pin.y}%;${labelDy}${labelDx}`;
+        const sideCls = pin.side === "left" ? " geo-pin--left" : "";
+        // Optional label suffix that HIDES on small screens (long labels near the map edge clip there).
+        const note = pin.labelNote ? `<span class="geo-pin-label-note">${escapeHTML(pin.labelNote)}</span>` : "";
+        // No id → a static, NON-chapter pin (home-map outreach markers). It isn't a link, so it must
+        // not look interactive: .geo-pin--static opts out of the hover treatment (hover = clickable).
+        if (!pin.id) {
+            return `
+            <span class="geo-pin geo-pin--static ${escapeHTML(pin.cls || "")}${sideCls}" style="${pos}">
                 <span class="geo-pin-dot"></span>
-                <span class="geo-pin-label">${escapeHTML(label)}</span>
+                <span class="geo-pin-label">${escapeHTML(pin.label || "")}${note}</span>
+            </span>`;
+        }
+        const chapter = chapterById(pin.id);
+        if (!chapter) return "";
+        const href = pin.href || chapterPublicHref(chapter);
+        const realStatus = (chapter.status && String(chapter.status).trim()) || "Active";
+        // forceStatus recolours the DOT only (home map: all chapter pins green to match its legend);
+        // the tooltip below keeps the chapter's real status so it never claims a false one.
+        // typeof guard: Array#map passes the INDEX as the 2nd arg, so `.map(mapPinMarkup)` stays safe.
+        const status = (typeof forceStatus === "string" && forceStatus) || realStatus;
+        const label = pin.label || String(chapter.name || "").replace(/\s*Chapter$/i, "");
+        const pinCls = statusClass(status).replace("status-", "pin-") + sideCls;
+        const title = pin.title || `${chapter.name} — ${realStatus}`;
+        return `
+            <a class="geo-pin ${pinCls}" style="${pos}"
+               href="${escapeHTML(safeUrl(href))}" title="${escapeHTML(title)}">
+                <span class="geo-pin-dot"></span>
+                <span class="geo-pin-label">${escapeHTML(label)}${note}</span>
             </a>`;
     }
 
     function renderChapterMaps() {
         const florida = document.querySelector("#map-florida");
         const world = document.querySelector("#map-world");
-        if (!florida && !world) return;
+        const homeWorld = document.querySelector("#map-world-home");
+        if (!florida && !world && !homeWorld) return;
         if (florida) florida.insertAdjacentHTML("beforeend", FLORIDA_MAP_PINS.map(mapPinMarkup).join(""));
         if (world) world.insertAdjacentHTML("beforeend", WORLD_MAP_PINS.map(mapPinMarkup).join(""));
+        if (homeWorld) {
+            // Home "Our Reach" map: every chapter pin is forced GREEN to match the two-item legend
+            // (green = chapters, red = outreach) — status colouring stays a chapters-page concern.
+            // The Florida pin aggregates the FL cluster (live count from FLORIDA_MAP_PINS) and links
+            // to the directory rather than one chapter's page.
+            const flCount = FLORIDA_MAP_PINS.length;
+            const chapterPins = WORLD_MAP_PINS.map(function (pin) {
+                const homePin = pin.id === "ahs"
+                    ? Object.assign({}, pin, {
+                        labelNote: ` · ${flCount} chapters`,
+                        href: "chapters.html",
+                        title: `Florida — ${flCount} chapters`
+                    })
+                    : pin;
+                return mapPinMarkup(homePin, "Active");
+            }).join("");
+            const outreachPins = WORLD_OUTREACH_PINS.map(function (pin) { return mapPinMarkup(pin); }).join("");
+            homeWorld.insertAdjacentHTML("beforeend", chapterPins + outreachPins);
+        }
     }
 
     function chapterDirectoryCardMarkup(chapter) {

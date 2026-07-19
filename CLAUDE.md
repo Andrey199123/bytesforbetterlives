@@ -217,6 +217,20 @@ intentional/editorial, not AI-template.
     per-pin `dy`/`dx` (px) stagger the clustered labels into a readable inland column
     (`--label-dy`/`--label-dx` on `.geo-pin-label`).
   `.pin-active`=green, `.pin-launching`=gold; `.geo-pin--left` floats label inland.
+- **Home "Our Reach" map** (`#global-reach` on `index.html` — FIRST content section, right after the
+  hero): single `world.svg` map (`.reach-map` caps width 900px) reusing the chapters-page pin system,
+  with legend green=chapters / red=outreach. Chapter pins = `WORLD_MAP_PINS` forced GREEN via
+  `mapPinMarkup(pin,"Active")` (2nd arg must be a STRING — bare `.map(mapPinMarkup)` passes the index;
+  it recolours the DOT only — the `title` tooltip always uses the chapter's REAL status);
+  the `ahs` pin becomes an aggregate "Florida · N chapters" (N live from `FLORIDA_MAP_PINS.length`;
+  the suffix is a `labelNote` → `.geo-pin-label-note`, hidden ≤760px so it can't clip the frame edge)
+  and links to `chapters.html` instead of the AHS page. Red pins = `WORLD_OUTREACH_PINS`
+  (Haiti/Peru/India country centroids, same Miller projection) — NOT chapters: id-less pins render as
+  static non-link `<span>`s (`.geo-pin--static`, hover-inert per the clickability HARD rule) with
+  `.pin-outreach` dots — HOLLOW `--coral-dark` rings, so the categories differ by shape, not colour
+  alone (green/coral is a red-green CVD pair). Adding a chapter needs NO extra step here (pin tables are
+  shared); adding an outreach country = one `WORLD_OUTREACH_PINS` entry (project %s per the
+  map-projection note).
 - **Member rosters**: leadership as cards, volunteers as `.roster-chip` pills (`personChipMarkup`) — on
   chapter profiles and Team volunteers grid.
 - **About** "Our Story" = numbered `.story-rail` timeline; **Impact** partners = `.partner-strip`
