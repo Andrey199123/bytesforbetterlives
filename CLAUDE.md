@@ -107,7 +107,7 @@ contain spaces.
 
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
-`chapters.html`, `chapter-{ahs,coral-springs,cypress,doral,gainesville,miami,new-york,virginia,russia,turkey}.html`,
+`chapters.html`, `chapter-{ahs,coral-springs,cypress,doral,gainesville,los-angeles,miami,new-york,virginia,russia,turkey}.html`,
 `contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery → lightbox).
 Admin (noindex, not in navbar): `admin.html` (chapter-picker login landing), `members-admin.html`,
 `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `initiatives-admin.html`,
@@ -163,7 +163,7 @@ intentional/editorial, not AI-template.
   The locator map carries identity in both cases. A faint **locator MAP + dot** (`chapterLocatorConfig` +
   `.chapter-hero-locator`/`.hero-locator-map`/`.hero-locator-dot`, hidden on mobile) shows each
   chapter's OWN region outline from `images/maps/`: FL chapters→`florida.svg` (dot %s mirror
-  `FLORIDA_MAP_PINS`); `new-york.svg`/`virginia.svg` (US-state outlines); `russia.svg`/`turkey.svg`
+  `FLORIDA_MAP_PINS`); `new-york.svg`/`virginia.svg`/`california.svg` (US-state outlines); `russia.svg`/`turkey.svg`
   (country paths). Each region SVG fills the box edge-to-edge so `left/top:%`==map %; dot % is
   **projected from the city's real lat/lng** (see map-projection note below); container `aspect-ratio`
   matches the SVG's bbox.
@@ -212,7 +212,7 @@ intentional/editorial, not AI-template.
   `.map-frame` edge-to-edge so `left:X%`==X% of map. Pin classes **`.geo-pin`/`.geo-pin-dot`/`.geo-pin-label`**
   (the legacy `.map-pin` teardrop component that used to hijack markup was deleted in the dead-code sweep).
   - **Map-projection note (how pin %s are derived):** pin positions are PROJECTED from each city's real
-    lat/lng, not eyeballed. `florida.svg` (+ `new-york.svg`/`virginia.svg`) are equirectangular over the
+    lat/lng, not eyeballed. `florida.svg` (+ `new-york.svg`/`virginia.svg`/`california.svg`) are equirectangular over the
     region's bounding box → `x%=(lng-lngW)/(lngE-lngW)`, `y%=(latN-lat)/(latN-latS)`, then mapped into the
     SVG via its path bbox vs viewBox (each has ~5% padding). `world.svg` (and its crops `russia.svg`/
     `turkey.svg`, which share its coordinate space) is **Miller cylindrical**: `x=X0+mx·lng`,
@@ -264,14 +264,19 @@ intentional/editorial, not AI-template.
 
 ## Current content snapshot
 - Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,
-  **10** chapters (`stats` array in `script.js`). Chapters (registry order): AHS, Cypress Bay,
-  Gainesville, Coral Springs, Miami, Doral, New York, Virginia, Russia, Turkey.
+  **11** chapters (`stats` array in `script.js`). Chapters (registry order): AHS, Cypress Bay,
+  Gainesville, Coral Springs, Miami, Doral, New York, Virginia, Russia, Turkey, Los Angeles.
 - Chapter cities (for map dots): AHS→Plantation FL, Cypress Bay→Weston/Cypress Bay FL,
   Gainesville→Gainesville FL, Coral Springs→Coral Springs FL, Miami→Miami FL, Doral→Doral FL,
-  New York→NYC, Virginia→Virginia Beach VA, Russia→Moscow, Turkey→Istanbul. (Miami = MAST @ FIU
+  New York→NYC, Virginia→Virginia Beach VA, Russia→Moscow, Turkey→Istanbul, Los Angeles→Los Angeles CA.
+  (Miami = MAST @ FIU
   students, not an official school club; public page is Miami-only. Chapter admin:
   adina.t.brody09@gmail.com.) Doral = independent chapter (2026–2027 officer cohort), President
-  Asvika Prakash; FL map pin at x:90.9,y:77.0.
+  Asvika Prakash; FL map pin at x:90.9,y:77.0. Los Angeles = independent chapter, no lead assigned yet
+  (`leadPeople` empty → directory "Led by" line hides via `chapterHasLead()`); world map pin at
+  x:14.2,y:38.0 with `dy:-42` (NOT `side:left` — as the westernmost pin, a left-floating label clipped
+  off the frame's left edge on the 2-col world map, so the label floats right + up, clear of the
+  east-coast cluster), locator outline `images/maps/california.svg`.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## Git / workflow

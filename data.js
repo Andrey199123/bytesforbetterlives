@@ -374,6 +374,18 @@ window.BFBL_DATA = {
             photos: [
                 "images/logo.avif"
             ]
+        },
+        {
+            id: "los-angeles",
+            subdomain: "los-angeles",
+            pageHref: "chapter-los-angeles.html",
+            name: "Los Angeles Chapter",
+            location: "Los Angeles, CA",
+            status: "Launching",
+            leadPeople: [],
+            coordinates: { lat: 34.0522, lng: -118.2437 },
+            description: "Launching chapter bringing senior tech help and digital-literacy outreach to Los Angeles.",
+            photos: []
         }
     ],
 

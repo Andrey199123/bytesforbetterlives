@@ -543,6 +543,16 @@
         }).join(" / ");
     }
 
+    // True only when a chapter names a real lead. New chapters (no roster yet) leave leadPeople empty
+    // and set no leadName, so the directory card's "Led by" block hides instead of showing the
+    // "Chapter Lead" placeholder resolvePersonRef() would otherwise fabricate.
+    function chapterHasLead(chapter) {
+        const named = Array.isArray(chapter.leadPeople)
+            ? chapter.leadPeople.some(function (person) { return person && person.name; })
+            : false;
+        return named || !!(chapter.leadName && String(chapter.leadName).trim());
+    }
+
     function activeChapters() {
         return (data.chapters || []).filter(function (chapter) {
             return chapter.status === "Active";
@@ -741,7 +751,7 @@
             { raw: 2350, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
             { raw: 1500, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
             { raw: 3500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
-            { raw: 10, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
+            { raw: 11, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
         ];
 
         root.innerHTML = `
@@ -913,6 +923,7 @@
     ];
     const WORLD_MAP_PINS = [
         { id: "ahs", label: "Florida", x: 24.5, y: 41.4, side: "left" },
+        { id: "los-angeles", label: "Los Angeles", x: 14.2, y: 38.0, dy: -42 }, // west edge: label floats right + up (side:left clipped "Los Angeles" off the frame's left edge on the 2-col world map); dy lifts it clear of the east-coast cluster
         { id: "new-york", label: "New York", x: 26.6, y: 34.3 },
         { id: "virginia", label: "Virginia", x: 26.0, y: 36.5, side: "left" },
         { id: "russia", label: "Russia", x: 57.9, y: 25.0 },
@@ -937,6 +948,7 @@
         const FL = { gainesville: [67.6, 24.2], "coral-springs": [91.9, 70.7], ahs: [93.4, 72.8], cypress: [90.4, 73.1], miami: [92.8, 77.8], doral: [90.9, 77.0] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         const R = {
+            "los-angeles": { map: "images/maps/california.svg", x: 59.0, y: 80.8, aspect: "0.859" },
             "new-york": { map: "images/maps/new-york.svg", x: 70.7, y: 89.9, aspect: "1.279" },
             "virginia": { map: "images/maps/virginia.svg", x: 87.5, y: 83.4, aspect: "1.679" },
             "russia":   { map: "images/maps/russia.svg",   x: 13.3, y: 68.7, aspect: "1.714" },
@@ -1016,8 +1028,18 @@
 
     function chapterDirectoryCardMarkup(chapter) {
         const pageHref = chapterPublicHref(chapter);
-        const leadNames = chapterLeadPeopleText(chapter);
         const featureCls = isExecutiveChapter(chapter) ? " chapter-card--feature" : "";
+        // Chapters without a named lead yet (brand-new) skip the "Led by" block entirely.
+        const leadBlock = chapterHasLead(chapter)
+            ? `
+                <div class="chapter-lead">
+                    ${chapterLeadAvatarMarkup(chapter)}
+                    <div>
+                        <span class="chapter-lead-eyebrow">Led by</span>
+                        <strong>${escapeHTML(chapterLeadPeopleText(chapter))}</strong>
+                    </div>
+                </div>`
+            : "";
         return `
             <a class="chapter-card${featureCls}" href="${escapeHTML(safeUrl(pageHref))}" aria-label="View ${escapeHTML(chapter.name)}">
                 <div class="chapter-card-header">
@@ -1026,14 +1048,7 @@
                         <p>${escapeHTML(chapter.location)}</p>
                     </div>
                     ${chapterStatusBadgeMarkup(chapter)}
-                </div>
-                <div class="chapter-lead">
-                    ${chapterLeadAvatarMarkup(chapter)}
-                    <div>
-                        <span class="chapter-lead-eyebrow">Led by</span>
-                        <strong>${escapeHTML(leadNames)}</strong>
-                    </div>
-                </div>
+                </div>${leadBlock}
                 <p class="chapter-card-desc">${escapeHTML(chapter.description)}</p>
                 <span class="chapter-card-go" aria-hidden="true">View chapter →</span>
             </a>
