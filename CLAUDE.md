@@ -62,7 +62,7 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
 - `navItems` (~line 21) = navbar links. Impact **stat numbers** = `stats` array (~line 366/501),
   *here, not data.js*.
 - **Analytics** = two injectors in `initRender`: `initVercelAnalytics()` (Vercel Web Analytics) and
-  `initPlausible()` (Plausible, cookie-less; `data-domain="bytesforbetterlives.org"` = the ONE
+  `initPlausible()` (Plausible, cookie-less; `data-domain="bytesforbetterlives.net"` = the ONE
   dashboard site all hosts/subdomains report into; `script.outbound-links.js` variant so external
   donate-link clicks are tracked; skips `/admin` paths; no-ops on localhost). Dashboard:
   plausible.io — the site must exist there under that exact domain for events to record.

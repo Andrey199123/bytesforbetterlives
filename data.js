@@ -170,7 +170,7 @@ window.BFBL_DATA = {
         {
             id: "ahs",
             // Public subdomain for this chapter (edit to change the chapter URL shown across the site).
-            // Example: "ahs" -> https://ahs.bytesforbetterlives.org/
+            // Example: "ahs" -> https://ahs.bytesforbetterlives.net/
             subdomain: "ahs",
             pageHref: "chapter-ahs.html",
             name: "AHS Chapter",

@@ -1,14 +1,12 @@
 // Subdomain Redirect Logic
 (function() {
     const host = window.location.hostname;
-    const isSubdomain = host.includes('bytesforbetterlives') && 
-                        !host.startsWith('www.bytesforbetterlives') && 
-                        host !== 'bytesforbetterlives.org' && 
-                        host !== 'bytesforbetterlives.net';
+    const isSubdomain = host.endsWith('.bytesforbetterlives.net') &&
+                        !host.startsWith('www.bytesforbetterlives.net');
 
     if (isSubdomain) {
         if (window.location.pathname !== '/' && window.location.pathname !== '/index.html' && !window.location.pathname.startsWith('/chapter-')) {
-            window.location.replace('https://www.bytesforbetterlives.org' + window.location.pathname + window.location.search + window.location.hash);
+            window.location.replace('https://www.bytesforbetterlives.net' + window.location.pathname + window.location.search + window.location.hash);
         } else {
             document.addEventListener('click', function(e) {
                 const a = e.target.closest('a');
@@ -18,7 +16,7 @@
                         e.preventDefault();
                         let newPath = href;
                         if (!newPath.startsWith('/')) newPath = '/' + newPath;
-                        window.location.href = 'https://www.bytesforbetterlives.org' + newPath;
+                        window.location.href = 'https://www.bytesforbetterlives.net' + newPath;
                     }
                 }
             });
@@ -311,7 +309,7 @@
 
     function initPlausible() {
         // Plausible Analytics (cookie-less, no consent banner needed). data-domain is the ONE
-        // dashboard site: every serving host (www/apex/.net/chapter subdomains) reports into it.
+        // dashboard site: every serving host (www/apex/chapter subdomains) reports into it.
         // The outbound-links variant also records clicks on external links (GoFundMe/PayPal donate
         // CTAs). Plausible's script no-ops on localhost, so local dev never records visits.
         if (window.__bfblPlausible) return;
@@ -323,7 +321,7 @@
         };
         const script = document.createElement("script");
         script.defer = true;
-        script.setAttribute("data-domain", "bytesforbetterlives.org");
+        script.setAttribute("data-domain", "bytesforbetterlives.net");
         script.src = "https://plausible.io/js/script.outbound-links.js";
         script.onerror = function () {
             // Blocked/offline — analytics is best-effort.
@@ -363,21 +361,15 @@
     }
 
     // Returns the base domain to use for chapter subdomains.
-    // If the current host is already on bytesforbetterlives.net, we keep links on .net;
-    // otherwise we default to .org.
     function chapterBaseDomain() {
-        var host = String(window.location.hostname || "").toLowerCase().replace(/^www\./, "");
-        if (host === "bytesforbetterlives.net" || host.endsWith(".bytesforbetterlives.net")) return "bytesforbetterlives.net";
-        return "bytesforbetterlives.org";
+        return "bytesforbetterlives.net";
     }
 
     // Whether we should generate chapter subdomain URLs in this environment.
     // Local previews (localhost, file://, netlify.app, vercel.app, etc.) keep using relative chapter pages.
     function shouldUseChapterSubdomains() {
         var host = String(window.location.hostname || "").toLowerCase().replace(/^www\./, "");
-        return host === "bytesforbetterlives.org"
-            || host === "bytesforbetterlives.net"
-            || host.endsWith(".bytesforbetterlives.org")
+        return host === "bytesforbetterlives.net"
             || host.endsWith(".bytesforbetterlives.net");
     }
 
