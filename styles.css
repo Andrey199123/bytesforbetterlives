@@ -1,4 +1,4 @@
-/* Fonts (Mulish + Nunito) load via <link rel="preconnect">+<link rel="stylesheet"> in every
+/* Fonts (Mulish + Gabarito) load via <link rel="preconnect">+<link rel="stylesheet"> in every
    page's <head> — NOT an @import here, which serialized HTML -> styles.css -> fonts CSS -> woff2
    and blocked first paint behind the whole chain. */
 
@@ -15,9 +15,11 @@
     color-scheme: light;
     --font-body: "Mulish", "Segoe UI", sans-serif;
     /* Rounded geometric display + clean geometric body — the closest free match to DECA's
-       Gotham Rounded / Gotham pairing (Gotham is licensed and can't be embedded). */
-    --font-display: "Nunito", "Segoe UI", sans-serif;
-    --font-label: "Nunito", "Segoe UI", sans-serif;
+       Gotham Rounded / Gotham pairing (Gotham is licensed and can't be embedded).
+       Gabarito is SITE-WIDE for display + labels; every font-weight below is on the
+       Gabarito scale (one notch under the old Nunito numbers — see the note on h1–h4). */
+    --font-display: "Gabarito", "Segoe UI", sans-serif;
+    --font-label: "Gabarito", "Segoe UI", sans-serif;
 
     /* Warm off-white paper + surfaces (was a cold blue-white). */
     --paper: oklch(98.6% 0.008 92);
@@ -171,7 +173,7 @@ button {
     background: var(--green-dark);
     color: var(--paper);
     font-family: var(--font-label);
-    font-weight: 700;
+    font-weight: 500;
     font-size: 0.95rem;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
@@ -216,7 +218,9 @@ h3,
 h4 {
     margin: 0;
     font-family: var(--font-display);
-    font-weight: 800;
+    /* Gabarito sets much blacker than the old Nunito at the same number, so the whole display/label
+       scale sits one notch down (was 900/800/750/700 → now 700/600/550/500). Body copy stays 400. */
+    font-weight: 600;
     line-height: 1.05;
     letter-spacing: -0.01em;
     color: var(--ink);
@@ -309,7 +313,7 @@ main {
     font-family: var(--font-label);
     text-transform: uppercase;
     letter-spacing: 0.16em;
-    font-weight: 800;
+    font-weight: 600;
     font-size: 0.8rem;
 }
 .section-kicker { color: var(--accent-dark); }      /* on light section backgrounds */
@@ -325,11 +329,10 @@ main {
 .eyebrow::before { background: var(--accent-soft); }
 
 /* Home photo hero: the eyebrow sits over the busy banner photo under the lightest wash, so give it
-   the same paper colour + legibility shadow as the h1/subtitle (the bare pale-mint eyebrow has none).
-   Editorial colour-field heroes keep their pale-mint eyebrow. */
+   the same paper colour as the h1/subtitle (the bare pale-mint eyebrow reads too weak there).
+   Editorial colour-field heroes keep their pale-mint eyebrow. No text-shadow — see .hero h1. */
 .home-hero .eyebrow {
     color: var(--paper);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 0 12px rgba(0, 0, 0, 0.5);
 }
 .home-hero .eyebrow::before {
     background: var(--paper);
@@ -406,7 +409,7 @@ main {
     content: "Bytes for Better Lives";
     max-width: 150px;
     font-family: var(--font-label);
-    font-weight: 800;
+    font-weight: 600;
     font-size: 0.96rem;
     line-height: 1.05;
     color: var(--green-dark);
@@ -431,7 +434,7 @@ main {
     padding: 0 clamp(0.2rem, 0.4vw, 0.5rem);
     color: var(--ink-soft);
     font-family: var(--font-label);
-    font-weight: 700;
+    font-weight: 500;
     font-size: clamp(0.88rem, 0.95vw, 1.02rem);
     border-radius: 999px;
     transition: color 150ms ease, background-color 150ms ease;
@@ -524,7 +527,7 @@ li:has(> .dropdown-link--all) {
     background: var(--green-dark);
     color: var(--paper);
     font-family: var(--font-label);
-    font-weight: 800;
+    font-weight: 600;
     font-size: 1rem;
     letter-spacing: 0.02em;
     border: 2px solid transparent;
@@ -625,7 +628,8 @@ li:has(> .dropdown-link--all) {
     font-size: clamp(2.75rem, 5vw, 4.8rem);
     text-transform: none;
     text-wrap: balance;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 0, 0, 0.5);
+    /* No text-shadows anywhere in a hero (user hard rule) — the hero wash alone carries legibility
+       over photo heroes; deepen the wash, never re-add a shadow. */
 }
 
 .hero p,
@@ -633,14 +637,15 @@ li:has(> .dropdown-link--all) {
     max-width: 760px;
     font-size: clamp(1.1rem, 2vw, 1.45rem);
     color: color-mix(in oklch, var(--paper) 88%, var(--accent-soft));
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 0, 0, 0.6);
 }
 
 .home-hero {
     --hero-img: url("images/hero-banner.jpg");
     --hero-pos: center 34%;
     /* Lighter treatment than the base .hero: much less green wash and a gentler ink layer so the
-       photo reads clearly, while the left side keeps enough darkening for the white hero text. */
+       photo reads clearly. NOTE: on index.html this wash never paints — body.page-home .home-hero
+       (redesign block, further down) replaces it with the near-uniform --home-hero-scrim that
+       actually carries hero legibility (measured 5.1–5.8:1). Kept only as the classless fallback. */
     background:
         linear-gradient(95deg,
             color-mix(in oklch, var(--accent-dark) 58%, transparent) 0%,
@@ -658,16 +663,21 @@ li:has(> .dropdown-link--all) {
     --hero-img: url("images/hero-banner.jpg");
     --hero-pos: center 34%;
     /* Chapter pages show that chapter's own photo — keep the green wash light so the people read
-       clearly; legibility comes from the left ink gradient + bottom scrim, not the accent colour. */
+       clearly; legibility comes from the left ink gradient + bottom scrim, not the accent colour.
+       The ink gradient carries ALL of it now that heroes have no text-shadows, so it stays deep
+       across the whole copy column (0–78%, where the longest description line ends) and only then
+       falls away fast — the right third of the photo stays bright because no copy ever sits there.
+       Deepen this wash if a chapter photo swallows the type — never re-add a shadow. */
     background:
         linear-gradient(95deg,
             color-mix(in oklch, var(--accent-dark) 36%, transparent) 0%,
             color-mix(in oklch, var(--accent-dark) 12%, transparent) 38%,
             transparent 62%),
         linear-gradient(95deg,
-            color-mix(in oklch, var(--ink) 54%, transparent) 0%,
-            color-mix(in oklch, var(--ink) 30%, transparent) 50%,
-            color-mix(in oklch, var(--ink) 14%, transparent) 100%),
+            color-mix(in oklch, var(--ink) 72%, transparent) 0%,
+            color-mix(in oklch, var(--ink) 68%, transparent) 55%,
+            color-mix(in oklch, var(--ink) 46%, transparent) 78%,
+            color-mix(in oklch, var(--ink) 20%, transparent) 100%),
         linear-gradient(180deg, transparent 56%, color-mix(in oklch, var(--ink) 56%, transparent) 100%),
         var(--hero-img) var(--hero-pos) / cover no-repeat;
 }
@@ -724,17 +734,9 @@ li:has(> .dropdown-link--all) {
     color: var(--paper);
 }
 
-/* On a solid accent field the heavy photo-legibility shadows are unnecessary — soften them so the
-   type reads as crisp editorial, not white-on-busy-photo. */
-.hero-editorial h1,
-.hero-editorial .hero-fancy-title {
-    text-shadow: 0 1px 3px color-mix(in oklch, var(--ink) 35%, transparent);
-}
-
 .hero-editorial p,
 .hero-editorial .hero-subtitle {
     color: color-mix(in oklch, var(--paper) 90%, var(--accent));
-    text-shadow: none;
 }
 
 .home-hero h1 {
@@ -759,11 +761,10 @@ li:has(> .dropdown-link--all) {
 .hero-actions .hero-link {
     color: var(--paper);
     font-family: var(--font-label);
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.01em;
     text-decoration: none;
     padding-inline: var(--space-xs);
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 .hero-actions .hero-link:hover {
     text-decoration: underline;
@@ -779,7 +780,7 @@ li:has(> .dropdown-link--all) {
     border: 1px solid transparent;
     border-radius: 999px;
     font-family: var(--font-label);
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.01em;
     line-height: 1;
     transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
@@ -976,7 +977,7 @@ li:has(> .dropdown-link--all) {
     font-family: var(--font-display);
     font-size: clamp(2.6rem, 5vw, 4rem);
     line-height: 0.9;
-    font-weight: 900;
+    font-weight: 700;
     letter-spacing: -0.02em;
     /* Lock digit advance width so the count-up animation doesn't jitter and stacked figures align. */
     font-variant-numeric: tabular-nums;
@@ -1190,7 +1191,7 @@ li:has(> .dropdown-link--all) {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-size: 0.78rem;
-    font-weight: 900;
+    font-weight: 700;
 }
 
 .status-active,
@@ -1545,14 +1546,14 @@ li:has(> .dropdown-link--all) {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 600;
 }
 
 /* Initiative schedule line (date · time) on the Current initiatives cards. */
 .initiative-when {
     margin: 0;
     font-family: var(--font-label);
-    font-weight: 700;
+    font-weight: 500;
     font-size: 0.82rem;
     color: var(--accent-dark);
 }
@@ -1569,7 +1570,7 @@ li:has(> .dropdown-link--all) {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 500;
 }
 
 /* Gallery grouped into location sections (renderGalleryImages). */
@@ -1584,7 +1585,7 @@ li:has(> .dropdown-link--all) {
 .gallery-location-title {
     margin: 0;
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 600;
     font-size: clamp(1.5rem, 3.5vw, 2.1rem);
     color: var(--ink);
     overflow-wrap: anywhere;
@@ -1605,7 +1606,7 @@ li:has(> .dropdown-link--all) {
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--muted);
     font-variant-numeric: tabular-nums;
 }
@@ -1647,7 +1648,7 @@ li:has(> .dropdown-link--all) {
     padding: var(--space-sm) var(--space-md);
     font-family: var(--font-label);
     font-size: 0.78rem;
-    font-weight: 700;
+    font-weight: 500;
     color: var(--paper);
     background: linear-gradient(transparent, color-mix(in oklch, var(--ink) 82%, transparent));
     opacity: 0;
@@ -1690,7 +1691,7 @@ li:has(> .dropdown-link--all) {
     align-self: flex-start;
     color: var(--accent-dark);
     font-family: var(--font-label);
-    font-weight: 800;
+    font-weight: 600;
     font-size: 0.92rem;
     transition: transform 160ms ease;
 }
@@ -1703,7 +1704,7 @@ li:has(> .dropdown-link--all) {
     text-transform: uppercase;
     letter-spacing: 0.12em;
     font-size: 0.68rem;
-    font-weight: 800;
+    font-weight: 600;
     color: var(--muted);
     margin-bottom: 2px;
 }
@@ -2003,9 +2004,9 @@ li:has(> .dropdown-link--all) {
     gap: var(--space-xs);
 }
 
+/* Weight is set by the later .form-group label rule in the CONTACT block — don't add one here. */
 .form-group label {
     color: var(--ink);
-    font-weight: 800;
 }
 
 .form-group input,
@@ -2210,7 +2211,7 @@ li:has(> .dropdown-link--all) {
     font-size: 0.82rem;
 }
 .lightbox-caption {
-    font-weight: 700;
+    font-weight: 500;
     letter-spacing: 0.02em;
 }
 .lightbox-caption:empty { display: none; }
@@ -2712,7 +2713,7 @@ li:has(> .dropdown-link--all) {
     color: var(--green-deep);
     font-family: var(--font-label);
     font-size: 0.76rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
 }
@@ -2762,7 +2763,7 @@ li:has(> .dropdown-link--all) {
     color: var(--gold-dark);
     font-family: var(--font-label);
     font-size: 0.72rem;
-    font-weight: 900;
+    font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     white-space: nowrap;
@@ -2779,7 +2780,7 @@ li:has(> .dropdown-link--all) {
     border: 1px solid var(--line);
     color: var(--ink-soft);
     font-family: var(--font-label);
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .donate-qr {
@@ -2813,7 +2814,7 @@ li:has(> .dropdown-link--all) {
     margin: 0;
     color: var(--ink);
     font-family: var(--font-label);
-    font-weight: 800;
+    font-weight: 600;
 }
 
 .donate-method-note {
@@ -2846,7 +2847,7 @@ li:has(> .dropdown-link--all) {
     max-width: 26ch;
     margin: 0;
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 500;
     font-size: clamp(1.7rem, 3vw, 2.7rem);
     line-height: 1.15;
 }
@@ -2868,7 +2869,7 @@ li:has(> .dropdown-link--all) {
     font-family: var(--font-label);
     font-style: normal;
     font-size: 0.85rem;
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     opacity: 0.8;
@@ -2877,7 +2878,7 @@ li:has(> .dropdown-link--all) {
 /* Oversized stat numeral for a dark "spotlight" beat. */
 .band-figure {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 600;
     font-size: clamp(3.5rem, 11vw, 7rem);
     line-height: 0.85;
     letter-spacing: -0.02em;
@@ -2909,7 +2910,7 @@ li:has(> .dropdown-link--all) {
 }
 .help-row .help-index {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 600;
     font-size: 1.7rem;
     color: var(--accent-dark);
     line-height: 1;
@@ -2968,7 +2969,7 @@ li:has(> .dropdown-link--all) {
     display: block;
     font-family: var(--font-label);
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.14em;
     color: var(--muted);
@@ -2991,7 +2992,7 @@ li:has(> .dropdown-link--all) {
 .contact-form-title {
     margin: 0 0 var(--space-md);
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 600;
     font-size: 1.2rem;
     line-height: 1.2;
     color: var(--ink);
@@ -3034,7 +3035,7 @@ li:has(> .dropdown-link--all) {
 .partner-strip .partner figcaption {
     font-family: var(--font-label);
     font-size: 0.76rem;
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--muted);
@@ -3084,7 +3085,7 @@ li:has(> .dropdown-link--all) {
     border: 2px solid var(--accent);
     color: var(--accent-dark);
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 600;
     font-size: 1.5rem;
     position: relative;
     z-index: 1;
@@ -3169,7 +3170,7 @@ li:has(> .dropdown-link--all) {
     margin: 0;
     z-index: 0;
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 600;
     font-size: clamp(6rem, 16vw, 13rem);
     line-height: 0.8;
     letter-spacing: -0.03em;
@@ -3230,7 +3231,7 @@ li:has(> .dropdown-link--all) {
 .map-cap-title {
     display: block;
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 600;
     font-size: 1.3rem;
     color: var(--ink);
 }
@@ -3283,14 +3284,34 @@ li:has(> .dropdown-link--all) {
     box-shadow: 0 1px 4px color-mix(in oklch, var(--ink) 35%, transparent);
     transition: transform 0.15s ease;
 }
+/* Hairline leader from a dot to a label that had to be pushed clear of its neighbours (Los Angeles
+   on the world maps). Functional cartography, not decoration: without it the pill floats free of
+   any marker. Inert — it is inside the pin's own link, so it needs no hover of its own. */
+.geo-pin-lead {
+    position: absolute;
+    left: 50%;
+    bottom: 50%;
+    width: 1px;
+    height: var(--label-lead, 0px);
+    background: color-mix(in oklch, var(--ink) 40%, transparent);
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+.geo-pin-lead--down {
+    bottom: auto;
+    top: 50%;
+}
 .geo-pin-label {
     position: absolute;
     top: 50%;
-    left: calc(100% + 7px);
-    /* --label-dy staggers clustered labels (SE-Florida pins) into a readable column. */
-    transform: translateY(calc(-50% + var(--label-dy, 0px)));
+    /* --label-dx pushes a label further from its dot, past a neighbouring dot (see --left below). */
+    left: calc(100% + var(--label-dx, 7px));
+    /* --label-dy staggers clustered labels (SE-Florida pins) into a readable column. It is a PIXEL
+       offset, so --label-dy-scale lets a frame that shrinks on small screens shrink its stagger too
+       (see the South-Florida inset rule below). */
+    transform: translateY(calc(-50% + var(--label-dy, 0px) * var(--label-dy-scale, 1)));
     font-family: var(--font-label);
-    font-weight: 700;
+    font-weight: 500;
     font-size: 0.74rem;
     line-height: 1;
     color: var(--ink);
@@ -3305,6 +3326,27 @@ li:has(> .dropdown-link--all) {
     left: auto;
     /* --label-dx pushes a label further inland, past neighbouring dots in the SE cluster. */
     right: calc(100% + var(--label-dx, 7px));
+}
+/* Corner locator on the South-Florida inset: the full-state silhouette with the crop outlined, so a
+   ~7× zoom of a featureless interior still reads as a map of somewhere. Decorative and inert. */
+.map-locator {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 66px;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 1;
+}
+.map-locator img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+.map-locator-box {
+    position: absolute;
+    border: 1.5px solid color-mix(in oklch, var(--ink) 60%, transparent);
+    border-radius: 2px;
 }
 .geo-pin.pin-active .geo-pin-dot { background: var(--green-dark); }
 .geo-pin.pin-launching .geo-pin-dot { background: var(--gold-dark); }
@@ -3352,9 +3394,34 @@ li:has(> .dropdown-link--all) {
 .map-dot.pin-active { background: var(--green-dark); }
 .map-dot.pin-launching { background: var(--gold-dark); }
 .map-dot.pin-outreach { background: var(--paper); border: 3.5px solid var(--coral-dark); }
-/* Home "Our Reach" map (#global-reach on index.html): one full-width world map instead of the
-   chapters-page two-map grid — capped so it doesn't tower on desktop. */
-.reach-map { max-width: 900px; margin-inline: auto; }
+/* Home "Our Reach" pair (#global-reach on index.html): the CROPPED world map (world-reach.svg,
+   659/335 aspect) next to the South-Florida inset (24/26). The column ratio ≈ the ratio of the two
+   aspect ratios (1.967 / 0.923 ≈ 2.13 : 1) so the frames land at the same height when top-aligned. */
+.reach-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2.13fr) minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.25rem);
+    align-items: start;
+}
+/* The inset carries 14 labels in a ~365px column, so it drops to the small label size. Its frame is
+   within ~20px of 370 at EVERY breakpoint (366 side-by-side, 380 stacked, 362 at 390px), so the
+   px-based --label-dy stagger needs no --label-dy-scale here — the offsets are tuned at that size. */
+#map-florida-se .geo-pin-label { font-size: 0.68rem; }
+
+/* Below ~1000px side-by-side squeezes the inset under ~300px and its labels start touching —
+   stack instead: world map full width, inset capped 380px. */
+@media (max-width: 1000px) {
+    .reach-row { grid-template-columns: 1fr; gap: 2rem; justify-items: center; }
+    .reach-row .map-card { width: 100%; }
+    .reach-row .map-card--inset { max-width: 380px; }
+}
+/* Pins sitting near a frame's RIGHT edge (world crop's India, ~90% across): on narrow frames the
+   right-floating label runs off the edge (clips <~520px viewport, and only *kisses* the border up
+   to ~620px), so flip it inland below 640px — desktop keeps the label on the right, where the
+   frame still has room. */
+@media (max-width: 640px) {
+    .geo-pin.pin-edge-right .geo-pin-label { left: auto; right: calc(100% + var(--label-dx, 7px)); }
+}
 
 @media (max-width: 760px) {
     .map-grid { grid-template-columns: 1fr; gap: 2rem; align-items: stretch; }
@@ -3363,195 +3430,207 @@ li:has(> .dropdown-link--all) {
     .geo-pin-label-note { display: none; }
 }
 
-/* ============================================================================
-   Donation nudges — a dismissable bottom ribbon + a one-time welcome modal
-   (injected by initDonateNudges in script.js). Gentle Wikipedia/Khan-style
-   asks, not a takeover; on-brand tokens only.
-   ========================================================================= */
+/* ===== HOME REDESIGN — body.page-home ONLY =====================================================
+   News-Literacy-Project structure on BFBL's mint palette: a full-bleed photo hero running under a
+   transparent navbar, a light neutral "impact intro" band that hands straight off to the
+   data-driven stat row, and a flat, square-cornered card/button attitude. EVERY rule below is
+   scoped to body.page-home, and the block sits last in the file so it wins on source order over
+   the shared nav/hero/button/card rules above — no other page is touched.
+   Integrates with (does not duplicate) the SITE-WIDE type system at the top of this file: Gabarito
+   display/label, the one-notch-down weight scale, and the global hero text-shadow kill. */
 
-/* -- Bottom ribbon (persistent until dismissed; JS reserves body padding-bottom
-      equal to its height so it never hides the footer) -- */
-.donate-banner {
+/* --- Navbar over the hero ---------------------------------------------------------------------
+   The bar goes FIXED (not sticky) so the hero photo starts at y=0 and runs behind it; the hero
+   re-adds --nav-height as top padding. Paper-coloured links would be unreadable once the page
+   scrolls onto the light body, so initHomeNavOverlay() (script.js, home-gated) adds .is-solid as
+   soon as the hero clears the bar and the navbar returns to its normal paper/ink treatment. */
+body.page-home .navbar {
     position: fixed;
-    left: 0;
+    top: 0;
     right: 0;
-    bottom: 0;
-    z-index: 3500; /* above content, below the modal (4000) */
-    background: color-mix(in oklch, var(--paper) 93%, var(--green));
-    border-top: 1px solid color-mix(in oklch, var(--green-dark) 24%, transparent);
-    box-shadow: 0 -10px 30px color-mix(in oklch, var(--ink) 12%, transparent);
-    padding-bottom: env(safe-area-inset-bottom); /* clear the iOS home indicator */
-    transform: translateY(110%);
-    transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.donate-banner.is-visible { transform: translateY(0); }
-
-body.nav-open .donate-banner {
-    transform: translateY(110%);
-    pointer-events: none;
+    left: 0;
+    background: transparent;
+    border-bottom-color: transparent;
+    backdrop-filter: none;
+    transition: background-color 220ms ease, border-color 220ms ease;
 }
 
-.donate-banner-inner {
-    width: min(1200px, calc(100% - 32px));
-    margin-inline: auto;
-    display: flex;
-    align-items: center;
-    gap: clamp(10px, 2vw, 18px);
-    padding: 12px 0;
+body.page-home .navbar.is-solid {
+    background: color-mix(in oklch, var(--paper) 92%, transparent);
+    border-bottom-color: color-mix(in oklch, var(--line) 85%, transparent);
+    backdrop-filter: blur(16px);
 }
-.donate-banner-icon { flex: none; color: var(--green-dark); }
-.donate-banner-text {
-    flex: 1 1 auto;
-    min-width: 0;
-    margin: 0;
-    font-weight: 700;
-    font-size: 0.98rem;
-    color: var(--ink);
-    text-wrap: pretty;
+
+/* Wordmark + hamburger sit directly on the photo while the bar is transparent. */
+body.page-home .navbar:not(.is-solid) .logo::after {
+    color: var(--paper);
 }
-.donate-banner-cta {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 42px;
-    padding: 0 1.4rem;
-    border-radius: 999px;
-    background: var(--green-dark);
+
+body.page-home .navbar:not(.is-solid) .hamburger {
+    background: transparent;
+    border-color: color-mix(in oklch, var(--paper) 55%, transparent);
+}
+
+body.page-home .navbar:not(.is-solid) .hamburger span {
+    background: var(--paper);
+}
+
+/* Link colours only ABOVE the drawer breakpoint: at <=1180px the menu is a paper drawer, where
+   paper-coloured links would be invisible. */
+@media (min-width: 1181px) {
+    body.page-home .navbar:not(.is-solid) .nav-link {
+        color: var(--paper);
+    }
+
+    body.page-home .navbar:not(.is-solid) .nav-link:hover,
+    body.page-home .navbar:not(.is-solid) .nav-link.active {
+        color: var(--ink);
+        background: color-mix(in oklch, var(--paper) 90%, transparent);
+    }
+
+    /* Donate CTA over the photo: square paper button, ink label. */
+    body.page-home .navbar:not(.is-solid) .btn-donate {
+        background: var(--paper);
+        color: var(--ink);
+        box-shadow: none;
+    }
+
+    body.page-home .navbar:not(.is-solid) .btn-donate:hover {
+        background: color-mix(in oklch, var(--paper) 88%, var(--green));
+        color: var(--ink);
+    }
+}
+
+/* --- Hero -------------------------------------------------------------------------------------
+   One strong, near-uniform ink scrim (shifted a touch green so it stays on brand) replaces the old
+   left-heavy accent wash: white type is legible anywhere on the frame WITHOUT text-shadows, which
+   the site no longer uses in any hero. */
+body.page-home .home-hero {
+    --home-hero-scrim: color-mix(in oklch, var(--ink) 86%, var(--green-deep));
+    height: auto;
+    min-height: 85vh;
+    padding-block: calc(var(--nav-height) + clamp(2rem, 5vw, 3.5rem)) clamp(3rem, 7vw, 5rem);
+    background:
+        linear-gradient(92deg,
+            color-mix(in oklch, var(--home-hero-scrim) 72%, transparent) 0%,
+            color-mix(in oklch, var(--home-hero-scrim) 66%, transparent) 55%,
+            color-mix(in oklch, var(--home-hero-scrim) 62%, transparent) 100%),
+        var(--hero-img) var(--hero-pos) / cover no-repeat;
+}
+
+/* The eyebrow was hidden while it held a long superlative claim; it now carries a short factual
+   credibility line (chapters + countries), which earns its place above the headline. Quieter than
+   the shared .eyebrow so the headline still leads. */
+body.page-home .home-hero .eyebrow {
+    font-size: 0.82rem;
+    letter-spacing: 0.14em;
+    color: color-mix(in oklch, var(--paper) 88%, var(--green));
+}
+
+body.page-home .home-hero .hero-content {
+    gap: var(--space-lg);
+    padding-top: 0;
+}
+
+/* Hold the subtitle to about two lines on desktop. */
+body.page-home .home-hero .hero-subtitle {
+    max-width: 46ch;
+}
+
+/* Quiet single action: a text link, underlined on hover only (hover = clickable, nothing else). */
+body.page-home .hero-arrow-link {
+    justify-self: start;
     color: var(--paper);
     font-family: var(--font-label);
-    font-weight: 800;
+    font-weight: 600;
+    font-size: 1.02rem;
     letter-spacing: 0.01em;
-    box-shadow: 0 6px 16px color-mix(in oklch, var(--green-dark) 30%, transparent);
-    transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
-}
-.donate-banner-cta:hover {
-    transform: translateY(-2px);
-    background: color-mix(in oklch, var(--green-dark) 88%, black);
-    box-shadow: 0 10px 24px color-mix(in oklch, var(--green-dark) 42%, transparent);
-}
-.donate-banner-close {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--ink-soft);
-    cursor: pointer;
-    transition: background-color 160ms ease, color 160ms ease;
-}
-.donate-banner-close:hover {
-    background: color-mix(in oklch, var(--ink) 8%, transparent);
-    color: var(--ink);
-}
-.donate-banner-close svg { display: block; }
-
-@media (max-width: 560px) {
-    /* Compact stack: message on its own row, then Donate + close together — keeps the ribbon
-       to ~two text lines instead of squeezing the sentence into a narrow middle column. */
-    .donate-banner-inner { flex-wrap: wrap; row-gap: 8px; padding: 9px 0; column-gap: 10px; }
-    .donate-banner-icon { display: none; } /* decorative heart — drop it to save vertical space */
-    .donate-banner-text { order: 1; flex: 1 1 100%; font-size: 0.86rem; }
-    .donate-banner-cta { order: 2; flex: 1 1 auto; }
-    .donate-banner-close { order: 3; flex: none; }
 }
 
-/* -- One-time welcome modal (shown once per visitor via localStorage) -- */
-.donate-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 4000; /* over the sticky navbar (3000) and the ribbon (3500) */
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(16px, 5vw, 48px);
-    background: color-mix(in oklch, var(--ink) 55%, transparent);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+body.page-home .hero-arrow-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 5px;
 }
-.donate-modal.active { display: flex; }
 
-.donate-modal-card {
-    position: relative;
-    width: min(94vw, 480px);
-    padding: clamp(1.75rem, 5vw, 2.75rem);
-    background: var(--paper);
-    border-radius: var(--radius-2xl);
-    box-shadow: var(--shadow-lg);
-    text-align: center;
-    opacity: 0;
-    transform: translateY(16px) scale(0.98);
-    transition: transform 300ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 300ms ease;
+/* --- Impact intro band ------------------------------------------------------------------------
+   Light NEUTRAL ground (deliberately not the green surface wash) so the mint stays on the type and
+   the numerals. The stat row below shares the same ground — the two read as one band. */
+body.page-home .home-intro {
+    background: color-mix(in oklch, var(--surface-strong) 55%, var(--paper));
+    padding-block: clamp(3.25rem, 6vw, 5rem) clamp(2rem, 4vw, 3rem);
 }
-.donate-modal.active .donate-modal-card {
-    opacity: 1;
-    transform: none;
-}
-.donate-modal-kicker {
-    margin: 0 0 0.5rem;
-    font-family: var(--font-label);
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    font-size: 0.76rem;
-    font-weight: 800;
+
+body.page-home .home-intro-title {
     color: var(--green-deep);
-}
-.donate-modal-title {
-    margin: 0 0 0.75rem;
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: clamp(1.5rem, 4vw, 1.9rem);
-    line-height: 1.15;
-    color: var(--ink);
+    font-size: clamp(2.1rem, 4.4vw, 3.5rem);
     text-wrap: balance;
 }
-.donate-modal-body {
-    max-width: 34ch;
-    margin: 0 auto 1.5rem;
-    color: var(--ink-soft);
-    line-height: 1.55;
-    text-wrap: pretty;
-}
-.donate-modal-body strong { color: var(--green-dark); }
-.donate-modal-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.6rem;
-}
-.donate-modal-actions .btn { width: 100%; }
-.donate-modal-fineprint {
-    margin: 1.1rem 0 0;
-    font-size: 0.78rem;
-    color: var(--muted);
-}
-.donate-modal-close {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--ink-soft);
-    cursor: pointer;
-    transition: background-color 160ms ease, color 160ms ease;
-}
-.donate-modal-close:hover {
-    background: color-mix(in oklch, var(--ink) 8%, transparent);
-    color: var(--ink);
-}
-.donate-modal-close svg { display: block; }
 
-@media (prefers-reduced-motion: reduce) {
-    .donate-banner,
-    .donate-modal-card { transition: none; }
+/* --- Stat row (second half of the same band) --------------------------------------------------- */
+body.page-home .impact-band {
+    margin-top: 0;
+    padding-block: 0 clamp(3rem, 6vw, 4.5rem);
+    background: color-mix(in oklch, var(--surface-strong) 55%, var(--paper));
+    border-bottom: 1px solid var(--line);
+}
+
+body.page-home .impact-band .stat-card {
+    border-radius: 0;
+    padding: var(--space-xs) var(--space-lg);
+}
+
+/* Flush the first numeral with the heading above it. */
+body.page-home .impact-band .stat-card:first-child {
+    padding-left: 0;
+}
+
+/* Dividers stay desktop-only (a spine on a stacked card would read as a decorative line); on home
+   they drop to a neutral hairline so the row reads flat rather than tinted. */
+@media (min-width: 901px) {
+    body.page-home .impact-band .stat-card:not(:first-child) {
+        border-left: 1px solid color-mix(in oklch, var(--line) 88%, var(--ink));
+    }
+}
+
+/* --- Square-corner pass ------------------------------------------------------------------------
+   Home commits to square corners; small data pills (.status-badge, story chips, avatars) keep
+   their shape. */
+body.page-home .btn,
+body.page-home .btn-donate,
+body.page-home .nav-link {
+    border-radius: 4px;
+}
+
+body.page-home .card,
+body.page-home .stat-card,
+body.page-home .team-member,
+body.page-home .feature-box,
+body.page-home .service-card,
+body.page-home .officer-card,
+body.page-home .chapter-card,
+body.page-home .leader-card,
+body.page-home .impact-card,
+body.page-home .story-face,
+body.page-home .map-frame,
+body.page-home .dropdown-menu,
+body.page-home .hamburger {
+    border-radius: 8px;
+}
+
+body.page-home .service-icon,
+body.page-home .dropdown-link {
+    border-radius: 6px;
+}
+
+@media (max-width: 680px) {
+    /* Mobile hero grows with its content instead of holding a viewport fraction. */
+    body.page-home .home-hero {
+        min-height: auto;
+        padding-block: calc(var(--nav-height) + clamp(2.5rem, 9vw, 4rem)) clamp(2.5rem, 9vw, 4rem);
+    }
+
+    body.page-home .impact-band .stat-card,
+    body.page-home .impact-band .stat-card:first-child {
+        padding-inline: 0;
+    }
 }

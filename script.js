@@ -261,6 +261,7 @@
         // and the skip link needs that <main> to exist so its #main-content target is real.
         ensureSkipLink();
         initMobileNavigation();
+        initHomeNavOverlay();
         initImageFallbacks();
         initCarousels();
         initLightbox();
@@ -269,7 +270,6 @@
         initSmoothScroll();
         initCounters();
         renderDonatePage();
-        initDonateNudges();
     }
 
     // Render once the live content (firebase-data.js, if present) has loaded — falling back to
@@ -894,57 +894,130 @@
         hideSectionWhenEmpty("#chapters-directory-grid");
     }
 
-    // Pin positions for the chapters-page maps, as PERCENTAGES of the map frame (left%, top%).
-    // These are PROJECTED from each city's real lat/lng — not eyeballed. florida.svg is treated as
-    // equirectangular over Florida's bounding box; world.svg is a Miller cylindrical projection
-    // (verified by reproducing the russia.svg/turkey.svg crop latitudes to within ~2px). Chapters
-    // carry no geo data, so positions live here (like the hardcoded `stats`/`FOUNDERS`); a chapter id
-    // with no entry simply gets no pin, and each pin's name/status/href still resolve live from
-    // data.chapters. World pins collapse the four South-Florida chapters into one "Florida" marker.
+    // Pin positions for the chapters-page + home maps, as PERCENTAGES of the map frame (left%, top%).
+    // These are PROJECTED from each place's real lat/lng — not eyeballed. See the "Map-projection
+    // note" in CLAUDE.md for the two calibrated models:
+    //   • florida.svg (and its crop florida-se.svg) = Albers conic — n 0.60283700, C 1.35122133,
+    //     lng0 -96, X = 479.96 + 1264.138·ρ·sin θ, Y = -1332.38 + 1264.138·ρ·cos θ.
+    //   • world.svg = a hand-drawn pseudocylindrical outline; North-American pins use a local affine
+    //     fit (x = 432.1872 + 0.7217·lat + 2.6924·lng, y = 360.4426 - 3.5132·lat + 0.1962·lng).
+    // Chapters carry no geo data, so positions live here (like the hardcoded `stats`/`FOUNDERS`); a
+    // chapter id with no entry simply gets no pin, and each pin's name/status/href still resolve live
+    // from data.chapters. World pins collapse the SE-Florida chapters into one "Florida" marker.
     // The SE-Florida chapters are only ~40 mi apart, so on the Florida map their dots correctly sit
     // close together on the SE coast — labels float LEFT (inland) to stay legible.
-    // dy = vertical label offset (px): the four SE-coast dots sit within ~2% of each other, so
-    // their labels are staggered into an evenly spaced inland column instead of overlapping.
+    // dy = vertical label offset (px): the SE-coast dots sit within ~7% of each other, so their
+    // labels are staggered into an evenly spaced inland column instead of overlapping.
+    // dx = extra horizontal push (px) away from the dot: it keeps the five stacked SE labels in a
+    // column that ends WEST of the dot cluster, so no pill ever sits on a neighbour's dot.
     const FLORIDA_MAP_PINS = [
-        { id: "gainesville", x: 67.6, y: 24.2 },
-        { id: "coral-springs", x: 91.9, y: 70.7, side: "left", dy: -16 },
-        { id: "ahs", x: 93.4, y: 72.8, side: "left", dx: 26 },
-        { id: "cypress", x: 90.4, y: 73.1, side: "left", dy: 18 },
-        { id: "miami", x: 92.8, y: 77.8, side: "left", dy: 14 },
-        { id: "doral", x: 90.9, y: 77.0, side: "left", dy: 46 }
+        { id: "gainesville", x: 63.2, y: 23.4 },
+        { id: "coral-springs", x: 92.2, y: 67.6, side: "left", dy: -26, dx: 4 },
+        { id: "ahs", x: 92.9, y: 69.6, side: "left", dy: -14, dx: 8 },
+        { id: "cypress", x: 91.1, y: 70.3, side: "left", dy: 2 },
+        { id: "doral", x: 92.2, y: 74.2, side: "left", dy: 8, dx: 4 },
+        { id: "miami", x: 94.2, y: 74.7, side: "left", dy: 27, dx: 16 }
     ];
+    // The four North-American dots sit within ~75px of each other on a 570px frame while their
+    // labels are 70-90px wide, so the labels are fanned vertically instead of all floating inland:
+    // Los Angeles rises (with a leader line, since its lift is longer than the pill), New York sits
+    // on its dot's line and Virginia drops below. Virginia floating LEFT used to bury the Los
+    // Angeles dot under its pill — the dot was unclickable and the pill read as its label.
     const WORLD_MAP_PINS = [
-        { id: "ahs", label: "Florida", x: 24.5, y: 41.4, side: "left" },
-        { id: "los-angeles", label: "Los Angeles", x: 14.2, y: 38.0, dy: -42 }, // west edge: label floats right + up (side:left clipped "Los Angeles" off the frame's left edge on the 2-col world map); dy lifts it clear of the east-coast cluster
-        { id: "new-york", label: "New York", x: 26.6, y: 34.3 },
-        { id: "virginia", label: "Virginia", x: 26.0, y: 36.5, side: "left" },
-        { id: "russia", label: "Russia", x: 57.9, y: 25.0 },
+        { id: "ahs", label: "Florida", x: 24.5, y: 39.7, side: "left", dy: 7 }, // projected from the FL centroid (27.9,-81.7) so the aggregate dot sits wholly on the peninsula
+        { id: "los-angeles", label: "Los Angeles", x: 14.6, y: 35.1, dy: -34 }, // west edge: label floats right (side:left clipped "Los Angeles" off the frame's left edge) and rises clear of the New York / Virginia pills its 86px pill would otherwise reach
+        { id: "new-york", label: "New York", x: 27.6, y: 32.7, dy: -2 },
+        { id: "virginia", label: "Virginia", x: 26.8, y: 34.9, dy: 14 },
+        { id: "russia", label: "Russia", x: 57.2, y: 25.6 },
         { id: "turkey", label: "Turkey", x: 55.5, y: 34.2 }
     ];
-    // Home "Our Reach" map only: countries where BFBL outreach/donation drives have reached, NOT
-    // chapters — so no id/status/href; they render as static (non-link) red pins. Same Miller
-    // projection as WORLD_MAP_PINS (country centroids: Haiti 18.97,-72.29 · Peru -9.19,-75.02 ·
-    // India 20.59,78.96).
+    // Home "Our Reach" map only: countries where BFBL outreach/donation work has reached, NOT
+    // chapters — so they carry no chapter id, but they DO carry an href to the page that documents
+    // the work, which makes them real links (hover = clickable). Country centroids projected with the
+    // same world.svg model (Haiti 18.97,-72.29 · Peru -9.19,-75.02 · India 20.59,78.96).
     const WORLD_OUTREACH_PINS = [
-        { label: "Haiti", x: 27.1, y: 45.8, cls: "pin-outreach" },
-        { label: "Peru", x: 26.3, y: 59.5, cls: "pin-outreach" },
-        { label: "India", x: 69.5, y: 45.0, cls: "pin-outreach" }
+        { label: "Haiti", x: 26.5, y: 45.1, cls: "pin-outreach", href: "impact.html#donations", title: "Haiti — games donated via House of New Vision and Hope" },
+        { label: "Peru", x: 25.4, y: 59.4, cls: "pin-outreach", href: "ongoing-initiatives.html", title: "Peru — school fundraiser (AHS chapter)" },
+        // pin-edge-right: the dot lands ~90% across the world-reach crop, so on narrow frames the
+        // right-floating label clips off the edge — the class flips it inland ≤640px (CSS).
+        { label: "India", x: 70.8, y: 44.4, cls: "pin-outreach pin-edge-right", href: "ongoing-initiatives.html", title: "India — Tamil Nadu school bathroom fundraiser (Cypress Bay)" }
     ];
 
+    // --- Home "South Florida" inset (images/maps/florida-se.svg) ---------------------------------
+    // florida-se.svg is florida.svg with the viewBox cropped to FLORIDA_SE_CROP (SVG clips to the
+    // viewBox, so the path is untouched — only stroke-width is scaled down for the ~7× zoom). Inset
+    // percentages come STRAIGHT from the Albers projection (see the model above), remapped to the
+    // crop box — NOT converted from the rounded full-map %s, which would multiply their rounding
+    // error by 176/24:
+    //   x% = (X - crop.x) / crop.w · 100 ,  y% = (Y - crop.y) / crop.h · 100
+    const FLORIDA_SE_CROP = { x: 780, y: 526.5, w: 24, h: 26 };
+    const FLORIDA_VIEWBOX = { x: 630, y: 435, w: 176, h: 152 };
+    const FLORIDA_SE_CHAPTER_PINS = [
+        { id: "coral-springs", x: 51.4, y: 43.4, dy: -4 },
+        { id: "ahs", x: 56.6, y: 54.9, side: "left", dx: 12, dy: -2 },
+        { id: "cypress", x: 43.3, y: 59.3, side: "left" },
+        { id: "doral", x: 51.1, y: 82.0, side: "left" },
+        { id: "miami", x: 65.5, y: 84.7, dy: 4 }
+    ];
+    // Places the chapters actually serve — senior residences, shelters, hospitals and children's
+    // homes. Not chapters (no id), but every one links to the page documenting that work.
+    // "Hollywood" is deliberately ONE marker: Five Star Premier and Joe DiMaggio are 1.6 km apart,
+    // so at any zoom this map can carry their dots overlap into a single blob and the upper pill
+    // covered the lower dot's click target. One pill naming both is honest and stays clickable.
+    const FLORIDA_IMPACT_PINS = [
+        { label: "Palomino Gardens", x: 51.6, y: 12.8, cls: "pin-outreach", href: "impact.html#seniors", title: "Palomino Gardens — one-on-one senior tech help" },
+        { label: "Plantation visits", x: 53.8, y: 53.7, cls: "pin-outreach", side: "left", dy: -24, href: "impact.html#seniors", title: "Plantation — recurring senior visits" },
+        { label: "Mamma’s Curry", x: 59.1, y: 53.5, cls: "pin-outreach", dy: -24, href: "impact.html#kids", title: "Mamma’s Curry Christmas celebration — 100+ games donated" },
+        { label: "Broward Health", x: 64.6, y: 55.8, cls: "pin-outreach", href: "impact.html#kids", title: "Broward Health Medical Center — pediatric patient visit" },
+        { label: "Palace at Weston", x: 46.7, y: 61.5, cls: "pin-outreach", side: "left", dx: 12, dy: 12, href: "impact.html#seniors", title: "The Palace at Weston — digital-safety workshops" },
+        { label: "Hollywood", x: 62.8, y: 62.6, cls: "pin-outreach", dy: 4, href: "impact.html#donations", title: "Hollywood — Five Star Premier Residences senior tech support and Joe DiMaggio Children’s Hospital game donations" },
+        { label: "His House", x: 58.0, y: 69.0, cls: "pin-outreach", side: "left", dy: 8, href: "impact.html#donations", title: "His House Children’s Home — 70+ games, 15+ iPads" },
+        { label: "Lotus House", x: 64.5, y: 82.5, cls: "pin-outreach", dy: -14, href: "past-events.html", title: "Lotus House Shelter — digital-safety & financial-literacy event" },
+        { label: "Nicklaus", x: 57.3, y: 87.6, cls: "pin-outreach", side: "left", dy: 6, href: "impact.html#donations", title: "Nicklaus Children’s Hospital — board games donated" }
+    ];
+    // The inset is a ~7× zoom of a silhouette with no interior geography, so on its own it reads as
+    // a plain green rectangle. A small full-state locator in the corner — the crop outlined on the
+    // familiar Florida shape — says WHERE the zoom is. Decorative: aria-hidden, inert, no hover.
+    function floridaLocatorMarkup() {
+        const c = FLORIDA_SE_CROP, f = FLORIDA_VIEWBOX;
+        const pct = function (a, b) { return Math.round(a / b * 10000) / 100; };
+        const box = `left:${pct(c.x - f.x, f.w)}%;top:${pct(c.y - f.y, f.h)}%;width:${pct(c.w, f.w)}%;height:${pct(c.h, f.h)}%`;
+        return `
+            <span class="map-locator" aria-hidden="true">
+                <img src="images/maps/florida.svg" alt="" width="176" height="152">
+                <span class="map-locator-box" style="${box}"></span>
+            </span>`;
+    }
+    // --- Home "Our Reach" world map crop (images/maps/world-reach.svg) ---------------------------
+    // world-reach.svg is world.svg with the viewBox cropped to "79 78 659 335" — the pin spread
+    // (western North America → India, northern Russia → Peru) — so the pins fill the frame instead
+    // of floating in empty ocean. WORLD_MAP_PINS/WORLD_OUTREACH_PINS keep FULL-map %s (chapters.html
+    // renders them as-is); the home renderer remaps each pin into the crop, so no second pin table.
+    const WORLD_REACH_CROP = { x: 79, y: 78, w: 659, h: 335 };
+    function worldReachPin(pin) {
+        // Full-map % → world.svg viewBox units (×9.5 / ×6.2, viewBox 950×620) → % of the crop box.
+        return Object.assign({}, pin, {
+            x: Math.round((pin.x * 9.5 - WORLD_REACH_CROP.x) / WORLD_REACH_CROP.w * 10000) / 100,
+            y: Math.round((pin.y * 6.2 - WORLD_REACH_CROP.y) / WORLD_REACH_CROP.h * 10000) / 100
+        });
+    }
+
     // Chapter-hero locator map: Florida chapters show the Florida outline (so the dot %s line up with
-    // FLORIDA_MAP_PINS); everyone else shows their OWN state/country outline. Dots are PROJECTED from
-    // each city's real lat/lng — FL/NY/VA equirectangular over the shape's bounding box; russia/turkey
-    // use the same Miller projection as world.svg (those SVGs are crops of it). Each SVG fills the box,
-    // so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
+    // FLORIDA_MAP_PINS — keep the two tables in LOCKSTEP); everyone else shows their OWN state/country
+    // outline. Dots are PROJECTED from each city's real lat/lng — FL via the Albers fit above, NY/VA/CA
+    // equirectangular over the shape's bounding box. russia.svg/turkey.svg are CROPS of world.svg, so
+    // their dots are that chapter's WORLD_MAP_PINS point in world.svg units (x%·9.5, y%·6.2) remapped
+    // into the crop viewBox — the same city then lands in the same place on both maps. Each SVG fills
+    // the box, so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
     function chapterLocatorConfig(id) {
-        const FL = { gainesville: [67.6, 24.2], "coral-springs": [91.9, 70.7], ahs: [93.4, 72.8], cypress: [90.4, 73.1], miami: [92.8, 77.8], doral: [90.9, 77.0] };
+        const FL = { gainesville: [63.2, 23.4], "coral-springs": [92.2, 67.6], ahs: [92.9, 69.6], cypress: [91.1, 70.3], miami: [94.2, 74.7], doral: [92.2, 74.2] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         const R = {
             "los-angeles": { map: "images/maps/california.svg", x: 59.0, y: 80.8, aspect: "0.859" },
             "new-york": { map: "images/maps/new-york.svg", x: 70.7, y: 89.9, aspect: "1.279" },
             "virginia": { map: "images/maps/virginia.svg", x: 87.5, y: 83.4, aspect: "1.679" },
-            "russia":   { map: "images/maps/russia.svg",   x: 13.3, y: 68.7, aspect: "1.714" },
-            "turkey":   { map: "images/maps/turkey.svg",   x: 18.9, y: 23.1, aspect: "2.088" }
+            "russia":   { map: "images/maps/russia.svg",   x: 11.6, y: 70.2, aspect: "1.714" },
+            "turkey":   { map: "images/maps/turkey.svg",   x: 19.1, y: 24.0, aspect: "2.091" }
         };
         return R[id] || null;
     }
@@ -958,18 +1031,28 @@
     function mapPinMarkup(pin, forceStatus) {
         const labelDy = typeof pin.dy === "number" && pin.dy !== 0 ? `--label-dy:${pin.dy}px;` : "";
         const labelDx = typeof pin.dx === "number" && pin.dx !== 0 ? `--label-dx:${7 + pin.dx}px;` : "";
+        // A label pushed further than its own pill height reads as belonging to nothing, so it gets
+        // a hairline leader back to its dot (Los Angeles on the world maps).
+        const dy = typeof pin.dy === "number" ? pin.dy : 0;
+        const lead = Math.abs(dy) >= 20
+            ? `<span class="geo-pin-lead${dy > 0 ? " geo-pin-lead--down" : ""}" style="--label-lead:${Math.abs(dy) - 8}px"></span>`
+            : "";
         const pos = `left:${pin.x}%;top:${pin.y}%;${labelDy}${labelDx}`;
         const sideCls = pin.side === "left" ? " geo-pin--left" : "";
         // Optional label suffix that HIDES on small screens (long labels near the map edge clip there).
         const note = pin.labelNote ? `<span class="geo-pin-label-note">${escapeHTML(pin.labelNote)}</span>` : "";
-        // No id → a static, NON-chapter pin (home-map outreach markers). It isn't a link, so it must
-        // not look interactive: .geo-pin--static opts out of the hover treatment (hover = clickable).
+        // No id → a NON-chapter pin (outreach country / Florida service site). With an href it is a
+        // real link and gets the normal hover treatment; without one it renders as an inert
+        // .geo-pin--static span, since hover feedback must only ever mean "clickable".
         if (!pin.id) {
-            return `
-            <span class="geo-pin geo-pin--static ${escapeHTML(pin.cls || "")}${sideCls}" style="${pos}">
+            const body = `${lead}
                 <span class="geo-pin-dot"></span>
-                <span class="geo-pin-label">${escapeHTML(pin.label || "")}${note}</span>
-            </span>`;
+                <span class="geo-pin-label">${escapeHTML(pin.label || "")}${note}</span>`;
+            const cls = `geo-pin ${escapeHTML(pin.cls || "")}${sideCls}`;
+            if (!pin.href) return `<span class="${cls} geo-pin--static" style="${pos}">${body}</span>`;
+            return `
+            <a class="${cls}" style="${pos}"
+               href="${escapeHTML(safeUrl(pin.href))}" title="${escapeHTML(pin.title || pin.label || "")}">${body}</a>`;
         }
         const chapter = chapterById(pin.id);
         if (!chapter) return "";
@@ -984,36 +1067,50 @@
         const title = pin.title || `${chapter.name} — ${realStatus}`;
         return `
             <a class="geo-pin ${pinCls}" style="${pos}"
-               href="${escapeHTML(safeUrl(href))}" title="${escapeHTML(title)}">
+               href="${escapeHTML(safeUrl(href))}" title="${escapeHTML(title)}">${lead}
                 <span class="geo-pin-dot"></span>
                 <span class="geo-pin-label">${escapeHTML(label)}${note}</span>
             </a>`;
+    }
+
+    // Every chapter pin on the HOME maps is forced GREEN to match the two-item legend there
+    // (green = chapters, red = outreach); status colouring stays a chapters-page concern.
+    function greenChapterPins(pins) {
+        return pins.map(function (pin) { return mapPinMarkup(pin, "Active"); }).join("");
     }
 
     function renderChapterMaps() {
         const florida = document.querySelector("#map-florida");
         const world = document.querySelector("#map-world");
         const homeWorld = document.querySelector("#map-world-home");
-        if (!florida && !world && !homeWorld) return;
+        const homeFloridaSe = document.querySelector("#map-florida-se");
+        if (!florida && !world && !homeWorld && !homeFloridaSe) return;
         if (florida) florida.insertAdjacentHTML("beforeend", FLORIDA_MAP_PINS.map(mapPinMarkup).join(""));
         if (world) world.insertAdjacentHTML("beforeend", WORLD_MAP_PINS.map(mapPinMarkup).join(""));
+        if (homeFloridaSe) {
+            homeFloridaSe.insertAdjacentHTML("beforeend",
+                floridaLocatorMarkup() + greenChapterPins(FLORIDA_SE_CHAPTER_PINS) + FLORIDA_IMPACT_PINS.map(function (pin) {
+                    return mapPinMarkup(pin);
+                }).join(""));
+        }
         if (homeWorld) {
-            // Home "Our Reach" map: every chapter pin is forced GREEN to match the two-item legend
-            // (green = chapters, red = outreach) — status colouring stays a chapters-page concern.
-            // The Florida pin aggregates the FL cluster (live count from FLORIDA_MAP_PINS) and links
-            // to the directory rather than one chapter's page.
+            // Every pin is remapped into the world-reach.svg crop (worldReachPin, a fresh copy per
+            // pin). The Florida pin aggregates the FL cluster (live count from FLORIDA_MAP_PINS) and
+            // links to the directory rather than one chapter's page.
             const flCount = FLORIDA_MAP_PINS.length;
-            const chapterPins = WORLD_MAP_PINS.map(function (pin) {
-                const homePin = pin.id === "ahs"
-                    ? Object.assign({}, pin, {
+            const chapterPins = greenChapterPins(WORLD_MAP_PINS.map(function (pin) {
+                const p = worldReachPin(pin);
+                return p.id === "ahs"
+                    ? Object.assign(p, {
                         labelNote: ` · ${flCount} chapters`,
                         href: "chapters.html",
                         title: `Florida — ${flCount} chapters`
                     })
-                    : pin;
-                return mapPinMarkup(homePin, "Active");
+                    : p;
+            }));
+            const outreachPins = WORLD_OUTREACH_PINS.map(function (pin) {
+                return mapPinMarkup(worldReachPin(pin));
             }).join("");
-            const outreachPins = WORLD_OUTREACH_PINS.map(function (pin) { return mapPinMarkup(pin); }).join("");
             homeWorld.insertAdjacentHTML("beforeend", chapterPins + outreachPins);
         }
     }
@@ -1764,6 +1861,29 @@
         });
     }
 
+    // HOME ONLY: the navbar sits transparent over the hero photo (body.page-home CSS), so it has to
+    // turn solid again the moment the hero scrolls past — paper-coloured links would be unreadable
+    // on the light page body. Gated on body.page-home + the .home-hero element, so every other page
+    // keeps the plain sticky navbar and this is a no-op there.
+    function initHomeNavOverlay() {
+        const navbar = document.querySelector(".navbar");
+        const hero = document.querySelector(".home-hero");
+        if (!navbar || !document.body.classList.contains("page-home")) return;
+        // No hero to sit over, or no IntersectionObserver (very old browsers): keep the bar solid.
+        if (!hero || !("IntersectionObserver" in window)) {
+            navbar.classList.add("is-solid");
+            return;
+        }
+
+        const observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                navbar.classList.toggle("is-solid", !entry.isIntersecting);
+            });
+        }, { rootMargin: "-" + (navbar.offsetHeight || 76) + "px 0px 0px 0px", threshold: 0 });
+
+        observer.observe(hero);
+    }
+
     function initSmoothScroll() {
         document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
             anchor.addEventListener("click", function (event) {
@@ -2134,162 +2254,6 @@
             (m.blurb ? '<p class="donate-method-blurb">' + escapeHTML(m.blurb) + '</p>' : "") +
             '<div class="donate-method-foot">' + foot + '</div>' +
         '</article>';
-    }
-
-    // Donation nudges: a dismissable bottom ribbon for returning visitors + a one-time
-    // welcome modal (shown once per visitor). Both are gentle, Wikipedia/Khan-style asks — never a
-    // takeover — and lead to the donate hub (donate.html). localStorage keys are versioned so the
-    // ask can be re-run later (bump the suffix) without every past visitor being re-counted.
-    var DONATE_MODAL_SEEN_KEY = "bfbl_donate_modal_seen_v1";
-    var DONATE_BANNER_DISMISSED_KEY = "bfbl_donate_banner_dismissed_v1";
-
-    function donateFlagGet(key) {
-        try { return localStorage.getItem(key); } catch (e) { return null; } // private mode → best effort
-    }
-    function donateFlagSet(key) {
-        try { localStorage.setItem(key, "1"); } catch (e) { /* localStorage blocked — skip */ }
-    }
-
-    function initDonateNudges() {
-        // Public pages only. Admin pages load admin.js (not this file), but guard defensively anyway.
-        var pathname = String(location.pathname || "").toLowerCase();
-        if (/admin/.test(pathname) || document.body.classList.contains("page-donate")) return;
-        var href = escapeHTML(safeUrl(donateHubUrl));
-        if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) initDonateBanner(href);
-        initDonateModal(href);
-    }
-
-    function initDonateBanner(href) {
-        if (document.querySelector(".donate-banner")) return;
-        if (donateFlagGet(DONATE_BANNER_DISMISSED_KEY)) return;
-
-        document.body.insertAdjacentHTML("beforeend",
-            '<div class="donate-banner" role="region" aria-label="Support Bytes for Better Lives">' +
-                '<div class="donate-banner-inner">' +
-                    '<svg class="donate-banner-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 21s-7.6-4.7-10.1-9.4C.3 8.2 2 4.8 5.3 4.8c2 0 3.4 1.2 4.1 2.4.7-1.2 2.1-2.4 4.1-2.4 3.3 0 5 3.4 3.4 6.8C19.4 16.3 12 21 12 21z" fill="currentColor"/></svg>' +
-                    '<p class="donate-banner-text">Help fund devices for local schools and seniors — it takes 30 seconds.</p>' +
-                    '<a class="donate-banner-cta" href="' + href + '">Donate</a>' +
-                    '<button class="donate-banner-close" type="button" aria-label="Dismiss donation banner"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></button>' +
-                '</div>' +
-            '</div>');
-
-        var banner = document.querySelector(".donate-banner");
-        var bodyObserver = window.MutationObserver ? new MutationObserver(syncBannerSpace) : null;
-
-        // Reserve exactly the banner's height at the page bottom so the fixed bar never hides the
-        // footer — measured (not a hardcoded value) because the ribbon wraps to two lines on mobile.
-        function syncBannerSpace() {
-            var hiddenByNav = document.body.classList.contains("nav-open");
-            document.body.style.paddingBottom = banner.classList.contains("is-visible") && !hiddenByNav ? (banner.offsetHeight + "px") : "";
-        }
-        // Force a reflow so the off-screen start state is committed, THEN reveal in the same tick —
-        // this triggers the slide-in transition reliably even in a backgrounded tab (where
-        // requestAnimationFrame is paused), unlike an rAF-gated reveal.
-        void banner.getBoundingClientRect();
-        banner.classList.add("is-visible");
-        syncBannerSpace();
-        window.addEventListener("resize", syncBannerSpace);
-        if (bodyObserver) bodyObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-
-        function dismissBanner() {
-            banner.classList.remove("is-visible");
-            document.body.style.paddingBottom = "";
-            donateFlagSet(DONATE_BANNER_DISMISSED_KEY);
-            if (bodyObserver) bodyObserver.disconnect();
-            window.setTimeout(function () { if (banner.parentNode) banner.parentNode.removeChild(banner); }, 320);
-        }
-        banner.querySelector(".donate-banner-close").addEventListener("click", dismissBanner);
-        // Clicking through to donate counts as engaging — don't nag on the next visit.
-        banner.querySelector(".donate-banner-cta").addEventListener("click", function () {
-            donateFlagSet(DONATE_BANNER_DISMISSED_KEY);
-        });
-    }
-
-    function initDonateModal(href) {
-        if (document.getElementById("donate-modal")) return;
-        if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) return;
-
-        document.body.insertAdjacentHTML("beforeend",
-            '<div class="donate-modal" id="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title" aria-describedby="donate-modal-body">' +
-                '<div class="donate-modal-card">' +
-                    '<button class="donate-modal-close" type="button" aria-label="Close"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></button>' +
-                    '<p class="donate-modal-kicker">Support the mission</p>' +
-                    '<h2 class="donate-modal-title" id="donate-modal-title">A small gift bridges the digital divide</h2>' +
-                    '<p class="donate-modal-body" id="donate-modal-body">Bytes for Better Lives is student-led and volunteer-run. A gift as small as <strong>$5</strong> helps put a tablet in a senior’s hands and devices in local classrooms, and every dollar goes straight to the work.</p>' +
-                    '<div class="donate-modal-actions">' +
-                        '<a class="btn btn-donate donate-modal-cta" href="' + href + '">Donate in 30 seconds</a>' +
-                        '<button class="btn btn-secondary donate-modal-dismiss" type="button">Maybe later</button>' +
-                    '</div>' +
-                    '<p class="donate-modal-fineprint">100% volunteer-run · a registered nonprofit (EIN 42-2241292)</p>' +
-                '</div>' +
-            '</div>');
-
-        var modal = document.getElementById("donate-modal");
-        var modalCard = modal.querySelector(".donate-modal-card");
-        var opener = null;
-        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        var openTimer = null;
-        modal.setAttribute("tabindex", "-1");
-
-        function openModal() {
-            if (modal.classList.contains("active")) return;
-            donateFlagSet(DONATE_MODAL_SEEN_KEY); // once per visitor, whether or not they act
-            opener = document.activeElement;
-            modal.classList.add("active");
-            document.body.classList.add("modal-open");
-            if (modalCard) {
-                modalCard.setAttribute("tabindex", "-1");
-                modalCard.focus();
-            } else {
-                modal.focus();
-            }
-        }
-        function closeModal() {
-            modal.classList.remove("active");
-            document.body.classList.remove("modal-open");
-            if (openTimer) {
-                window.clearTimeout(openTimer);
-                openTimer = null;
-            }
-            if (opener && typeof opener.focus === "function") opener.focus();
-            window.setTimeout(function () { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 320);
-        }
-        function hasBlockingDialog() {
-            return !modal.classList.contains("active") && document.body.classList.contains("modal-open");
-        }
-        function tryOpenModal() {
-            if (modal.classList.contains("active")) return;
-            if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) return;
-            if (hasBlockingDialog()) {
-                openTimer = window.setTimeout(tryOpenModal, 600);
-                return;
-            }
-            openTimer = null;
-            openModal();
-        }
-
-        modal.querySelector(".donate-modal-close").addEventListener("click", closeModal);
-        modal.querySelector(".donate-modal-dismiss").addEventListener("click", closeModal);
-        // The Donate link navigates to the hub; dismiss the modal behind it.
-        modal.querySelector(".donate-modal-cta").addEventListener("click", closeModal);
-        modal.addEventListener("click", function (event) { if (event.target === modal) closeModal(); });
-        document.addEventListener("keydown", function (event) {
-            if (!modal.classList.contains("active")) return;
-            if (event.key === "Escape") { closeModal(); return; }
-            if (event.key !== "Tab") return;
-            var focusables = Array.from(modal.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'))
-                .filter(function (el) { return el.offsetParent !== null && !el.disabled && el.tabIndex >= 0; });
-            if (!focusables.length) return;
-            var first = focusables[0];
-            var last = focusables[focusables.length - 1];
-            if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
-            else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
-        });
-
-        // A short beat before the ask feels less like a takeover; if another dialog is open, wait
-        // until it closes before showing the donation modal.
-        if (reduce) window.setTimeout(tryOpenModal, 0);
-        else window.setTimeout(tryOpenModal, 1200);
     }
 
     function initCounters() {

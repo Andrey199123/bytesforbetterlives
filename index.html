@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://firestore.googleapis.com">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Nunito:wght@600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900&display=swap">
     <link rel="stylesheet" href="styles.css">
     <link rel="canonical" href="https://www.bytesforbetterlives.net/">
     <!-- The hero banner is the LCP element but lives in CSS background-image, which the
@@ -43,34 +43,22 @@
     </nav>
 
     <main>
+        <!-- The navbar sits transparent OVER this hero on home only (body.page-home CSS +
+             initHomeNavOverlay in script.js), so the hero carries its own nav-height top padding. -->
         <section class="hero home-hero">
             <div class="hero-content">
-                <p class="eyebrow">Student-led nonprofit in South Florida</p>
-                <h1>Bridging the digital divide for seniors and children.</h1>
-                <p class="hero-subtitle">Bytes for Better Lives provides senior tech help, digital literacy education, online safety presentations, and donations that support children, families, and community partners.</p>
-                <div class="hero-actions">
-                    <a href="chapters.html#start-chapter" class="btn btn-primary">Start a Chapter</a>
-                    <!-- Seed href only — script.js re-points every [data-donate-url] link at the donate hub. -->
-                    <a href="donate.html" data-donate-url class="btn btn-secondary">Donate</a>
-                    <a href="contact.html" class="hero-link">Volunteer →</a>
-                </div>
+                <p class="eyebrow">Largest and fastest growing youth-led digital equity nonprofit in Florida</p>
+                <h1>Technology shouldn’t determine opportunity.</h1>
+                <p class="hero-subtitle">Bytes for Better Lives bridges the digital divide through tech help for seniors, digital literacy for kids, and device donations for families.</p>
+                <a href="about.html" class="hero-arrow-link">Our mission and vision <span aria-hidden="true">→</span></a>
             </div>
         </section>
 
-        <section class="section" id="global-reach" aria-label="Where we work">
+        <!-- Impact intro — the editorial lead-in that hands straight off to the data-driven stat
+             band below it. Static copy; the numbers stay in script.js. -->
+        <section class="home-intro" aria-label="Our impact">
             <div class="container">
-                <div class="section-header">
-                    <p class="section-kicker">Our Reach</p>
-                    <h2 class="section-title">Local chapters, global reach.</h2>
-                    <p class="section-description">Tap a chapter marker to take a closer look.</p>
-                </div>
-                <div class="map-frame map-frame--world reach-map" id="map-world-home" data-map="world">
-                    <img class="map-base" src="images/maps/world.svg" alt="World map showing Bytes for Better Lives chapter locations and outreach work" width="950" height="620">
-                </div>
-                <div class="map-legend">
-                    <span class="map-legend-item"><span class="map-dot pin-active"></span>Chapter locations</span>
-                    <span class="map-legend-item"><span class="map-dot pin-outreach"></span>Outreach &amp; donation work</span>
-                </div>
+                <h2 class="home-intro-title">Our impact, thanks to your support</h2>
             </div>
         </section>
 
@@ -87,22 +75,55 @@
             </div>
         </section>
 
+        <section class="section" id="global-reach" aria-labelledby="global-reach-title">
+            <div class="container">
+                <div class="section-header">
+                    <p class="section-kicker">Where we work</p>
+                    <h2 class="section-title" id="global-reach-title">Our Reach</h2>
+                    <p class="section-description">Tap any marker to see what we’re doing there.</p>
+                </div>
+                <!-- Reach PAIR: the world map CROPPED to the pin spread (world-reach.svg =
+                     world.svg with viewBox "79 78 659 335"; script.js remaps the full-map pin %s
+                     into the crop at render time) next to the zoomed South-Florida inset
+                     (images/maps/florida-se.svg), which has room to show every service site with
+                     a readable label. Pins — and the inset's corner locator, which shows WHERE in
+                     Florida the zoom sits — are injected by renderChapterMaps(). -->
+                <div class="reach-row">
+                    <figure class="map-card">
+                        <figcaption class="map-cap"><span class="map-cap-sub">Worldwide</span></figcaption>
+                        <div class="map-frame" id="map-world-home" data-map="world-reach" role="group" aria-label="World map showing Bytes for Better Lives chapter locations and outreach work">
+                            <img class="map-base" src="images/maps/world-reach.svg" alt="" width="659" height="335">
+                        </div>
+                    </figure>
+                    <figure class="map-card map-card--inset">
+                        <figcaption class="map-cap"><span class="map-cap-sub">South Florida</span></figcaption>
+                        <div class="map-frame" id="map-florida-se" data-map="florida-se" role="group" aria-label="Zoomed map of South Florida showing chapters and the places we serve">
+                            <img class="map-base" src="images/maps/florida-se.svg" alt="" width="240" height="260">
+                        </div>
+                    </figure>
+                </div>
+                <div class="map-legend">
+                    <span class="map-legend-item"><span class="map-dot pin-active"></span>Chapter locations</span>
+                    <span class="map-legend-item"><span class="map-dot pin-outreach"></span>Outreach &amp; donation work</span>
+                </div>
+            </div>
+        </section>
+
         <section class="section surface-band">
             <div class="container">
                 <div class="split-section">
                     <div class="section-header">
                         <p class="section-kicker">Leadership</p>
                         <h2 class="section-title">Board of Directors</h2>
-                        <p class="section-description">The board of directors guides BFBL programs, partnerships, chapter growth, and student volunteer coordination. Founded by Aaron Pinto and Pranav Rai.</p>
+                        <p class="section-description">The board of directors guides BFBL programs, partnerships, chapter growth, and student volunteer coordination.</p>
                         <div class="btn-row">
                             <a href="team.html" class="btn btn-quiet">Meet the Team</a>
                         </div>
                     </div>
                     <div class="officer-grid" id="executive-board-preview" aria-label="Board of Directors"></div>
-
-        </div>
-    </div>
-</section>
+                </div>
+            </div>
+        </section>
 
         <section class="section">
             <div class="container">
@@ -115,15 +136,6 @@
                 <div class="preview-actions">
                     <a href="chapters.html" class="btn btn-primary">View All Chapters</a>
                 </div>
-            </div>
-        </section>
-
-        <section class="section band--ink">
-            <div class="container">
-                <blockquote class="editorial-quote">
-                    “We started Bytes for Better Lives because a grandparent couldn’t join a video call and a classroom didn’t have enough devices. Technology should leave no one behind.”
-                    <cite>Aaron Pinto &amp; Pranav Rai · Co-Founders</cite>
-                </blockquote>
             </div>
         </section>
 
@@ -140,6 +152,7 @@
                 </div>
             </div>
         </section>
+
     </main>
 
     <footer class="footer">

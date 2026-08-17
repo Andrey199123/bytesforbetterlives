@@ -99,7 +99,9 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
 Single stylesheet. Colors are **OKLCH custom properties** in `:root`. **Fonts load via
 `<link rel="preconnect">`+`<link rel="stylesheet">` in every page `<head>`** (public + admin), NOT via
 CSS `@import` (that serialized HTML→styles.css→fonts-CSS→woff2 and blocked first paint) — a new page
-shell must copy the three font `<link>`s.
+shell must copy the three font `<link>`s **verbatim** (2 preconnects + the stylesheet with
+`family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900`). All 42 pages carry the
+identical link; Nunito is retired and must not come back.
 
 ### `images/`
 Subfolders (e.g. `images/work with seniors/`, `images/donations/`, `images/team/`); some names
@@ -108,7 +110,8 @@ contain spaces.
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
 `chapters.html`, `chapter-{ahs,coral-springs,cypress,doral,gainesville,los-angeles,miami,new-york,virginia,russia,turkey}.html`,
-`contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery → lightbox).
+`contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery → lightbox),
+`donate.html` (donate hub — `donateHubUrl` in `script.js` drives every Donate CTA; `renderDonatePage()`).
 Admin (noindex, not in navbar): `admin.html` (chapter-picker login landing), `members-admin.html`,
 `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `initiatives-admin.html`,
 `fundraisers-admin.html`, `structure-admin.html`; per-chapter scoped `chapter-<id>-admin.html`
@@ -128,11 +131,24 @@ generated from the `chapter-admin.html` template (which also works as `?c=<id>` 
 ## Design / branding
 **2026-05-31 redesign** — "warm + bold blend" (DECA + youthteaching.org), mint-led; read as
 intentional/editorial, not AI-template.
-- **Type**: `--font-display`=**Nunito** (headings 800); `--font-body`=**Mulish**; `--font-label`=Nunito
-  (kickers/buttons/nav, uppercase). No serif (rejected).
+- **Type (SITE-WIDE, 2026-08)**: `--font-display`+`--font-label`=**Gabarito** (free stand-in for
+  DECA's Gotham Rounded — Rethink Sans was tried and rejected as AI-template; Gotham is commercial);
+  `--font-body`=**Mulish**. No serif (rejected). **Nunito is RETIRED** — gone from `:root`, from every
+  page's fonts `<link>`, and from the whole repo. Both tokens are set once in the base `:root`; there
+  is NO `body.page-home` type override any more.
+  - **Weight scale**: Gabarito sets much blacker than Nunito did at the same number, so the whole
+    display/label scale sits one notch down and those are now the BASE values in each component's own
+    rule — 900→**700**, 800→**600**, 750→**550**, 700→**500**. When adding a display/label component,
+    pick from 500/550/600/700. ⚠️ The re-map applies ONLY to rules whose text renders in Gabarito.
+    **Mulish text keeps its original 400–900 weights** — check the computed `font-family` before
+    touching a `font-weight` (several Mulish rules were mapped down by mistake and reverted).
+  - **No text-shadows in ANY hero** (HARD user rule) — the declarations are deleted, not overridden
+    with `text-shadow:none`. If hero type gets lost over a photo, **deepen the hero wash**; never
+    re-add a shadow. (`.chapter-hero`'s ink gradient was deepened to 72/68/46/20% for exactly this.)
 - **Brand color = "SY Glacier Mint" `#B4D3AD`** (`--green`; `--green-dark:#4F7A46`, `--green-deep`,
   `--green-soft`). Primary CTAs (`.btn-primary`,`.btn-donate`) fill `--green-dark`+paper text as **pill
-  buttons** (mint failed contrast, reserved for soft washes).
+  buttons** (mint failed contrast, reserved for soft washes) — EXCEPT on home, which squares them
+  (4px) with the rest of the page.
 - **Per-page accent**: `--accent`/`-soft`/`-dark` default green; `body.page-*` overrides — green
   (home, impact, chapters, chapter profiles), gold (initiatives, gallery, past-events), teal (about,
   contact), coral (team). Accent drives kicker/underline, hero tint, band wash, card-hover, stat
@@ -141,14 +157,31 @@ intentional/editorial, not AI-template.
   `--green-deep`, the others use `--gold-deep`/`--teal-deep`/`--coral-deep`.
 - **Warm palette**: `--paper`/`--surface` warm off-white; neutral/deeper shadows; generous radii
   (`--radius-lg:18px`…`2xl:32px`).
-- **Section motif**: `.section-kicker` (uppercase Nunito, `--accent-dark`, 0.16em) + 48px `--accent`
+- **Section motif**: `.section-kicker` (uppercase Gabarito 600, `--accent-dark`, 0.16em) + 48px `--accent`
   underline under `.section-title`; hero `.eyebrow`=`--accent-soft`.
 
 ### Heroes — two treatments
-- **Home only** keeps the photo hero (`.home-hero`, `images/hero-banner.jpg`, crop `center 34%`). It
-  overrides base `.hero` with a lighter wash (green `--accent-dark` ~58→20→0%, `--ink` ~50→28→16%) so
-  the photo reads clearly while the left keeps enough darkening for white text. (Banner is real BFBL
-  signage.)
+- **Home only** keeps the photo hero (`.home-hero`, `images/hero-banner.jpg`, crop `center 34%`).
+  **2026-08 home redesign** (News-Literacy-Project structure on the mint palette) replaced the old
+  light left-heavy wash with ONE strong, near-uniform scrim — `--home-hero-scrim`
+  (`ink` 86% + `green-deep`) at **72→66→62%** across a `92deg` gradient — so white type is legible
+  anywhere on the frame with NO text-shadow (measured ≥7.7:1). Hero is `height:auto` +
+  `min-height:85vh` (auto-ish on mobile), `padding-block` starts at `calc(var(--nav-height) + …)`
+  because the navbar overlays it (below). Content: `.eyebrow` → h1 → subtitle (`max-width:46ch`) → ONE
+  quiet `.hero-arrow-link` ("Our mission and vision →" → about.html, underline on hover); the hero
+  button row was removed (Donate lives in the navbar). All of this lives in the `HOME REDESIGN` block
+  at the END of `styles.css`, scoped to `body.page-home`. (Banner is real BFBL signage.)
+  - **Hero copy.** Current: eyebrow "Largest and fastest growing youth-led digital equity nonprofit
+    in Florida" (user reinstated this superlative 2026-08-16, overriding the earlier facts-only rule
+    that had replaced it with "Student-led · 11 chapters · 3 countries"), h1 "Technology shouldn't
+    determine opportunity.", subtitle naming the three programs. The eyebrow no longer carries the
+    chapter count, so it's off the add-a-chapter count-bump checklist.
+- **Home navbar overlays the hero**: `body.page-home .navbar` is `position:fixed` + transparent (paper
+  links/wordmark/hamburger bars, Donate = SQUARE paper-bg ink-text button; link colours only
+  `@media(min-width:1181px)` so the paper mobile drawer stays readable). `initHomeNavOverlay()`
+  (script.js, gated on `body.page-home` + `.home-hero`, no-op elsewhere) adds **`.is-solid`** via an
+  IntersectionObserver once the hero clears the bar → the navbar returns to its normal paper/ink
+  treatment. No hero or no IO → `.is-solid` immediately.
 - **All 8 interior pages** (about, impact, team, ongoing-initiatives, contact, past-events, gallery,
   chapters DIRECTORY) use **`.hero-editorial`** — a photo-less accent COLOUR-FIELD (directional
   `--accent-dark`→ink gradient + faint dot-grid + top-left glow), keyed per-page accent. No image →
@@ -156,8 +189,11 @@ intentional/editorial, not AI-template.
   HTML class is `hero hero-editorial`.
 - **Chapter-PROFILE pages** keep their own photo hero (`.chapter-hero`) WHEN the chapter has a real
   `photos[0]`; `renderChapterProfilePage()` sets `--hero-img` to it. `.chapter-hero` overrides the base
-  `.hero` wash with a LIGHT one (accent 36→12→0%, ink 54→30→14%) so the chapter's own photo reads
-  clearly. **Chapters with NO real photo get `.chapter-hero--editorial`** (a photo-less accent
+  `.hero` wash with its own (light accent 36→12→0%, ink 72%→68%@55%→46%@78%→20%) so the chapter's own
+  photo still reads while the copy stays legible — the ink gradient carries ALL legibility now that
+  heroes have no text-shadows (it was 54→30→14% and bright banners swallowed the subtitle). It stays
+  deep across the whole copy column and only falls away past 78%, so the right third of the photo —
+  where no copy ever sits — stays bright. Verified ≥5.3:1 on every photo chapter. **Chapters with NO real photo get `.chapter-hero--editorial`** (a photo-less accent
   colour-field, same recipe as `.hero-editorial`) instead of falling back to the shared `hero-banner.jpg`
   — whose printed wordmark bled through the light wash and made every photoless chapter look identical.
   The locator map carries identity in both cases. A faint **locator MAP + dot** (`chapterLocatorConfig` +
@@ -179,11 +215,27 @@ intentional/editorial, not AI-template.
   Clickable children inside a flat card keep their own hover.
 - **No decorative top/left "lines" on blocks** (HARD rule): removed `.service-card::before` top strip
   and `.chapter-card.card-edge-*` left spines; accent carried by coloured numeral / data-driven pill.
-- **Editorial stat band** (`.impact-band`): big Nunito numerals (`--accent-dark`, 900, `tabular-nums`
+- **Editorial stat band** (`.impact-band`): big Gabarito numerals (`--accent-dark`, 700, `tabular-nums`
   so the count-up doesn't jitter) + hairline dividers on soft accent wash; Home+Impact use the `stats`
   array. Dividers (`border-left`) are scoped to the desktop 5-up row (`@media min-width:901px`) — on
   stacked/2-col layouts the numeral carries the accent (a left spine there would break the no-lines
   HARD rule). Grid laddering: 5 (≥901px) → 3 (≤900) → 2 (≤680 and ≤440); never 1-col.
+  **On home** the band drops the green wash and shares the light NEUTRAL ground of the impact-intro
+  band above it (`surface-strong` 55% + paper), pads `0` on top, flushes the first numeral to the
+  container edge and thins the desktop dividers to a neutral hairline — the two sections read as one.
+- **Impact-intro band** (`.home-intro`, home only, STATIC markup in `index.html` directly under the
+  hero and directly above `#home-impact-stats`): light neutral band holding ONLY the
+  `.home-intro-title` in `--green-deep` ("Our impact, thanks to your support") — the 2-col grid,
+  "Our work in numbers" CTA and right-column sentence/lede were removed 2026-08 at user request
+  (markup + their CSS deleted); the title alone hands off to the numbers.
+- **Home is SQUARE-cornered** (home-scoped, end of `styles.css`): `.btn`/`.btn-donate`/`.nav-link` →
+  4px; cards/`.story-face`/`.map-frame`/`.dropdown-menu`/`.hamburger` → 8px; `.service-icon`/
+  `.dropdown-link` → 6px. Small data pills (`.status-badge`, story chips) and avatars keep their shape.
+- **Home section order** (`index.html`): hero → impact-intro band → stat band (`#home-impact-stats`)
+  → What We Do → Our Reach map (`#global-reach`, moved down from first) → Board of Directors →
+  Chapters preview → Photo Stories → footer (the founder-quote `band--ink` was removed 2026-08 at
+  user request). Renderers target ids, so
+  reordering the containers is safe; keep every container id.
 - **Program tiles** (`.service-card` in `.service-grid`): `.service-icon` chip (soft tile-colour wash +
   program-specific stroke SVG, defined inline in `renderWhatWeDo`) cycling green/gold/coral/teal via
   `:nth-child(4n+…)`; 3-up desktop. (Replaced the 01-05 numerals — they implied a sequence the programs
@@ -192,7 +244,7 @@ intentional/editorial, not AI-template.
   flex-column). Used on Home chapters preview, Impact Seniors/Kids/Donations, Initiatives
   `#fundraiser-grid`, Past-events.
 - **Editorial dark beats** — `.band--ink` sections with `.editorial-quote` (big quote glyph ::before)
-  and/or `.band-figure` (oversized accent numeral): founder quote on Home, "3,500+" on About, "40+" on
+  and/or `.band-figure` (oversized accent numeral): "3,500+" on About, "40+" on
   Team, dark closing CTAs on Impact/Initiatives/Chapters/Past-events. Bands: `.surface-band`
   (accent-soft 62%), `.band--tint`, `.band--ink`.
 - **Gallery** = dense mosaic (`.photo-gallery-grid` + `.g-feature`/`.g-wide`/`.g-tall` cadence + hover
@@ -211,31 +263,80 @@ intentional/editorial, not AI-template.
   `stats`/`FOUNDERS`); each pin resolves name/status/href LIVE via `chapterById()`. Image fills
   `.map-frame` edge-to-edge so `left:X%`==X% of map. Pin classes **`.geo-pin`/`.geo-pin-dot`/`.geo-pin-label`**
   (the legacy `.map-pin` teardrop component that used to hijack markup was deleted in the dead-code sweep).
-  - **Map-projection note (how pin %s are derived):** pin positions are PROJECTED from each city's real
-    lat/lng, not eyeballed. `florida.svg` (+ `new-york.svg`/`virginia.svg`/`california.svg`) are equirectangular over the
-    region's bounding box → `x%=(lng-lngW)/(lngE-lngW)`, `y%=(latN-lat)/(latN-latS)`, then mapped into the
-    SVG via its path bbox vs viewBox (each has ~5% padding). `world.svg` (and its crops `russia.svg`/
-    `turkey.svg`, which share its coordinate space) is **Miller cylindrical**: `x=X0+mx·lng`,
-    `y=Y0−k·millerY(lat)` where `millerY(lat)=1.25·ln(tan(π/4+0.4·lat))`. To add/move a pin, compute the
-    %s this way and visually verify against the silhouette; the four SE-Florida chapters legitimately
-    cluster on the SE coast (~40 mi apart), so their labels float left and a couple of dots overlap;
-    per-pin `dy`/`dx` (px) stagger the clustered labels into a readable inland column
-    (`--label-dy`/`--label-dx` on `.geo-pin-label`).
+  - **Map-projection note (how pin %s are derived) — CALIBRATED 2026-08, supersedes the old
+    "Miller / equirectangular" note, which was wrong:** pin positions are PROJECTED from each place's
+    real lat/lng, not eyeballed.
+    - **`florida.svg`** (viewBox `630 435 176 152`) is an **Albers conic**, not equirectangular:
+      `n=0.60283700`, `C=1.35122133`, `lng0=-96`; `ρ=√(C−2n·sin φ)/n`, `θ=n·(λ−λ0)` in radians;
+      `X=479.96+1264.138·ρ·sin θ`, `Y=−1332.38+1264.138·ρ·cos θ`; then
+      `x%=(X−630)/176·100`, `y%=(Y−435)/152·100`.
+    - **`world.svg`** (+ its crops `russia.svg`/`turkey.svg`/`world-reach.svg`) is a **hand-drawn pseudocylindrical**
+      outline, not Miller. Global fit (λ,φ in radians):
+      `x = 453.159 + λ·(161.7715 − 22.1313·φ² + 0.3638·φ⁴)`,
+      `y = 337.757 − 172.8404·φ + 0.6486·φ³ − 10.4118·φ⁵`; `x%=x/9.5`, `y%=y/6.2`.
+      North-American pins are off by a few px under the global fit, so they use a **local affine**
+      instead: `x = 432.1872 + 0.7217·lat + 2.6924·lng`, `y = 360.4426 − 3.5132·lat + 0.1962·lng`.
+    - `new-york.svg`/`virginia.svg`/`california.svg` stay equirectangular over the shape's bbox →
+      `x%=(lng−lngW)/(lngE−lngW)`, `y%=(latN−lat)/(latN−latS)`, mapped in via path bbox vs viewBox.
+    - `russia.svg`/`turkey.svg` hero locators are CROPS of world.svg, so their dot = that chapter's
+      `WORLD_MAP_PINS` point in world.svg units (`x%·9.5`,`y%·6.2`) remapped into the crop viewBox —
+      the same city then lands identically on both maps. (They previously held stale Miller values.)
+    - To add/move a pin: compute the %s this way, then **visually verify** against the silhouette
+      (serve locally + screenshot), and **audit label-vs-DOT, not just label-vs-label** — a pill
+      sitting on a neighbour's dot hides the marker, mislabels it and steals its click target.
+      The SE-Florida chapters legitimately cluster on the SE coast (~40 mi apart), so their labels
+      float left and a couple of dots overlap; per-pin `dy`/`dx` (px) stagger the clustered labels
+      into a readable inland column (`--label-dy`/`--label-dx` on `.geo-pin-label`, both sides).
+      `--label-dy-scale` (default 1) shrinks a whole frame's stagger when the frame itself shrinks.
+      A `dy` of |20px|+ auto-renders a **hairline leader** (`.geo-pin-lead`, `--label-lead`) back to
+      the dot, so a lifted pill (Los Angeles, whose 86px label would otherwise land on the New
+      York/Virginia dots) still reads as belonging to its marker.
+    - Two DOTS may still overlap where the places genuinely are that close at that scale (New York /
+      Virginia on the world maps, AHS / Plantation on the inset). That is accepted: each label is
+      inside its own `<a>`, so the pill is the real click target and both chapters stay reachable.
+      A LABEL on someone else's dot is not accepted — it hides and mislabels that marker.
   `.pin-active`=green, `.pin-launching`=gold; `.geo-pin--left` floats label inland.
-- **Home "Our Reach" map** (`#global-reach` on `index.html` — FIRST content section, right after the
-  hero): single `world.svg` map (`.reach-map` caps width 900px) reusing the chapters-page pin system,
-  with legend green=chapters / red=outreach. Chapter pins = `WORLD_MAP_PINS` forced GREEN via
-  `mapPinMarkup(pin,"Active")` (2nd arg must be a STRING — bare `.map(mapPinMarkup)` passes the index;
-  it recolours the DOT only — the `title` tooltip always uses the chapter's REAL status);
-  the `ahs` pin becomes an aggregate "Florida · N chapters" (N live from `FLORIDA_MAP_PINS.length`;
-  the suffix is a `labelNote` → `.geo-pin-label-note`, hidden ≤760px so it can't clip the frame edge)
-  and links to `chapters.html` instead of the AHS page. Red pins = `WORLD_OUTREACH_PINS`
-  (Haiti/Peru/India country centroids, same Miller projection) — NOT chapters: id-less pins render as
-  static non-link `<span>`s (`.geo-pin--static`, hover-inert per the clickability HARD rule) with
-  `.pin-outreach` dots — HOLLOW `--coral-dark` rings, so the categories differ by shape, not colour
-  alone (green/coral is a red-green CVD pair). Adding a chapter needs NO extra step here (pin tables are
-  shared); adding an outreach country = one `WORLD_OUTREACH_PINS` entry (project %s per the
-  map-projection note).
+- **Home "Our Reach" PAIR** (`#global-reach` on `index.html` — sits AFTER the What We Do section since
+  the 2026-08 home redesign; restructured 2026-08-16): ONE `.reach-row` grid holding two `.map-card`
+  figures side by side — the **CROPPED world map** `#map-world-home` (`images/maps/world-reach.svg` =
+  world.svg with viewBox cropped to **`79 78 659 335`**, the pin spread W-N-America→India /
+  N-Russia→Peru, so pins fill the frame) next to the **South-Florida inset** `#map-florida-se`
+  (`images/maps/florida-se.svg` = florida.svg viewBox-cropped to **`780 526.5 24 26`**, `stroke-width`
+  scaled 0.16 for the ~7× zoom). The old full-width 900px world map + whole-Florida panel
+  (`#map-florida-home`, `.reach-fl-row`, `.map-inset-region`/`FLORIDA_INSET_REGION`) were REMOVED —
+  do not restore. Columns `2.13fr / 1fr` = ratio of the two aspect ratios (659/335 ÷ 24/26) so the
+  frames land at the same height; **≤1000px** they stack (inset capped 380px). The inset runs 0.68rem
+  labels and NO `--label-dy-scale`: its frame is within ~20px of 370 at every breakpoint (366 / 380 /
+  362), so the px `dy` offsets are simply tuned at that size.
+  Captions reuse `.map-cap`/`.map-cap-sub` ("Worldwide" / "South Florida").
+  - **World-map pins**: `WORLD_MAP_PINS`/`WORLD_OUTREACH_PINS` keep FULL-map %s (chapters.html renders
+    them as-is); the home renderer remaps every pin into the crop via `worldReachPin()` +
+    `WORLD_REACH_CROP` (`x%·9.5`,`y%·6.2` → viewBox units → % of crop box) — NO second pin table, so
+    new/moved world pins need no home-specific work. Chapter pins forced GREEN via
+    `mapPinMarkup(pin,"Active")` (2nd arg must be a STRING — bare `.map(mapPinMarkup)` passes the
+    index; recolours the DOT only, the `title` tooltip keeps the REAL status); the `ahs` pin becomes
+    an aggregate "Florida · N chapters" (N live from `FLORIDA_MAP_PINS.length`; suffix = `labelNote` →
+    `.geo-pin-label-note`, hidden ≤760px) linking to `chapters.html`. Red pins = `WORLD_OUTREACH_PINS`
+    (Haiti/Peru/India centroids) — id-less but with `href` → real `<a>`s; `mapPinMarkup` id-less
+    branch: **href → link; no href → `.geo-pin--static` `<span>`** (hover-inert per the clickability
+    HARD rule). `.pin-outreach` dots are HOLLOW `--coral-dark` rings (shape ≠ colour alone;
+    green/coral is a red-green CVD pair). India carries `pin-edge-right` (dot ~90% across the crop →
+    its label flips inland ≤640px so it can't clip the frame edge). New outreach country = one
+    `WORLD_OUTREACH_PINS` entry (full-map %s per the map-projection note — the crop remap is
+    automatic; give any pin landing near the crop's right edge `pin-edge-right`).
+  - **Inset pins**: `FLORIDA_SE_CHAPTER_PINS` (5 metro chapters, own inset %s) +
+    `FLORIDA_IMPACT_PINS` (9 service-site markers, each a `pin-outreach` link into
+    impact/past-events). Inset %s come STRAIGHT from the Albers X,Y remapped onto `FLORIDA_SE_CROP`
+    (`x%=(X−780)/24·100`, `y%=(Y−526.5)/26·100`) — never converted from the rounded full-map %s,
+    which multiplies their rounding error by 176/24. `stats`/`FOUNDERS`-style hardcoded tables —
+    chapters carry no geo. **"Hollywood" is one marker for two sites** (Five Star Premier + Joe
+    DiMaggio, 1.6 km apart): at any zoom this frame can carry, their dots merge into one blob and the
+    upper pill covered the lower dot's click target — one pill naming both is honest and clickable.
+  - **Inset corner locator** (`floridaLocatorMarkup()` → `.map-locator`/`.map-locator-box`): the crop
+    is a ~7× zoom into a silhouette with NO interior geography, so on its own the panel reads as a
+    plain green rectangle. A small full-state Florida with the crop outlined (derived from
+    `FLORIDA_SE_CROP` ÷ `FLORIDA_VIEWBOX`, so it can't drift from the SVG) says where the zoom is.
+    Decorative: `aria-hidden`, `pointer-events:none`, no hover.
 - **Member rosters**: leadership as cards, volunteers as `.roster-chip` pills (`personChipMarkup`) — on
   chapter profiles and Team volunteers grid.
 - **About** "Our Story" = numbered `.story-rail` timeline; **Impact** partners = `.partner-strip`
@@ -247,7 +348,7 @@ intentional/editorial, not AI-template.
   `contact.html`); `.social-link` = 42px quiet icon button inheriting currentColor. The old full-colour
   raster logos in `images/contact us logo/` are unused (kept only by stale test files). Footer quick
   links include an **Admin** link (`admin.html`) alongside the nav pages (`renderFooter` `quickLinks`).
-- Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Nunito. Responsive hamburger
+- Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Gabarito. Responsive hamburger
   (`initMobileNavigation`, sets `aria-label`/`aria-expanded`). `--muted` darkened (~40% L) for AA;
   interior `.hero h1` + `.section-title`/`h2` get a mobile clamp + `overflow-wrap`.
 - **A11y baseline** (keep when adding pages/components): `:focus-visible` ring = `--accent` outline +
@@ -272,11 +373,12 @@ intentional/editorial, not AI-template.
   (Miami = MAST @ FIU
   students, not an official school club; public page is Miami-only. Chapter admin:
   adina.t.brody09@gmail.com.) Doral = independent chapter (2026–2027 officer cohort), President
-  Asvika Prakash; FL map pin at x:90.9,y:77.0. Los Angeles = independent chapter, no lead assigned yet
+  Asvika Prakash; FL map pin at x:92.2,y:74.2. Los Angeles = independent chapter, no lead assigned yet
   (`leadPeople` empty → directory "Led by" line hides via `chapterHasLead()`); world map pin at
-  x:14.2,y:38.0 with `dy:-42` (NOT `side:left` — as the westernmost pin, a left-floating label clipped
-  off the frame's left edge on the 2-col world map, so the label floats right + up, clear of the
-  east-coast cluster), locator outline `images/maps/california.svg`.
+  x:14.6,y:35.1 with `dy:-34` (NOT `side:left` — as the westernmost pin, a left-floating label clipped
+  off the frame's left edge on the 2-col world map, so the label floats right and rises clear of the
+  New York / Virginia pills its 86px label would otherwise reach; the lift auto-draws a leader line),
+  locator outline `images/maps/california.svg`.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## Git / workflow
@@ -412,8 +514,10 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
     subdomain); (2) `chapter-<id>-admin.html` (re-run the sed loop above); (3) Firestore registry entry
     `{id,pageHref}` in `site/content.chapters` AND a `chapterContent/<id>` doc `{page,members}` (use
     `tools/firestore.mjs`); (4) map pin — FL chapters → `FLORIDA_MAP_PINS` + `chapterLocatorConfig` FL
-    table in `script.js`; others → `WORLD_MAP_PINS` + a region SVG; (5) bump the `stats` "Chapters"
-    `raw` count in `script.js` AND any hardcoded count prose (e.g. `index.html`, `team.html`);
+    table (LOCKSTEP, same %s) in `script.js`, and if it's in the SE-Florida metro also
+    `FLORIDA_SE_CHAPTER_PINS` (inset %s); others → `WORLD_MAP_PINS` + a region SVG; (5) bump the `stats`
+    "Chapters" `raw` count in `script.js` AND every hardcoded count prose — `index.html`
+    chapters-preview description, `team.html` (the home hero eyebrow no longer carries a count);
     (6) `sitemap.xml` `<loc>` for the subdomain; (7) `vercel.json` subdomain redirect PAIR (.net + .org)
     — without it the canonical/sitemap subdomain URL just redirects to the homepage; (8) add the chapter
     lead to the chapter doc's members + `page.leadPeople`; (9) optional: mirror into the `data.js` seed
