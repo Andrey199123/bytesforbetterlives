@@ -12,7 +12,7 @@
 .admin-toolbar { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
 /* admin.html chapter-picker login landing */
 .admin-chapter-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
-.admin-chapter-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); text-decoration: none; color: var(--ink); transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
+.admin-chapter-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 1.25rem; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); text-decoration: none; color: var(--ink); transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
 .admin-chapter-card:hover { border-color: var(--green); box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
 .admin-chapter-card strong { font-size: 1.15rem; }
 .admin-chapter-loc { color: var(--ink-soft); font-size: 0.9rem; }
@@ -24,15 +24,15 @@
 @media (max-width: 1100px) { .gallery-grid-admin { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 @media (max-width: 700px) { .gallery-grid-admin { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 /* Clickable + drag-and-drop upload zone (member photo + gallery). */
-.upload-dropzone { display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-align: center; border: 2px dashed var(--line); border-radius: var(--radius-md); padding: 1.75rem 1rem; color: var(--ink-soft); font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
+.upload-dropzone { display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-align: center; border: 2px dashed var(--line); border-radius: 8px; padding: 1.75rem 1rem; color: var(--ink-soft); font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s, color .15s; }
 .upload-dropzone:hover { border-color: var(--green-dark); color: var(--ink); }
 .upload-dropzone.dragover { border-color: var(--green); background: color-mix(in oklch, var(--green) 14%, var(--paper)); color: var(--ink); }
 .upload-dropzone-sm { padding: 0.7rem 0.6rem; font-size: 0.78rem; }
-.admin-card { display: grid; gap: 0.45rem; padding: 1rem; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--paper); }
+.admin-card { display: grid; gap: 0.45rem; padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
 .admin-card label { font-weight: 700; font-size: 0.8rem; display: grid; gap: 0.2rem; color: var(--ink-soft); }
-.admin-card input, .admin-card select, .admin-card textarea { width: 100%; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 8px; font: inherit; box-sizing: border-box; }
+.admin-card input, .admin-card select, .admin-card textarea { width: 100%; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 4px; font: inherit; box-sizing: border-box; }
 .chapters-board { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 1rem; align-items: flex-start; }
-.chapter-col { flex: 0 0 250px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-md); padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.chapter-col { flex: 0 0 250px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; }
 .chapter-col h4 { margin: 0; font-size: 1rem; }
 .tier-zone { border: 1px dashed var(--line); border-radius: 8px; padding: 0.45rem; min-height: 54px; display: flex; flex-direction: column; gap: 0.35rem; }
 .tier-zone.dragover { border-color: var(--green); background: color-mix(in oklch, var(--green) 14%, var(--paper)); }
@@ -41,10 +41,10 @@
 .member-chip .chip-top { display: flex; align-items: center; gap: 0.4rem; }
 .member-chip img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
 .member-chip.dragging { opacity: 0.45; }
-.chip-role, .chip-exectitle { width: 100%; font: inherit; font-size: 0.74rem; font-weight: 700; padding: 0.18rem 0.3rem; border: 1px solid var(--line); border-radius: 6px; box-sizing: border-box; background: var(--surface); cursor: pointer; }
+.chip-role, .chip-exectitle { width: 100%; font: inherit; font-size: 0.74rem; font-weight: 700; padding: 0.18rem 0.3rem; border: 1px solid var(--line); border-radius: 4px; box-sizing: border-box; background: var(--surface); cursor: pointer; }
 .chip-exectitle { cursor: text; }
 /* Official Google sign-in button (Google branding guidelines) */
-.gsi-button { display: inline-flex; align-items: center; gap: 12px; height: 44px; padding: 0 16px; background: #fff; color: #1f1f1f; border: 1px solid #747775; border-radius: 6px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.15px; cursor: pointer; transition: background-color .2s, box-shadow .2s; }
+.gsi-button { display: inline-flex; align-items: center; gap: 12px; height: 44px; padding: 0 16px; background: #fff; color: #1f1f1f; border: 1px solid #747775; border-radius: 4px; font-family: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.15px; cursor: pointer; transition: background-color .2s, box-shadow .2s; }
 .gsi-button:hover { background: #f7f8f8; box-shadow: 0 1px 2px rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15); }
 .gsi-button:active { background: #f1f3f4; }
 
@@ -61,8 +61,8 @@
 .admin-list { display: grid; gap: 0.4rem; border: 1px solid var(--line); border-radius: 8px; padding: 0.6rem 0.7rem; }
 .admin-list-label { font-weight: 700; font-size: 0.8rem; color: var(--ink-soft); }
 .admin-list-row { display: flex; gap: 0.4rem; align-items: center; }
-.admin-list-row--stack { display: grid; gap: 0.3rem; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem; background: var(--surface); }
-.admin-list-row > input { flex: 1; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 6px; font: inherit; box-sizing: border-box; }
+.admin-list-row--stack { display: grid; gap: 0.3rem; border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem; background: var(--surface); }
+.admin-list-row > input { flex: 1; padding: 0.35rem 0.5rem; border: 1px solid var(--line); border-radius: 4px; font: inherit; box-sizing: border-box; }
 .admin-list-x { flex: 0 0 auto; cursor: pointer; padding: 0.25rem 0.6rem; font-size: 0.85rem; }
 .admin-list-add { justify-self: start; padding: 0.2rem 0.75rem; font-size: 0.8rem; }
 

@@ -46,6 +46,14 @@
     const donateHubUrl = "donate.html";
     const peruFundraiserUrl = "https://www.gofundme.com/f/help-children-gain-access-education-tools-in-peru";
 
+    // Declared here, above every call site, on purpose (used by initNavOverlay, far below). It used
+    // to live beside that function as `var navOverlayObserver = null;`, which broke it: the binding
+    // hoisted, but the `= null` INITIALIZER ran in source order — i.e. AFTER the parse-time call had
+    // already stored an observer in it — wiping the reference, so no later call could disconnect
+    // that observer. Pages ended up with two live IntersectionObservers toggling .is-over-hero at
+    // two different thresholds. Never give this an initializer, here or anywhere else.
+    var navOverlayObserver;
+
     // Founders are hardcoded here on purpose — they never change, so they are NOT stored in
     // Firestore / data.people and are NOT editable in the admin. Edit this list to update them.
     const FOUNDERS = [
@@ -242,13 +250,33 @@
         });
     }
 
-    function initRender() {
-        initVercelAnalytics();
-        initPlausible();
+    // PAGE CHROME — the navbar, the footer, the skip link and their behaviour. None of it needs the
+    // Firestore fetch: the only data-driven piece is the Chapters dropdown, which renders from the
+    // data.js seed (or firebase-data.js's localStorage snapshot) and is patched in place afterwards
+    // by refreshChaptersDropdown(). So this runs SYNCHRONOUSLY at parse time instead of waiting
+    // behind BFBL_DATA_READY (up to 3s), which is what left the bar logo-only on every navigation.
+    // Every renderer it calls null-guards its root, so this is a harmless no-op on pages without a
+    // navbar/footer.
+    // ⚠️ CALL EXACTLY ONCE per page, from the LAST statement of this IIFE (see the call site for
+    // why it cannot move up): initNavDropdowns and initMobileNavigation add listeners
+    // (initMobileNavigation with no guard at all — a second call toggles the hamburger twice per
+    // click, opening then instantly closing the drawer).
+    function renderChrome() {
         renderNavigation();
         initNavDropdowns();
         renderFooter();
         syncDonateLinks();
+        ensureSkipLink();
+        initMobileNavigation();
+        // LAST: the overlay navbar's transparent state is JS-applied (solid is the CSS default) and
+        // its IntersectionObserver rootMargin measures navbar.offsetHeight, so the bar has to be
+        // filled in first. Called again from ensureChapterProfileLayout() once a chapter hero exists.
+        initNavOverlay();
+    }
+
+    function initRender() {
+        initVercelAnalytics();
+        initPlausible();
         renderHomePage();
 
         renderGalleryImages();
@@ -257,11 +285,11 @@
         renderChapterDirectoryPage();
         renderChapterMaps();
         renderChapterProfilePage();
-        // After renderChapterProfilePage: chapter stubs only get their <main> injected there,
-        // and the skip link needs that <main> to exist so its #main-content target is real.
+        // Again after renderChapterProfilePage (renderChrome already ran it): chapter stubs only get
+        // their <main> injected there, and the skip link needs that <main> to exist so its
+        // #main-content target is real. ensureSkipLink sets main.id BEFORE its own bail-out, so the
+        // second call costs nothing on pages whose <main> is static.
         ensureSkipLink();
-        initMobileNavigation();
-        initHomeNavOverlay();
         initImageFallbacks();
         initCarousels();
         initLightbox();
@@ -272,8 +300,10 @@
         renderDonatePage();
     }
 
-    // Render once the live content (firebase-data.js, if present) has loaded — falling back to
-    // data.js if Firestore is empty/unreachable. Then re-sync data and derive roles before render.
+    // Render the page BODY once the live content (firebase-data.js, if present) has loaded —
+    // falling back to data.js if Firestore is empty/unreachable. Then re-sync data and derive roles
+    // before render. The chrome is already on screen by now (renderChrome, below), so all this pass
+    // owes the navbar/footer is a patch of the two bits live data can actually change.
     document.addEventListener("DOMContentLoaded", function () {
         var ready = (window.BFBL_DATA_READY && typeof window.BFBL_DATA_READY.then === "function")
             ? window.BFBL_DATA_READY
@@ -283,6 +313,8 @@
             donateUrl = data.donateUrl || donateUrl;
             contactEmail = data.contactEmail || contactEmail;
             deriveRoles();
+            refreshChaptersDropdown();
+            refreshFooter();
             initRender();
         });
     });
@@ -557,22 +589,55 @@
         });
     }
 
+    function chaptersNavItem() {
+        return navItems.find(function (item) { return item.label === "Chapters"; });
+    }
+
+    // The <li>s inside the Chapters dropdown — the ONE part of the navbar that depends on Firestore
+    // data. Kept out of renderNavigation so the post-fetch pass can re-render just this list
+    // (refreshChaptersDropdown) instead of rebuilding the whole bar.
+    function chaptersDropdownItemsMarkup(directoryHref, page) {
+        // On touch devices the "Chapters" toggle only opens/closes the menu (it never
+        // navigates), so the directory needs its own entry inside the dropdown.
+        const allLink = `<li><a href="${escapeHTML(safeUrl(directoryHref))}" class="dropdown-link dropdown-link--all${page === directoryHref ? " active" : ""}">All Chapters</a></li>`;
+        const chapterLinks = (data.chapters || []).map(function (chapter) {
+            const localHref = chapter.pageHref || `chapter-${chapter.id}.html`;
+            const href = chapterPublicHref(chapter);
+            const isActive = page === localHref;
+            return `<li><a href="${escapeHTML(safeUrl(href))}" class="dropdown-link${isActive ? " active" : ""}">${escapeHTML(chapter.name)}</a></li>`;
+        }).join("");
+        return allLink + chapterLinks;
+    }
+
+    // What is currently painted inside the dropdown, so the post-fetch refresh can no-op when the
+    // seed (or the localStorage snapshot) already matched live Firestore.
+    var chaptersDropdownPainted = "";
+
+    // renderChrome paints the navbar from the seed/snapshot before the Firestore fetch resolves, so
+    // the live chapter list can arrive later. Replace ONLY the dropdown's <li>s: the
+    // .dropdown-toggle — which owns dataset.dropdownBound and every hover/focus/click handler
+    // initNavDropdowns bound to it — is left untouched, so NOTHING re-binds. Do NOT call
+    // initNavDropdowns() again: a re-render of the toggle would clear its bound flag and let it add
+    // a second document-level click listener closing over a detached dropdown.
+    function refreshChaptersDropdown() {
+        const menus = document.querySelectorAll(".nav-item.dropdown .dropdown-menu");
+        if (!menus.length) return;
+        const item = chaptersNavItem();
+        const markup = chaptersDropdownItemsMarkup(item ? item.href : "chapters.html", currentPageName());
+        if (markup === chaptersDropdownPainted) return;
+        chaptersDropdownPainted = markup;
+        menus.forEach(function (menu) {
+            menu.innerHTML = markup;
+        });
+    }
+
     function renderNavigation() {
         const page = currentPageName();
         const menus = document.querySelectorAll(".nav-menu");
         if (!menus.length) return;
 
         function chaptersDropdownMarkup(item) {
-            // On touch devices the "Chapters" toggle only opens/closes the menu (it never
-            // navigates), so the directory needs its own entry inside the dropdown.
-            const allLink = `<li><a href="${escapeHTML(safeUrl(item.href))}" class="dropdown-link dropdown-link--all${page === item.href ? " active" : ""}">All Chapters</a></li>`;
-            const chapterLinks = (data.chapters || []).map(function (chapter) {
-                const localHref = chapter.pageHref || `chapter-${chapter.id}.html`;
-                const href = chapterPublicHref(chapter);
-                const isActive = page === localHref;
-                return `<li><a href="${escapeHTML(safeUrl(href))}" class="dropdown-link${isActive ? " active" : ""}">${escapeHTML(chapter.name)}</a></li>`;
-            }).join("");
-
+            chaptersDropdownPainted = chaptersDropdownItemsMarkup(item.href, page);
             const isActive = page === item.href || page.indexOf("chapter-") === 0;
             return `
                 <li class="nav-item dropdown">
@@ -580,8 +645,7 @@
                         ${escapeHTML(item.label)} <span class="dropdown-caret" aria-hidden="true">▾</span>
                     </a>
                     <ul class="dropdown-menu" aria-label="Chapter pages">
-                        ${allLink}
-                        ${chapterLinks}
+                        ${chaptersDropdownPainted}
                     </ul>
                 </li>
             `;
@@ -657,9 +721,25 @@
         linkedin: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.49 2.49 0 1 1-.02 4.98 2.49 2.49 0 0 1 .02-4.98zM3 9.4h4V21H3zM9.6 9.4h3.83v1.58h.05c.53-.95 1.84-1.95 3.78-1.95 4.04 0 4.79 2.6 4.79 5.98V21h-4v-5.28c0-1.26-.02-2.88-1.8-2.88-1.8 0-2.07 1.37-2.07 2.79V21h-3.98z"/></svg>'
     };
 
+    // The footer's only data-driven values (everything else in it is hardcoded above/below).
+    function footerDataSignature() {
+        const social = data.socialLinks || {};
+        return [contactEmail, social.instagram, social.linkedin].join("|");
+    }
+    var footerPaintedSignature = "";
+
+    // Same story as refreshChaptersDropdown: the footer is painted from the seed/snapshot before the
+    // fetch resolves. renderFooter binds no listeners (pure innerHTML), so re-running it is safe —
+    // but only do it when a value actually changed, so the common case repaints nothing.
+    function refreshFooter() {
+        if (footerDataSignature() === footerPaintedSignature) return;
+        renderFooter();
+    }
+
     function renderFooter() {
         const footerContainer = document.querySelector(".footer .container");
         if (!footerContainer) return;
+        footerPaintedSignature = footerDataSignature();
 
         const quickLinks = [
             ["Home", "index.html"],
@@ -1224,7 +1304,9 @@
     function renderChapterProfilePage() {
         const chapterId = (document.body && document.body.dataset ? document.body.dataset.chapterId : "") || "";
         if (!chapterId) return;
-        document.body.classList.add("page-chapter"); // green accent for chapter profile pages
+        // Inert runtime hook: kept as a handle for per-page CSS/JS, but nothing targets it today
+        // (chapter profiles get their green accent from the base :root, not from this class).
+        document.body.classList.add("page-chapter");
 
         ensureChapterProfileLayout();
 
@@ -1500,6 +1582,9 @@
         } else {
             document.body.appendChild(main);
         }
+
+        // The chapter hero only exists now, so the overlay navbar can finally observe it.
+        initNavOverlay();
     }
 
     function renderGalleryPreview() {
@@ -1815,19 +1900,16 @@
         syncStoryCardHeight(card, flipped);
     }
 
-    // Page-level a11y/meta basics injected once per page (DRY across every static shell since the
-    // site is fully JS-driven): a skip link, an id on <main>, and the mobile theme-color.
+    // Page-level a11y basics injected once per page (DRY across every static shell since the site is
+    // fully JS-driven): a skip link and an id on <main>.
+    // theme-color is NOT injected here any more — it is a STATIC <meta name="theme-color"
+    // content="#FCFAF5"> in every page's <head>. Injecting it took ~250ms, long enough for mobile
+    // browser chrome to paint its default colour and then visibly recolour on every navigation.
+    // Idempotent: main.id is set before the skip-link bail-out, so callers may run this twice (once
+    // from renderChrome, once after a chapter page injects its <main>).
     function ensureSkipLink() {
         const main = document.querySelector("main");
         if (main && !main.id) main.id = "main-content";
-        if (!document.querySelector('meta[name="theme-color"]')) {
-            const meta = document.createElement("meta");
-            meta.name = "theme-color";
-            // --paper as sRGB hex: theme-color must match the page/navbar background — the old
-            // dark green painted a dark band of browser chrome over a near-white page on mobile.
-            meta.content = "#FCFAF5";
-            document.head.appendChild(meta);
-        }
         if (document.querySelector(".skip-link")) return;
         const link = document.createElement("a");
         link.className = "skip-link";
@@ -1851,37 +1933,97 @@
             document.body.classList.toggle("nav-open", isOpen);
         });
 
-        navMenu.querySelectorAll("a").forEach(function (link) {
-            link.addEventListener("click", function () {
-                navMenu.classList.remove("active");
-                hamburger.classList.remove("active");
-                hamburger.setAttribute("aria-expanded", "false");
-                document.body.classList.remove("nav-open");
+        // Closing the drawer on link clicks is DELEGATED to the menu itself rather than bound per
+        // <a>: refreshChaptersDropdown() replaces the dropdown's <li>s after the Firestore fetch
+        // lands, which would silently drop per-link handlers and leave the drawer open when a
+        // chapter link is tapped. (Re-running initMobileNavigation instead is not an option — it
+        // would double-bind the hamburger.)
+        navMenu.addEventListener("click", function (event) {
+            const link = event.target instanceof Element ? event.target.closest("a") : null;
+            if (!link || !navMenu.contains(link)) return;
+            navMenu.classList.remove("active");
+            hamburger.classList.remove("active");
+            hamburger.setAttribute("aria-expanded", "false");
+            document.body.classList.remove("nav-open");
+        });
+    }
+
+    // HERO PAGES: on any page carrying the static body class "nav-overlay" the navbar sits fixed
+    // over the page's opening hero and goes transparent while that hero is behind it
+    // (body.nav-overlay CSS), turning solid again the moment the hero scrolls past — paper-coloured
+    // links would be unreadable on the light page body. The SOLID bar is the CSS default and
+    // .is-over-hero is what this adds, so a blocked script (or a renderer that threw before this
+    // ran) leaves a readable navbar rather than an invisible one. Gated on body.nav-overlay + the
+    // page's first hero, so every other page (admin, design system, test harnesses) keeps the plain
+    // sticky navbar and this is a no-op there.
+    // Safe to call repeatedly: it tears down the previous observer first (navOverlayObserver is
+    // declared at the top of this IIFE — see the note there). Called at parse time from
+    // renderChrome() (so the bar reads transparent from the first paint, without waiting on the
+    // Firestore fetch that gates initRender) and once more from ensureChapterProfileLayout() when it
+    // injects a chapter hero.
+    //
+    // body.nav-overlay CROSS-FADES the bar between solid and transparent, which must NOT run for the
+    // initial state: any first paint landing before this executes shows the solid default and would
+    // then visibly fade to transparent. So the transition is CSS-gated on body.nav-ready, removed
+    // here while the state is applied and restored one frame later — every call, because the
+    // chapter-profile re-call flips the bar solid→transparent long after first paint too.
+    var navReadyGeneration = 0;
+    function enableNavTransitions() {
+        const generation = ++navReadyGeneration;
+        const raf = window.requestAnimationFrame
+            ? window.requestAnimationFrame.bind(window)
+            : function (fn) { return setTimeout(fn, 16); };
+        // TWO frames, not one: the state applied above has to be recalculated and painted with
+        // transitions still OFF first. Adding the class in the SAME frame would fold both changes
+        // into one style recalculation, and the browser animates whenever the after-change style
+        // has a transition — which is the fade this exists to suppress.
+        raf(function () {
+            raf(function () {
+                if (generation !== navReadyGeneration) return; // superseded by a later call
+                document.body.classList.add("nav-ready");
             });
         });
     }
 
-    // HOME ONLY: the navbar sits transparent over the hero photo (body.page-home CSS), so it has to
-    // turn solid again the moment the hero scrolls past — paper-coloured links would be unreadable
-    // on the light page body. Gated on body.page-home + the .home-hero element, so every other page
-    // keeps the plain sticky navbar and this is a no-op there.
-    function initHomeNavOverlay() {
+    function initNavOverlay() {
         const navbar = document.querySelector(".navbar");
-        const hero = document.querySelector(".home-hero");
-        if (!navbar || !document.body.classList.contains("page-home")) return;
-        // No hero to sit over, or no IntersectionObserver (very old browsers): keep the bar solid.
+        if (!navbar || !document.body.classList.contains("nav-overlay")) return;
+        document.body.classList.remove("nav-ready");
+        // First hero in document order: .home-hero (home), .hero-editorial (interior pages) or
+        // .chapter-hero (chapter profiles — injected later by ensureChapterProfileLayout, which
+        // calls this again once the hero exists).
+        const hero = document.querySelector(".home-hero, .hero-editorial, .chapter-hero");
+        if (navOverlayObserver) {
+            navOverlayObserver.disconnect();
+            navOverlayObserver = null;
+        }
+        // No hero to sit over, or no IntersectionObserver (very old browsers): leave the bar solid.
         if (!hero || !("IntersectionObserver" in window)) {
-            navbar.classList.add("is-solid");
+            navbar.classList.remove("is-over-hero");
+            enableNavTransitions();
             return;
         }
 
-        const observer = new IntersectionObserver(function (entries) {
+        // Initial state from GEOMETRY, mirroring the observer's own rootMargin condition below
+        // (hero still crossing the band under the fixed bar). Adding .is-over-hero unconditionally
+        // was wrong for any load that is ALREADY scrolled when this runs — a mid-page reload, a
+        // back-restore — where the bar painted transparent over light content until the observer's
+        // first callback corrected it (a visible flash, or a 220ms cross-fade once nav-ready has
+        // landed). Matching the observer makes its first callback a no-op.
+        // Not the same thing as an anchor deep-link (impact.html#seniors): Chrome runs the fragment
+        // scroll AFTER this script, starting from y=0, and html{scroll-behavior:smooth} animates it,
+        // so the bar correctly starts transparent and the solid fade is scroll-driven.
+        const navH = navbar.offsetHeight || 76;
+        const heroRect = hero.getBoundingClientRect();
+        navbar.classList.toggle("is-over-hero", heroRect.bottom > navH);
+        navOverlayObserver = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
-                navbar.classList.toggle("is-solid", !entry.isIntersecting);
+                navbar.classList.toggle("is-over-hero", entry.isIntersecting);
             });
-        }, { rootMargin: "-" + (navbar.offsetHeight || 76) + "px 0px 0px 0px", threshold: 0 });
+        }, { rootMargin: "-" + navH + "px 0px 0px 0px", threshold: 0 });
 
-        observer.observe(hero);
+        navOverlayObserver.observe(hero);
+        enableNavTransitions();
     }
 
     function initSmoothScroll() {
@@ -2321,6 +2463,15 @@
         });
     }
 
+    // Chrome first, synchronously at parse time: script.js is a plain end-of-<body> script, so the
+    // navbar, the footer container and any static hero are already in the DOM. Waiting for
+    // initRender (gated on the Firestore fetch, up to 3s) is what made the bar sit logo-only — and
+    // showed a solid navbar over the hero — for a few hundred ms on every navigation.
+    // ⚠️ MUST STAY THE LAST STATEMENT IN THIS IIFE. Function declarations hoist, but the
+    // module-level `const`s do NOT: calling renderChrome() higher up put SOCIAL_ICONS (and, via
+    // initRender later, the map-pin tables) in the temporal dead zone, so renderFooter threw, the
+    // whole IIFE aborted mid-way and every later const stayed permanently uninitialised.
+    renderChrome();
 })();
 
 let emailModalTrigger = null;

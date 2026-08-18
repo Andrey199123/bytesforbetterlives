@@ -61,9 +61,12 @@
     --shadow-md: 0 16px 34px color-mix(in oklch, var(--ink) 13%, transparent);
     --shadow-lg: 0 32px 72px color-mix(in oklch, var(--ink) 18%, transparent);
 
+    /* Legacy radius tokens — components now set their own literal radius (4px controls /
+       6px icon chips / 8px cards). Only --radius-md is still read here (.skip-link, .social-link,
+       .story-overlay-label, .story-category); --radius-sm is read by design-system.html (.ds-code),
+       and lg/xl/2xl survive only as swatches in that page's token gallery. */
     --radius-sm: 6px;
     --radius-md: 12px;
-    /* Generous, friendly rounding (Ustart warmth). */
     --radius-lg: 18px;
     --radius-xl: 24px;
     --radius-2xl: 32px;
@@ -97,34 +100,33 @@
     --gradient-2: linear-gradient(135deg, var(--green), var(--gold));
     --gradient-3: linear-gradient(135deg, var(--green-deep), var(--green));
 
-    /* Per-page accent — mint/green-led by default; overridden by body.page-* below. */
+    /* Site accent — mint/green, SITE-WIDE. There are no per-page accents any more: the gold/teal/
+       coral pages (initiatives, gallery, past-events, about, contact, team) read as a different
+       product from home, so every page now inherits this one green set. Do NOT reintroduce
+       body.page-* accent overrides. The --gold/--teal/--coral tokens above stay — they are DATA and
+       brand colours (program-tile cycle, launching/outreach map pins, status pills), not accents. */
     --accent: var(--green-dark);
     --accent-soft: var(--green-soft);
     --accent-dark: var(--green-deep);
 }
 
-/* Per-page accent role so each page reads distinct yet on-brand. Green leads; warm gold,
-   teal and coral give the other pages their own identity (no more blue leaking everywhere). */
-body.page-home, body.page-impact, body.page-chapters, body.page-chapter {
-    --accent: var(--green-dark); --accent-soft: var(--green-soft); --accent-dark: var(--green-deep);
-}
-body.page-initiatives, body.page-gallery, body.page-pastevents {
-    --accent: var(--gold-dark); --accent-soft: var(--gold-soft); --accent-dark: var(--gold-deep);
-}
-body.page-about, body.page-contact {
-    --accent: var(--teal-dark); --accent-soft: var(--teal-soft); --accent-dark: var(--teal-deep);
-}
-body.page-team {
-    --accent: var(--coral-dark); --accent-soft: var(--coral-soft); --accent-dark: var(--coral-deep);
-}
-
 html {
     scroll-behavior: smooth;
+    /* Every page is a JS-hydrated shell, so it starts short and grows past the viewport a beat
+       later. On classic-scrollbar platforms that made the scrollbar appear mid-hydration and shove
+       the whole layout ~15px left — a visible sidestep on every navigation. Reserve the gutter up
+       front so the content column is the same width before and after hydration (and page to page).
+       Inert where the OS draws overlay scrollbars. */
+    scrollbar-gutter: stable;
 }
 
 body {
     margin: 0;
     min-width: 320px;
+    /* Repeated from <html> on purpose: `overflow-x: hidden` below makes <body> the element the
+       viewport takes its overflow — and its scrollbar-gutter — from, and the property doesn't
+       inherit, so html's `stable` alone would be discarded here. */
+    scrollbar-gutter: stable;
     font-family: var(--font-body);
     font-size: 1.0625rem;
     line-height: 1.6;
@@ -330,7 +332,8 @@ main {
 
 /* Home photo hero: the eyebrow sits over the busy banner photo under the lightest wash, so give it
    the same paper colour as the h1/subtitle (the bare pale-mint eyebrow reads too weak there).
-   Editorial colour-field heroes keep their pale-mint eyebrow. No text-shadow — see .hero h1. */
+   The photo-less colour-field heroes keep the pale-mint eyebrow — their field is flat, so it holds
+   up there. No text-shadow — see .hero h1. */
 .home-hero .eyebrow {
     color: var(--paper);
 }
@@ -436,7 +439,7 @@ main {
     font-family: var(--font-label);
     font-weight: 500;
     font-size: clamp(0.88rem, 0.95vw, 1.02rem);
-    border-radius: 999px;
+    border-radius: 4px;
     transition: color 150ms ease, background-color 150ms ease;
 }
 
@@ -470,7 +473,7 @@ main {
     margin: 0;
     list-style: none;
     border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
+    border-radius: 8px;
     background: var(--paper);
     box-shadow: var(--shadow-md);
     opacity: 0;
@@ -493,7 +496,7 @@ main {
     display: flex;
     align-items: center;
     padding: 0.55rem 0.75rem;
-    border-radius: var(--radius-lg);
+    border-radius: 6px;
     color: var(--ink-soft);
     font-weight: 750;
     text-decoration: none;
@@ -523,7 +526,7 @@ li:has(> .dropdown-link--all) {
     justify-content: center;
     min-height: 44px;
     padding: 0.62rem 1.5rem;
-    border-radius: 999px;
+    border-radius: 4px;
     background: var(--green-dark);
     color: var(--paper);
     font-family: var(--font-label);
@@ -546,7 +549,7 @@ li:has(> .dropdown-link--all) {
     width: 46px;
     height: 46px;
     border: 1px solid var(--line);
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     background: var(--paper);
     align-items: center;
     justify-content: center;
@@ -587,9 +590,9 @@ li:has(> .dropdown-link--all) {
     display: flex;
     align-items: center;
     padding-block: clamp(2rem, 5vw, 3.5rem);
-    /* Branded photo treatment: an accent-tinted directional wash + bottom scrim turns the shared
-       photo into a per-page colour field (green/teal/gold/coral), keeps the people visible, makes
-       white text legible anywhere, and dissolves the wordmark baked into the right of the photo. */
+    /* Branded photo treatment: a green-tinted directional wash + bottom scrim turns the shared
+       photo into a brand colour field, keeps the people visible, makes white text legible anywhere,
+       and dissolves the wordmark baked into the right of the photo. */
     --hero-img: url("images/hero-bg.avif");
     --hero-pos: center 34%;
     background:
@@ -659,16 +662,54 @@ li:has(> .dropdown-link--all) {
         var(--hero-img) var(--hero-pos) / cover no-repeat;
 }
 
+/* Chapter stubs ship as navbar + footer and NOTHING else — ensureChapterProfileLayout() injects the
+   whole <main> (hero included) once data resolves. So a cold load painted the footer directly under
+   the bar and then dropped it a full page (measured cold CLS 0.82, source BODY). Reserve one
+   viewport under the bar until that <main> exists; the :has() self-cancels the instant it does, so
+   nothing about the settled page changes. 100vh can only undershoot — the hero alone floors at
+   560px and the members section plus the always-on "Get involved" band follow it.
+   PADDING ON THE BODY, not a margin on the footer: the navbar is position:fixed (out of flow), so
+   the footer is the stub's ONLY in-flow box and its margin-top COLLAPSES through <body> — the body
+   keeps a 0x0 box until <main> lands and then jumps to viewport size, which Chrome scores as a
+   shift all by itself (0.45 measured that way, ~0 with padding). The reservation has to give the
+   body a real box, not just push its one child down. */
+body[data-chapter-id]:not(:has(main)) {
+    padding-top: 100vh;
+}
+
 .chapter-hero {
     --hero-img: url("images/hero-banner.jpg");
     --hero-pos: center 34%;
+    /* The navbar is FIXED over this hero (body.nav-overlay), so the box swaps the base .hero's fixed
+       height for auto + the same value as a floor: the hero re-adds --nav-height as top padding
+       (see the nav-overlay padding rule) and must be free to grow by that much instead of clipping
+       against overflow:hidden. Same move home already makes. */
+    height: auto;
+    min-height: clamp(560px, 62vh, 700px);
     /* Chapter pages show that chapter's own photo — keep the green wash light so the people read
        clearly; legibility comes from the left ink gradient + bottom scrim, not the accent colour.
        The ink gradient carries ALL of it now that heroes have no text-shadows, so it stays deep
        across the whole copy column (0–78%, where the longest description line ends) and only then
        falls away fast — the right third of the photo stays bright because no copy ever sits there.
-       Deepen this wash if a chapter photo swallows the type — never re-add a shadow. */
+       Deepen this wash if a chapter photo swallows the type — never re-add a shadow.
+       TOP STRIP: the navbar is transparent over this hero now, and its paper links sit in the right
+       third where the ink gradient has already fallen to 20–46%. So the stack opens with a scrim
+       across the navbar band only — it fades out ~72px past --nav-height, still well above the
+       eyebrow, so hero copy and the photo's bright right third below the bar are untouched. This is
+       the "deepen the wash" remedy the hard rule calls for, never a text-shadow.
+       ⚠️ The strip is a FULL-SIZE layer with PIXEL colour stops, NOT a `/ 100% <h>` sized layer:
+       renderChapterProfilePage sets an inline `background-position` (the per-chapter photo crop,
+       --hero-pos), and background-position applies to EVERY layer — a strip smaller than the box
+       gets dragged 68% down the hero with the photo and stops covering the navbar entirely. A
+       layer that already fills the box ignores position, so the px stops stay pinned to the top.
+       It has to clear 4.5:1 for the paper nav links and 3:1 for the mobile hamburger over the WORST
+       photo in the set (Cypress Bay's sunlit tile roof / yellow wall); re-measure per-link there
+       after any change here, not just against an average. */
     background:
+        linear-gradient(180deg,
+            color-mix(in oklch, var(--ink) 62%, transparent) 0,
+            color-mix(in oklch, var(--ink) 50%, transparent) calc(var(--nav-height) * 0.75),
+            transparent calc(var(--nav-height) + 72px)),
         linear-gradient(95deg,
             color-mix(in oklch, var(--accent-dark) 36%, transparent) 0%,
             color-mix(in oklch, var(--accent-dark) 12%, transparent) 38%,
@@ -682,18 +723,44 @@ li:has(> .dropdown-link--all) {
         var(--hero-img) var(--hero-pos) / cover no-repeat;
 }
 
-/* Chapters with no real photo of their own: use the same photo-less accent colour-field as the
-   interior editorial heroes instead of the shared banner (whose printed wordmark bleeds through the
-   light chapter wash). Applied by renderChapterProfilePage; the locator map still gives identity. */
+/* ---------------------------------------------------------------------------------------------
+   PHOTO-LESS HERO FIELD — the interior pages (about/impact/team/chapters/contact/initiatives/
+   past-events/gallery/donate) and any chapter with no real photo of its own.
+
+   These used to be per-page ACCENT colour-fields (green/gold/teal/coral), which is exactly why the
+   site read as several products: four different hero colours, none of them home's. They now share
+   ONE field with home — home's own --home-hero-scrim colour (ink 86% + green-deep) at home's 92deg
+   72 -> 66 -> 62% falloff, laid over a deep green-ink ground because there is no photo underneath.
+   Result: a near-uniform dark green-ink band, measured ~14:1 against paper copy, so white type is
+   legible anywhere WITHOUT a text-shadow (site hard rule — deepen the field, never add a shadow).
+   The two texture motifs survive, re-tinted to the green family and pulled back because the ground
+   is much darker than the old accent fields were.
+   `.chapter-hero--editorial` shares the field verbatim (it used to run a third, slightly different
+   recipe); it keeps the .chapter-hero BOX. Applied by renderChapterProfilePage; the locator map
+   still gives the chapter its identity. --------------------------------------------------------- */
+.hero-editorial,
 .chapter-hero.chapter-hero--editorial {
+    --hero-field: color-mix(in oklch, var(--ink) 86%, var(--green-deep));
     background:
+        /* faint counter-glow in the empty bottom-right so the field isn't dead on that side */
+        radial-gradient(60% 90% at 100% 100%,
+            color-mix(in oklch, var(--green-soft) 6%, transparent) 0%, transparent 55%),
+        /* soft top-left glow for depth */
         radial-gradient(80% 120% at 8% 0%,
-            color-mix(in oklch, var(--accent) 36%, transparent) 0%, transparent 60%),
+            color-mix(in oklch, var(--green-dark) 28%, transparent) 0%, transparent 60%),
+        /* light dot-grid texture so the field never reads as a flat block. Both motifs are held
+           down hard: the brightest single pixel anywhere on the field (a dot sitting inside a glow)
+           has to clear 7:1 against paper copy, and the dots are the loudest thing on it. */
         radial-gradient(circle at 1px 1px,
-            color-mix(in oklch, var(--paper) 15%, transparent) 1px, transparent 1.6px) 0 0 / 24px 24px,
-        linear-gradient(115deg,
-            var(--accent-dark) 0%,
-            color-mix(in oklch, var(--accent-dark) 72%, var(--ink)) 100%);
+            color-mix(in oklch, var(--paper) 13%, transparent) 1px, transparent 1.6px) 0 0 / 20px 20px,
+        /* home's hero scrim, same colour and same 92deg falloff */
+        linear-gradient(92deg,
+            color-mix(in oklch, var(--hero-field) 72%, transparent) 0%,
+            color-mix(in oklch, var(--hero-field) 66%, transparent) 55%,
+            color-mix(in oklch, var(--hero-field) 62%, transparent) 100%),
+        /* ...standing in for home's photo: the ground the scrim falls off over */
+        color-mix(in oklch, var(--green-deep) 55%, var(--ink));
+    color: var(--paper);
 }
 
 .hero-home-banner {
@@ -701,42 +768,17 @@ li:has(> .dropdown-link--all) {
     --hero-pos: center 34%;
 }
 
-/* Editorial color-field hero — interior pages (about/impact/team/chapters/contact/initiatives/
-   past-events/gallery) drop the shared banner photo, which repeated identically on every page with
-   the wordmark bleeding through the wash (the loudest "template" tell). Instead each page commits to
-   its own ACCENT as the hero identity (green/gold/coral/teal): a directional accent gradient, a faint
-   light dot-grid for texture, and a soft top-left glow — confident and distinct per page, no photo.
-   Overrides the .hero background entirely. Unlike the photo hero (fixed height + overflow:hidden to
-   keep the banner image a constant size), the editorial hero has no image to clip, so it uses
-   min-height + height:auto + overflow:visible: the banner GROWS to fit its content (eyebrow + headline
-   + subtitle + any CTAs) and never clips elements — the photo hero's fixed height was cropping the
-   taller heroes (e.g. Impact's 2-line headline + 3-line copy + 2 buttons). */
+/* The interior editorial hero's BOX (its colour field is defined above, shared with
+   .chapter-hero--editorial). Unlike the photo hero (fixed height + overflow:hidden to keep the
+   banner image a constant size), it has no image to clip, so it uses min-height + height:auto +
+   overflow:visible: the banner GROWS to fit its content (eyebrow + headline + subtitle + any CTAs)
+   and never clips elements — the photo hero's fixed height was cropping the taller heroes (e.g.
+   Impact's 2-line headline + 3-line copy + 2 buttons). Subtitles deliberately carry NO colour
+   override: they inherit .hero p, which is exactly what home's hero subtitle renders. */
 .hero-editorial {
     height: auto;
     min-height: clamp(420px, 48vh, 560px);
     overflow: visible;
-    background:
-        /* a soft counter-glow in the empty bottom-right so the field isn't dead on that side */
-        radial-gradient(60% 90% at 100% 100%,
-            color-mix(in oklch, var(--accent-soft) 24%, transparent) 0%, transparent 55%),
-        /* soft top-left glow for depth */
-        radial-gradient(80% 120% at 8% 0%,
-            color-mix(in oklch, var(--accent) 42%, transparent) 0%, transparent 60%),
-        /* light dot-grid texture so the field never reads as a flat block */
-        radial-gradient(circle at 1px 1px,
-            color-mix(in oklch, var(--paper) 22%, transparent) 1px, transparent 1.6px) 0 0 / 20px 20px,
-        /* the accent colour field itself, deepened toward ink on the right. The start mixes in
-           the mid accent for chroma — pure accent-dark to ink read muddy olive/maroon on the
-           gold and coral pages and the four heroes all converged on "dark tinted band". */
-        linear-gradient(115deg,
-            color-mix(in oklch, var(--accent-dark) 76%, var(--accent)) 0%,
-            color-mix(in oklch, var(--accent-dark) 78%, var(--ink)) 100%);
-    color: var(--paper);
-}
-
-.hero-editorial p,
-.hero-editorial .hero-subtitle {
-    color: color-mix(in oklch, var(--paper) 90%, var(--accent));
 }
 
 .home-hero h1 {
@@ -778,7 +820,7 @@ li:has(> .dropdown-link--all) {
     min-height: 50px;
     padding: 0.85rem 1.85rem;
     border: 1px solid transparent;
-    border-radius: 999px;
+    border-radius: 4px;
     font-family: var(--font-label);
     font-weight: 600;
     letter-spacing: 0.01em;
@@ -853,7 +895,7 @@ li:has(> .dropdown-link--all) {
 .impact-card {
     background: color-mix(in oklch, var(--paper) 96%, var(--green-soft));
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     box-shadow: var(--shadow-sm);
 }
 
@@ -932,11 +974,13 @@ li:has(> .dropdown-link--all) {
 }
 
 /* ===== IMPACT ===== */
+/* Light NEUTRAL ground (home's treatment, now the only one): the mint stays on the type and the
+   numerals rather than washing the whole band, so the stat row reads the same everywhere. */
 .impact-band {
     position: relative;
     margin-top: -1px;
     padding-block: var(--space-2xl);
-    background: color-mix(in oklch, var(--accent-soft) 48%, var(--paper));
+    background: color-mix(in oklch, var(--surface-strong) 55%, var(--paper));
     border-bottom: 1px solid var(--line);
 }
 
@@ -955,11 +999,66 @@ li:has(> .dropdown-link--all) {
     gap: var(--space-sm);
 }
 
-/* Hairline dividers only in the horizontal 5-up row; on stacked/2-col layouts the green
+/* Neutral hairline dividers, only in the horizontal 5-up row; on stacked/2-col layouts the green
    numeral carries the accent (a left spine on a stacked card reads as a decorative bar). */
 @media (min-width: 901px) {
     .impact-band .stat-card:not(:first-child) {
-        border-left: 2px solid color-mix(in oklch, var(--accent) 36%, var(--line));
+        border-left: 1px solid color-mix(in oklch, var(--line) 88%, var(--ink));
+    }
+}
+
+/* --- Stat-band height reservation ---------------------------------------------------------------
+   #home-impact-stats ships EMPTY in the markup (home + impact) and renderHomeStats() fills it, so
+   first paint used to show a ~73px sliver that then grew to ~221px and shoved the rest of the page
+   down — the biggest layout jump in the first viewport. Reserve the height up front.
+
+   This does NOT violate "never render an empty section": renderHomeStats() builds from a HARDCODED
+   5-entry array in script.js, reads nothing from data/Firestore, and hideSectionWhenEmpty() is
+   never pointed at this id. The band has no data-driven empty state to pin open — the only way it
+   stays blank is total JS failure, where the whole page is unrendered anyway. Scoped by id + page
+   class so design-system.html's static .impact-band specimen is untouched.
+
+   Values are the MEASURED settled height at the shortest width in each column step, rounded DOWN
+   with ~10px of slack, so the reservation can only ever undershoot: at no width does it add space
+   the filled band doesn't already occupy, and steady state stays pixel-identical. Home is shorter
+   than impact because body.page-home drops the band's top padding to butt it against .home-intro.
+   Measured floors (home / impact): >=901px 218/239, <=900 339/393, <=680 409/459, <=440 482/556.
+   Re-measure with the band filled if the stat copy, the column ladder or the band padding change. */
+#home-impact-stats {
+    min-height: 210px;
+}
+
+body.page-impact #home-impact-stats {
+    min-height: 230px;
+}
+
+@media (max-width: 900px) {
+    #home-impact-stats {
+        min-height: 330px;
+    }
+
+    body.page-impact #home-impact-stats {
+        min-height: 385px;
+    }
+}
+
+@media (max-width: 680px) {
+    #home-impact-stats {
+        min-height: 400px;
+    }
+
+    body.page-impact #home-impact-stats {
+        min-height: 450px;
+    }
+}
+
+@media (max-width: 440px) {
+    #home-impact-stats {
+        min-height: 470px;
+    }
+
+    body.page-impact #home-impact-stats {
+        min-height: 545px;
     }
 }
 
@@ -1006,7 +1105,7 @@ li:has(> .dropdown-link--all) {
     gap: var(--space-md);
     min-height: 250px;
     padding: var(--space-xl);
-    border-radius: var(--radius-xl);
+    border-radius: 8px;
     overflow: hidden;
     transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
@@ -1027,7 +1126,7 @@ li:has(> .dropdown-link--all) {
     justify-content: center;
     width: 52px;
     height: 52px;
-    border-radius: var(--radius-md);
+    border-radius: 6px;
     background: var(--tile-soft);
     color: var(--tile);
 }
@@ -1317,7 +1416,7 @@ li:has(> .dropdown-link--all) {
 .chapter-leadership-card {
     background: color-mix(in oklch, var(--paper) 96%, var(--green-soft));
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     box-shadow: var(--shadow-sm);
     padding: var(--space-xl);
     display: flex;
@@ -1402,7 +1501,7 @@ li:has(> .dropdown-link--all) {
     text-align: center;
     background: color-mix(in oklch, var(--paper) 96%, var(--green-soft));
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     box-shadow: var(--shadow-sm);
 }
 
@@ -1425,6 +1524,7 @@ li:has(> .dropdown-link--all) {
     gap: var(--space-sm);
 }
 
+/* Name chip, not a control — stays a true 999px pill like .roster-chip (KEEP SHAPE). */
 .chapter-partner {
     padding: 0.6rem 1.1rem;
     font-weight: 700;
@@ -1579,6 +1679,22 @@ li:has(> .dropdown-link--all) {
     flex-direction: column;
     gap: var(--space-xl);
 }
+
+/* Height reservation, same doctrine as #home-impact-stats: the container ships EMPTY and
+   renderGalleryImages() fills it, so on a cold load the page went ~900px -> ~13800px and the footer
+   snapped up out of the first viewport (measured CLS 0.109, source FOOTER). One viewport of
+   reservation moves that growth below the fold. 100vh can only undershoot: a gallery worth
+   publishing is many screens tall. */
+body.page-gallery .gallery-locations {
+    min-height: 100vh;
+}
+/* …but data.js carries no galleryImages seed, so an unreachable Firestore with no fresh snapshot is
+   a REACHABLE empty state, not just a crash: renderGalleryImages() writes its one-line .gallery-empty
+   copy. Release the reservation there, or that line sits atop a viewport of dead white (the
+   "never render an empty section" rule). */
+body.page-gallery .gallery-locations:has(> .gallery-empty) {
+    min-height: 0;
+}
 .gallery-location-head {
     margin-bottom: var(--space-sm);
 }
@@ -1624,7 +1740,7 @@ li:has(> .dropdown-link--all) {
     position: relative;
     margin: 0;
     overflow: hidden;
-    border-radius: var(--radius-md);
+    border-radius: 8px;
 }
 .photo-gallery-grid .g-feature { grid-column: span 2; grid-row: span 2; }
 .photo-gallery-grid .g-wide { grid-column: span 2; }
@@ -1719,14 +1835,14 @@ li:has(> .dropdown-link--all) {
     width: 100%;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     background: var(--surface);
 }
 
 .chapter-note {
     padding: var(--space-md);
     border: 1px solid color-mix(in oklch, var(--gold) 45%, var(--line));
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     background: var(--gold-soft);
     color: var(--ink-soft);
 }
@@ -1793,7 +1909,7 @@ li:has(> .dropdown-link--all) {
     flex-direction: column;
     overflow: hidden;
     border: 1px solid var(--line);
-    border-radius: var(--radius-md);
+    border-radius: 8px;
     background: var(--paper);
     box-shadow: var(--shadow-sm);
     -webkit-backface-visibility: hidden;
@@ -1893,82 +2009,6 @@ li:has(> .dropdown-link--all) {
     font-weight: 800;
 }
 
-/* ===== MEMBERS ===== */
-.members-count {
-    color: var(--muted);
-    font-weight: 800;
-    margin-left: var(--space-xs);
-    font-size: 0.92em;
-}
-
-.members-viewport {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scroll-snap-type: x mandatory;
-    scroll-padding-inline: var(--space-2xl);
-    padding: var(--space-sm) var(--space-2xl);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    background: var(--surface);
-    box-shadow: var(--shadow-sm);
-}
-
-.members-track {
-    display: flex;
-    gap: var(--space-sm);
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.members-chip {
-    flex: 0 0 auto;
-    padding: 0.62rem 0.95rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--paper);
-    color: var(--ink);
-    font-weight: 800;
-    white-space: nowrap;
-    scroll-snap-align: start;
-    box-shadow: var(--shadow-sm);
-}
-
-.members-arrow {
-    position: absolute;
-    top: 50%;
-    z-index: 5;
-    width: 42px;
-    height: 42px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    background: color-mix(in oklch, var(--paper) 92%, transparent);
-    color: var(--ink);
-    box-shadow: var(--shadow-sm);
-    transform: translateY(-50%);
-}
-
-.members-arrow:hover {
-    background: var(--paper);
-}
-
-.members-arrow:disabled {
-    opacity: 0.45;
-    cursor: default;
-}
-
-.members-arrow.prev {
-    left: 12px;
-}
-
-.members-arrow.next {
-    right: 12px;
-}
-
 /* ===== TEAM AND LEADERSHIP ===== */
 .team-grid {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -2013,7 +2053,7 @@ li:has(> .dropdown-link--all) {
 .form-group textarea {
     width: 100%;
     border: 1px solid var(--line);
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     background: var(--surface);
     color: var(--ink);
     padding: 0.85rem 0.9rem;
@@ -2139,7 +2179,7 @@ li:has(> .dropdown-link--all) {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    border-radius: var(--radius-lg);
+    border-radius: 8px;
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
 }
 
@@ -2594,7 +2634,7 @@ li:has(> .dropdown-link--all) {
 .modal-content {
     background: var(--paper);
     padding: 2.5rem;
-    border-radius: var(--radius-xl);
+    border-radius: 8px;
     width: 90%;
     max-width: 500px;
     position: relative;
@@ -2629,7 +2669,7 @@ li:has(> .dropdown-link--all) {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid color-mix(in oklch, var(--line) 74%, var(--ink));
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     background: var(--paper);
     font-family: inherit;
     resize: vertical;
@@ -2775,7 +2815,7 @@ li:has(> .dropdown-link--all) {
     justify-content: center;
     min-height: 44px;
     padding: 0 1.2rem;
-    border-radius: 999px;
+    border-radius: 4px;
     background: color-mix(in oklch, var(--paper) 90%, var(--ink));
     border: 1px solid var(--line);
     color: var(--ink-soft);
@@ -2790,7 +2830,7 @@ li:has(> .dropdown-link--all) {
     aspect-ratio: 1;
     margin-inline: auto;
     padding: var(--space-sm);
-    border-radius: var(--radius-lg);
+    border-radius: 8px;
     background: color-mix(in oklch, var(--green-soft) 50%, var(--paper));
     border: 1px solid color-mix(in oklch, var(--green-dark) 18%, var(--line));
     box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--paper) 60%, transparent);
@@ -2919,7 +2959,7 @@ li:has(> .dropdown-link--all) {
 .help-row p { margin: 0; }
 .help-row--lead {
     background: var(--accent-soft);
-    border-radius: var(--radius-lg);
+    border-radius: 8px;
     border-bottom-color: transparent;
     padding-inline: var(--space-lg);
 }
@@ -2950,7 +2990,7 @@ li:has(> .dropdown-link--all) {
     padding: var(--space-md) var(--space-lg);
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
+    border-radius: 8px;
     color: var(--ink);
     transition: border-color 180ms ease, background-color 180ms ease;
 }
@@ -2983,7 +3023,7 @@ li:has(> .dropdown-link--all) {
 .contact-form-card {
     background: var(--paper);
     border: 1px solid color-mix(in oklch, var(--line) 92%, transparent);
-    border-radius: var(--radius-xl);
+    border-radius: 8px;
     padding: clamp(1.5rem, 3.5vw, 2.5rem);
     box-shadow: var(--shadow-md);
 }
@@ -3095,7 +3135,7 @@ li:has(> .dropdown-link--all) {
     width: 100%;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    border-radius: var(--radius-md);
+    border-radius: 8px;
 }
 @media (max-width: 760px) {
     .story-rail { grid-template-columns: 1fr; gap: var(--space-xl); }
@@ -3185,7 +3225,7 @@ li:has(> .dropdown-link--all) {
     aspect-ratio: var(--locator-aspect, 950 / 620);
     height: auto;
     overflow: hidden;
-    border-radius: var(--radius-lg);
+    border-radius: 8px;
 }
 .hero-locator-map {
     position: absolute;
@@ -3249,7 +3289,7 @@ li:has(> .dropdown-link--all) {
    through as a subtle "sea". Inner padding is recreated with a small inset on the figure instead. */
 .map-frame {
     position: relative;
-    border-radius: var(--radius-xl);
+    border-radius: 8px;
     background:
         radial-gradient(120% 130% at 18% 12%, color-mix(in oklch, var(--accent-soft) 75%, transparent) 0%, transparent 62%),
         var(--paper);
@@ -3430,75 +3470,123 @@ li:has(> .dropdown-link--all) {
     .geo-pin-label-note { display: none; }
 }
 
-/* ===== HOME REDESIGN — body.page-home ONLY =====================================================
-   News-Literacy-Project structure on BFBL's mint palette: a full-bleed photo hero running under a
-   transparent navbar, a light neutral "impact intro" band that hands straight off to the
-   data-driven stat row, and a flat, square-cornered card/button attitude. EVERY rule below is
-   scoped to body.page-home, and the block sits last in the file so it wins on source order over
-   the shared nav/hero/button/card rules above — no other page is touched.
+/* ===== HERO-PAGE NAV OVERLAY + HOME REDESIGN ===================================================
+   News-Literacy-Project structure on BFBL's mint palette: a full-bleed hero running under a
+   transparent navbar, and a light neutral "impact intro" band that hands straight off to the
+   data-driven stat row. This block sits last in the file so it wins on source order over the
+   shared nav/hero/band rules above.
+   TWO scopes live here, and they are not the same thing:
+     - body.nav-overlay — EVERY public page that opens with a hero (home, the interior editorial
+       heroes, every chapter profile). Static class in each page's <body>.
+     - body.page-home  — home-only structure (its photo hero, the .home-intro band it alone has,
+       and that band's pairing with the stat row).
+   The square-cornered card/button attitude that started here is now the SITE-WIDE BASE (4px
+   buttons/controls, 8px cards/surfaces, 6px icon chips — set in each component's own rule above),
+   so the home-scoped square-corner pass that used to live here is gone; home renders identically
+   because the base now equals what those overrides produced.
    Integrates with (does not duplicate) the SITE-WIDE type system at the top of this file: Gabarito
    display/label, the one-notch-down weight scale, and the global hero text-shadow kill. */
 
-/* --- Navbar over the hero ---------------------------------------------------------------------
-   The bar goes FIXED (not sticky) so the hero photo starts at y=0 and runs behind it; the hero
-   re-adds --nav-height as top padding. Paper-coloured links would be unreadable once the page
-   scrolls onto the light body, so initHomeNavOverlay() (script.js, home-gated) adds .is-solid as
-   soon as the hero clears the bar and the navbar returns to its normal paper/ink treatment. */
-body.page-home .navbar {
+/* --- Navbar over the hero — every hero page ---------------------------------------------------
+   The bar goes FIXED (not sticky) so the hero starts at y=0 and runs behind it; the hero re-adds
+   --nav-height as top padding (rule below). Paper-coloured links would be unreadable once the page
+   scrolls onto the light body, so the SOLID paper/ink bar (the base .navbar treatment, inherited —
+   nothing to restate here) is the DEFAULT and the transparent-over-the-hero look is the state JS
+   opts into: initNavOverlay() (script.js, gated on body.nav-overlay + the page's opening hero) adds
+   .is-over-hero while the hero is behind the bar and drops it the moment the hero clears it. That
+   way a blocked script — or a renderer that threw before the observer attached — leaves a readable
+   navbar, never an invisible one. Specificity is (0,2,1)/(0,3,x) exactly as before, so home — which
+   carries BOTH page-home and nav-overlay — computes what it did when these were page-home rules. */
+body.nav-overlay .navbar {
     position: fixed;
     top: 0;
     right: 0;
     left: 0;
-    background: transparent;
-    border-bottom-color: transparent;
-    backdrop-filter: none;
+}
+
+/* The solid bar being the default means the FIRST paint over a hero is the wrong state, corrected
+   a frame or two later when .is-over-hero lands. With the transition declared unconditionally that
+   correction played as a 220ms fade — the solid bar visibly dissolving on every navigation. So the
+   transition is gated: initNavOverlay() applies its initial state, then adds .nav-ready to <body>
+   on the next frame, so the first state change snaps and only scroll-driven ones animate. Same
+   220ms cross-fade as before once ready — this changes when it runs, not how it looks. */
+body.nav-overlay.nav-ready .navbar {
     transition: background-color 220ms ease, border-color 220ms ease;
 }
 
-body.page-home .navbar.is-solid {
-    background: color-mix(in oklch, var(--paper) 92%, transparent);
-    border-bottom-color: color-mix(in oklch, var(--line) 85%, transparent);
-    backdrop-filter: blur(16px);
+/* Same correction, same gate, for the descendants that flip colour with .is-over-hero: the
+   desktop nav links declare a 150ms colour transition and the Donate pill a 250ms one, so without
+   this they'd cross-fade through the correction the bar itself no longer plays — for LONGER than
+   the bar ever did. Hover/scroll animations are untouched once .nav-ready lands. */
+body.nav-overlay:not(.nav-ready) .navbar .nav-link,
+body.nav-overlay:not(.nav-ready) .navbar .btn-donate {
+    transition: none;
 }
 
-/* Wordmark + hamburger sit directly on the photo while the bar is transparent. */
-body.page-home .navbar:not(.is-solid) .logo::after {
+body.nav-overlay .navbar.is-over-hero {
+    background: transparent;
+    border-bottom-color: transparent;
+    backdrop-filter: none;
+}
+
+/* Wordmark + hamburger sit directly on the hero while the bar is transparent. */
+body.nav-overlay .navbar.is-over-hero .logo::after {
     color: var(--paper);
 }
 
-body.page-home .navbar:not(.is-solid) .hamburger {
+body.nav-overlay .navbar.is-over-hero .hamburger {
     background: transparent;
     border-color: color-mix(in oklch, var(--paper) 55%, transparent);
 }
 
-body.page-home .navbar:not(.is-solid) .hamburger span {
+body.nav-overlay .navbar.is-over-hero .hamburger span {
     background: var(--paper);
 }
 
 /* Link colours only ABOVE the drawer breakpoint: at <=1180px the menu is a paper drawer, where
    paper-coloured links would be invisible. */
 @media (min-width: 1181px) {
-    body.page-home .navbar:not(.is-solid) .nav-link {
+    body.nav-overlay .navbar.is-over-hero .nav-link {
         color: var(--paper);
     }
 
-    body.page-home .navbar:not(.is-solid) .nav-link:hover,
-    body.page-home .navbar:not(.is-solid) .nav-link.active {
+    body.nav-overlay .navbar.is-over-hero .nav-link:hover,
+    body.nav-overlay .navbar.is-over-hero .nav-link.active {
         color: var(--ink);
         background: color-mix(in oklch, var(--paper) 90%, transparent);
     }
 
-    /* Donate CTA over the photo: square paper button, ink label. */
-    body.page-home .navbar:not(.is-solid) .btn-donate {
+    /* Donate CTA over the hero: square paper button, ink label. */
+    body.nav-overlay .navbar.is-over-hero .btn-donate {
         background: var(--paper);
         color: var(--ink);
         box-shadow: none;
     }
 
-    body.page-home .navbar:not(.is-solid) .btn-donate:hover {
+    body.nav-overlay .navbar.is-over-hero .btn-donate:hover {
         background: color-mix(in oklch, var(--paper) 88%, var(--green));
         color: var(--ink);
     }
+}
+
+/* position:fixed takes the bar out of flow, so every hero on an overlay page has to re-add its
+   height as top padding — home's exact recipe, applied to the two non-home hero types. (.home-hero
+   sets its own identical padding below.) Scoped to body.nav-overlay so a .hero-editorial on a page
+   with no navbar — design-system.html — doesn't gain a 76px dead strip. */
+body.nav-overlay .hero-editorial,
+body.nav-overlay .chapter-hero {
+    padding-block: calc(var(--nav-height) + clamp(2rem, 5vw, 3.5rem)) clamp(3rem, 7vw, 5rem);
+}
+
+/* ...and the locator map centres on the hero's PADDING box (top:50% + translateY(-50%)), so that
+   extra top padding slid it up under the transparent bar — the tallest outline (California, on
+   Los Angeles) painted into the nav band. This nudge is a HAND-TUNED clearance for the nav band,
+   not a derived recentring: true content-box centring would be (padTop − padBottom) / 2, i.e. 26px
+   at 1280px where the overlay padding computes to 132/80, and --nav-height / 2 = 38px deliberately
+   overshoots that so the tallest outline clears the bar at every width. Re-tune by eye against
+   chapter-los-angeles.html if the hero padding or --nav-height changes. */
+body.nav-overlay .chapter-hero .chapter-hero-mark {
+    top: calc(50% + var(--nav-height) / 2);
 }
 
 /* --- Hero -------------------------------------------------------------------------------------
@@ -3566,17 +3654,14 @@ body.page-home .home-intro-title {
     text-wrap: balance;
 }
 
-/* --- Stat row (second half of the same band) --------------------------------------------------- */
+/* --- Stat row (second half of the same band) ---------------------------------------------------
+   The neutral ground, the chrome-less cards and the neutral hairline dividers are now the BASE
+   .impact-band (see the IMPACT section above) — every page gets home's treatment, so only the
+   PAIRING with .home-intro is still home-scoped: no top padding and no negative margin, so the two
+   sections butt together and read as one band. */
 body.page-home .impact-band {
     margin-top: 0;
     padding-block: 0 clamp(3rem, 6vw, 4.5rem);
-    background: color-mix(in oklch, var(--surface-strong) 55%, var(--paper));
-    border-bottom: 1px solid var(--line);
-}
-
-body.page-home .impact-band .stat-card {
-    border-radius: 0;
-    padding: var(--space-xs) var(--space-lg);
 }
 
 /* Flush the first numeral with the heading above it. */
@@ -3584,48 +3669,16 @@ body.page-home .impact-band .stat-card:first-child {
     padding-left: 0;
 }
 
-/* Dividers stay desktop-only (a spine on a stacked card would read as a decorative line); on home
-   they drop to a neutral hairline so the row reads flat rather than tinted. */
-@media (min-width: 901px) {
-    body.page-home .impact-band .stat-card:not(:first-child) {
-        border-left: 1px solid color-mix(in oklch, var(--line) 88%, var(--ink));
-    }
-}
-
-/* --- Square-corner pass ------------------------------------------------------------------------
-   Home commits to square corners; small data pills (.status-badge, story chips, avatars) keep
-   their shape. */
-body.page-home .btn,
-body.page-home .btn-donate,
-body.page-home .nav-link {
-    border-radius: 4px;
-}
-
-body.page-home .card,
-body.page-home .stat-card,
-body.page-home .team-member,
-body.page-home .feature-box,
-body.page-home .service-card,
-body.page-home .officer-card,
-body.page-home .chapter-card,
-body.page-home .leader-card,
-body.page-home .impact-card,
-body.page-home .story-face,
-body.page-home .map-frame,
-body.page-home .dropdown-menu,
-body.page-home .hamburger {
-    border-radius: 8px;
-}
-
-body.page-home .service-icon,
-body.page-home .dropdown-link {
-    border-radius: 6px;
-}
-
 @media (max-width: 680px) {
     /* Mobile hero grows with its content instead of holding a viewport fraction. */
     body.page-home .home-hero {
         min-height: auto;
+        padding-block: calc(var(--nav-height) + clamp(2.5rem, 9vw, 4rem)) clamp(2.5rem, 9vw, 4rem);
+    }
+
+    /* Same on the other hero types, so the fixed bar never eats into mobile hero copy. */
+    body.nav-overlay .hero-editorial,
+    body.nav-overlay .chapter-hero {
         padding-block: calc(var(--nav-height) + clamp(2.5rem, 9vw, 4rem)) clamp(2.5rem, 9vw, 4rem);
     }
 

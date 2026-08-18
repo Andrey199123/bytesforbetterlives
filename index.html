@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FCFAF5">
     <meta name="description" content="Bytes for Better Lives is a South Florida student-led nonprofit bridging the digital divide for seniors and children through tech help, digital literacy education, online safety, and donations.">
     <title>Bytes for Better Lives | Bridging the Digital Divide</title>
     <link rel="icon" type="image/avif" href="images/logo.avif">
@@ -27,7 +28,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="google-site-verification" content="zX6BUNOBV4yH4PZD7fEVflyBRPSL3XbNYfznUh8AgJU" />
 </head>
-<body class="page-home">
+<body class="page-home nav-overlay">
     <nav class="navbar">
         <div class="nav-container">
             <a href="index.html" class="logo">
@@ -43,8 +44,8 @@
     </nav>
 
     <main>
-        <!-- The navbar sits transparent OVER this hero on home only (body.page-home CSS +
-             initHomeNavOverlay in script.js), so the hero carries its own nav-height top padding. -->
+        <!-- The navbar sits transparent OVER this hero on every hero page (body.nav-overlay CSS +
+             initNavOverlay in script.js), so the hero carries its own nav-height top padding. -->
         <section class="hero home-hero">
             <div class="hero-content">
                 <p class="eyebrow">Largest and fastest growing youth-led digital equity nonprofit in Florida</p>
