@@ -3251,7 +3251,7 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
 @media (max-width: 680px) { .chapter-hero-mark.chapter-hero-locator { display: none; } }
 
 /* ===== CHAPTER LOCATION MAPS (chapters.html "Where We Are") =====================================
-   Self-contained inline-SVG maps (images/maps/florida.svg + world.svg) with status-coloured pins
+   Self-contained SVG maps (images/maps/florida-roads.svg + world.svg) with status-coloured pins
    overlaid as absolutely-positioned links. No third-party map library / tiles → no CSP changes,
    no API keys, same-origin only. Pin coordinates are % of the .map-frame (set inline by script.js
    from FLORIDA_MAP_PINS / WORLD_MAP_PINS). */

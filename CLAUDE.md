@@ -414,18 +414,47 @@ The navbar overlays all of them — see `nav-overlay` below.
   once ("Led by", `chapterLeadPeopleText`) + `.chapter-card-go` "View chapter →". `.chapter-card-desc`
   is `-webkit-line-clamp:3` so cards don't stretch unevenly. Chapter cards ARE links → keep hover lift.
   (Dead `card-edge-*` classes removed from `chapterDirectoryCardMarkup`.)
-- **Chapter location maps** (chapters.html "Where We Are"): two self-contained inline-SVG maps with
-  status-coloured pins — `images/maps/florida.svg` and `images/maps/world.svg` (both PD, recoloured
-  mint). **No third-party map lib/tiles → no CSP change, same-origin** (deliberately NOT
-  Google/Mapbox/Leaflet). `renderChapterMaps()` renders pins from percent tables
+- **Chapter location maps** (chapters.html "Where We Are"): two self-contained SVG maps with
+  status-coloured pins — `images/maps/florida-roads.svg` and `images/maps/world.svg` (both PD,
+  recoloured mint). **No third-party map lib/tiles → no CSP change, same-origin** (deliberately NOT
+  Google/Mapbox/Leaflet — the Florida map is a REAL map with roads, but it is still a static file).
+  `renderChapterMaps()` renders pins from percent tables
   `FLORIDA_MAP_PINS`/`WORLD_MAP_PINS` (chapters carry no geo in Firestore, so hardcoded like
   `stats`/`FOUNDERS`); each pin resolves name/status/href LIVE via `chapterById()`. Image fills
   `.map-frame` edge-to-edge so `left:X%`==X% of map. Pin classes **`.geo-pin`/`.geo-pin-dot`/`.geo-pin-label`**
   (the legacy `.map-pin` teardrop component that used to hijack markup was deleted in the dead-code sweep).
+  - ⚠️ **The two Florida maps are GENERATED, not hand-drawn** (2026-08-18): `florida-roads.svg`
+    (this map) and `florida-se-roads.svg` (the home inset) are built by **`tools/maps/build.py`**
+    from public-domain geodata — Natural Earth (state outline, the Keys, Lake Okeechobee) and
+    TIGER/Line 2023 (roads, county polygons, AREAWATER) — projected with the SAME Albers conic the
+    pin tables were calibrated against, so **every pin % below is unchanged**. `tools/maps/README.md`
+    has the download commands and the traps; the source data is NOT committed. **Do not hand-edit the
+    two files, and never change their `viewBox`** — every pin percentage on the site is expressed in
+    it. The plain silhouette `images/maps/florida.svg` STAYS: it still backs the decorative locators
+    (chapter-hero `chapterLocatorConfig`, and the inset's own corner locator), where road detail
+    would just be noise at ~90px.
+  - Both generated maps keep the **sea transparent** (the `.map-frame` wash behind reads as sea):
+    the state map cuts Lake Okeechobee with `fill-rule="evenodd"`, the inset cuts every water body
+    with an SVG `<mask>` whose water path is also STROKED (dilating water ~150 m — without it the
+    offshore county line antialiases into a stray hairline out at sea). The inset's coastline is a
+    separately DERIVED layer, because a mask cuts the land path's own stroke and the county boundary
+    is offshore anyway.
+  - Detail is scaled to what each map's zoom can carry: the state map (~3.1 px/unit) shows only the
+    interstates + Florida's Turnpike — US highways were built and rejected as ink without a readable
+    feature; the inset (~15.4 px/unit) adds the arterial tier, which is what makes it READ as South
+    Florida (the dense coastal grid stopping dead at the Everglades).
+  - ⚠️ **Stroke scaling is NOT one rule.** The two frames are not in the `176/24` zoom ratio the old
+    files assumed: the state map renders ~570px for 176 units (**3.24 px/unit**) and the inset ~366px
+    for 24 units (**15.25 px/unit**), so px/unit differ by **4.7×, not 7.33×** — dividing a stroke by
+    `176/24` makes the inset line ~0.64× the state's ON SCREEN. So: the **coastline** is matched in
+    PIXELS (`COAST_W_FULL` 0.38 = 1.23px, `COAST_W_SE` 0.08 = 1.22px) because it is the same kind of
+    line on both; the **road tiers** keep the ÷`176/24` convention, which lands them deliberately
+    finer on the inset since it carries ~10× the line density. Both are set in `tools/maps/build.py`.
+    Re-derive them if either frame's rendered width changes.
   - **Map-projection note (how pin %s are derived) — CALIBRATED 2026-08, supersedes the old
     "Miller / equirectangular" note, which was wrong:** pin positions are PROJECTED from each place's
     real lat/lng, not eyeballed.
-    - **`florida.svg`** (viewBox `630 435 176 152`) is an **Albers conic**, not equirectangular:
+    - **`florida-roads.svg`** (viewBox `630 435 176 152`) is an **Albers conic**, not equirectangular:
       `n=0.60283700`, `C=1.35122133`, `lng0=-96`; `ρ=√(C−2n·sin φ)/n`, `θ=n·(λ−λ0)` in radians;
       `X=479.96+1264.138·ρ·sin θ`, `Y=−1332.38+1264.138·ρ·cos θ`; then
       `x%=(X−630)/176·100`, `y%=(Y−435)/152·100`.
@@ -460,8 +489,9 @@ The navbar overlays all of them — see `nav-overlay` below.
   figures side by side — the **CROPPED world map** `#map-world-home` (`images/maps/world-reach.svg` =
   world.svg with viewBox cropped to **`79 78 659 335`**, the pin spread W-N-America→India /
   N-Russia→Peru, so pins fill the frame) next to the **South-Florida inset** `#map-florida-se`
-  (`images/maps/florida-se.svg` = florida.svg viewBox-cropped to **`780 526.5 24 26`**, `stroke-width`
-  scaled 0.16 for the ~7× zoom). The old full-width 900px world map + whole-Florida panel
+  (`images/maps/florida-se-roads.svg`, viewBox **`780 526.5 24 26`** — its own generated map at the
+  same ~7× zoom into the same Albers plane; see the generated-maps + stroke-scaling notes under
+  Chapter location maps). The old full-width 900px world map + whole-Florida panel
   (`#map-florida-home`, `.reach-fl-row`, `.map-inset-region`/`FLORIDA_INSET_REGION`) were REMOVED —
   do not restore. Columns `2.13fr / 1fr` = ratio of the two aspect ratios (659/335 ÷ 24/26) so the
   frames land at the same height; **≤1000px** they stack (inset capped 380px). The inset runs 0.68rem

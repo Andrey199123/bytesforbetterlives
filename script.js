@@ -977,8 +977,10 @@
     // Pin positions for the chapters-page + home maps, as PERCENTAGES of the map frame (left%, top%).
     // These are PROJECTED from each place's real lat/lng — not eyeballed. See the "Map-projection
     // note" in CLAUDE.md for the two calibrated models:
-    //   • florida.svg (and its crop florida-se.svg) = Albers conic — n 0.60283700, C 1.35122133,
-    //     lng0 -96, X = 479.96 + 1264.138·ρ·sin θ, Y = -1332.38 + 1264.138·ρ·cos θ.
+    //   • florida-roads.svg (and the inset florida-se-roads.svg) = Albers conic — n 0.60283700,
+    //     C 1.35122133, lng0 -96, X = 479.96 + 1264.138·ρ·sin θ, Y = -1332.38 + 1264.138·ρ·cos θ.
+    //     Those two files are GENERATED from public-domain geodata with that exact projection
+    //     (tools/maps/build.py), so real roads, coastline and bays line up with these pins.
     //   • world.svg = a hand-drawn pseudocylindrical outline; North-American pins use a local affine
     //     fit (x = 432.1872 + 0.7217·lat + 2.6924·lng, y = 360.4426 - 3.5132·lat + 0.1962·lng).
     // Chapters carry no geo data, so positions live here (like the hardcoded `stats`/`FOUNDERS`); a
@@ -1023,12 +1025,13 @@
         { label: "India", x: 70.8, y: 44.4, cls: "pin-outreach pin-edge-right", href: "ongoing-initiatives.html", title: "India — Tamil Nadu school bathroom fundraiser (Cypress Bay)" }
     ];
 
-    // --- Home "South Florida" inset (images/maps/florida-se.svg) ---------------------------------
-    // florida-se.svg is florida.svg with the viewBox cropped to FLORIDA_SE_CROP (SVG clips to the
-    // viewBox, so the path is untouched — only stroke-width is scaled down for the ~7× zoom). Inset
-    // percentages come STRAIGHT from the Albers projection (see the model above), remapped to the
-    // crop box — NOT converted from the rounded full-map %s, which would multiply their rounding
-    // error by 176/24:
+    // --- Home "South Florida" inset (images/maps/florida-se-roads.svg) ---------------------------
+    // The inset is its own generated map (tools/maps/build.py) drawn at viewBox FLORIDA_SE_CROP —
+    // the same ~7× zoom into the same Albers plane as the state map, so a place lands at the same
+    // spot on both. Every stroke is divided by 176/24 there, which is exactly how much more zoomed
+    // in it is. Inset percentages come STRAIGHT from the Albers projection (see the model above),
+    // remapped to the crop box — NOT converted from the rounded full-map %s, which would multiply
+    // their rounding error by 176/24:
     //   x% = (X - crop.x) / crop.w · 100 ,  y% = (Y - crop.y) / crop.h · 100
     const FLORIDA_SE_CROP = { x: 780, y: 526.5, w: 24, h: 26 };
     const FLORIDA_VIEWBOX = { x: 630, y: 435, w: 176, h: 152 };
