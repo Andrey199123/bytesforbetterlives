@@ -330,6 +330,10 @@ main {
 .home-hero .eyebrow {
     color: var(--paper);
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 0 12px rgba(0, 0, 0, 0.5);
+    /* Nudge the kicker up off the faces in the banner photo behind it. Uses `top` (not margin)
+       so ONLY this line shifts — the h1/subtitle/buttons keep their existing rhythm. */
+    position: relative;
+    top: clamp(-2.5rem, -2.6vw, -0.75rem);
 }
 .home-hero .eyebrow::before {
     background: var(--paper);
