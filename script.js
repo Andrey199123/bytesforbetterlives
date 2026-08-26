@@ -46,6 +46,14 @@
     const donateHubUrl = "donate.html";
     const peruFundraiserUrl = "https://www.gofundme.com/f/help-children-gain-access-education-tools-in-peru";
 
+    // Declared here, above every call site, on purpose (used by initNavOverlay, far below). It used
+    // to live beside that function as `var navOverlayObserver = null;`, which broke it: the binding
+    // hoisted, but the `= null` INITIALIZER ran in source order — i.e. AFTER the parse-time call had
+    // already stored an observer in it — wiping the reference, so no later call could disconnect
+    // that observer. Pages ended up with two live IntersectionObservers toggling .is-over-hero at
+    // two different thresholds. Never give this an initializer, here or anywhere else.
+    var navOverlayObserver;
+
     // Founders are hardcoded here on purpose — they never change, so they are NOT stored in
     // Firestore / data.people and are NOT editable in the admin. Edit this list to update them.
     const FOUNDERS = [
@@ -242,13 +250,33 @@
         });
     }
 
-    function initRender() {
-        initVercelAnalytics();
-        initPlausible();
+    // PAGE CHROME — the navbar, the footer, the skip link and their behaviour. None of it needs the
+    // Firestore fetch: the only data-driven piece is the Chapters dropdown, which renders from the
+    // data.js seed (or firebase-data.js's localStorage snapshot) and is patched in place afterwards
+    // by refreshChaptersDropdown(). So this runs SYNCHRONOUSLY at parse time instead of waiting
+    // behind BFBL_DATA_READY (up to 3s), which is what left the bar logo-only on every navigation.
+    // Every renderer it calls null-guards its root, so this is a harmless no-op on pages without a
+    // navbar/footer.
+    // ⚠️ CALL EXACTLY ONCE per page, from the LAST statement of this IIFE (see the call site for
+    // why it cannot move up): initNavDropdowns and initMobileNavigation add listeners
+    // (initMobileNavigation with no guard at all — a second call toggles the hamburger twice per
+    // click, opening then instantly closing the drawer).
+    function renderChrome() {
         renderNavigation();
         initNavDropdowns();
         renderFooter();
         syncDonateLinks();
+        ensureSkipLink();
+        initMobileNavigation();
+        // LAST: the overlay navbar's transparent state is JS-applied (solid is the CSS default) and
+        // its IntersectionObserver rootMargin measures navbar.offsetHeight, so the bar has to be
+        // filled in first. Called again from ensureChapterProfileLayout() once a chapter hero exists.
+        initNavOverlay();
+    }
+
+    function initRender() {
+        initVercelAnalytics();
+        initPlausible();
         renderHomePage();
 
         renderGalleryImages();
@@ -257,10 +285,11 @@
         renderChapterDirectoryPage();
         renderChapterMaps();
         renderChapterProfilePage();
-        // After renderChapterProfilePage: chapter stubs only get their <main> injected there,
-        // and the skip link needs that <main> to exist so its #main-content target is real.
+        // Again after renderChapterProfilePage (renderChrome already ran it): chapter stubs only get
+        // their <main> injected there, and the skip link needs that <main> to exist so its
+        // #main-content target is real. ensureSkipLink sets main.id BEFORE its own bail-out, so the
+        // second call costs nothing on pages whose <main> is static.
         ensureSkipLink();
-        initMobileNavigation();
         initImageFallbacks();
         initCarousels();
         initLightbox();
@@ -269,11 +298,12 @@
         initSmoothScroll();
         initCounters();
         renderDonatePage();
-        initDonateNudges();
     }
 
-    // Render once the live content (firebase-data.js, if present) has loaded — falling back to
-    // data.js if Firestore is empty/unreachable. Then re-sync data and derive roles before render.
+    // Render the page BODY once the live content (firebase-data.js, if present) has loaded —
+    // falling back to data.js if Firestore is empty/unreachable. Then re-sync data and derive roles
+    // before render. The chrome is already on screen by now (renderChrome, below), so all this pass
+    // owes the navbar/footer is a patch of the two bits live data can actually change.
     document.addEventListener("DOMContentLoaded", function () {
         var ready = (window.BFBL_DATA_READY && typeof window.BFBL_DATA_READY.then === "function")
             ? window.BFBL_DATA_READY
@@ -283,6 +313,8 @@
             donateUrl = data.donateUrl || donateUrl;
             contactEmail = data.contactEmail || contactEmail;
             deriveRoles();
+            refreshChaptersDropdown();
+            refreshFooter();
             initRender();
         });
     });
@@ -557,22 +589,55 @@
         });
     }
 
+    function chaptersNavItem() {
+        return navItems.find(function (item) { return item.label === "Chapters"; });
+    }
+
+    // The <li>s inside the Chapters dropdown — the ONE part of the navbar that depends on Firestore
+    // data. Kept out of renderNavigation so the post-fetch pass can re-render just this list
+    // (refreshChaptersDropdown) instead of rebuilding the whole bar.
+    function chaptersDropdownItemsMarkup(directoryHref, page) {
+        // On touch devices the "Chapters" toggle only opens/closes the menu (it never
+        // navigates), so the directory needs its own entry inside the dropdown.
+        const allLink = `<li><a href="${escapeHTML(safeUrl(directoryHref))}" class="dropdown-link dropdown-link--all${page === directoryHref ? " active" : ""}">All Chapters</a></li>`;
+        const chapterLinks = (data.chapters || []).map(function (chapter) {
+            const localHref = chapter.pageHref || `chapter-${chapter.id}.html`;
+            const href = chapterPublicHref(chapter);
+            const isActive = page === localHref;
+            return `<li><a href="${escapeHTML(safeUrl(href))}" class="dropdown-link${isActive ? " active" : ""}">${escapeHTML(chapter.name)}</a></li>`;
+        }).join("");
+        return allLink + chapterLinks;
+    }
+
+    // What is currently painted inside the dropdown, so the post-fetch refresh can no-op when the
+    // seed (or the localStorage snapshot) already matched live Firestore.
+    var chaptersDropdownPainted = "";
+
+    // renderChrome paints the navbar from the seed/snapshot before the Firestore fetch resolves, so
+    // the live chapter list can arrive later. Replace ONLY the dropdown's <li>s: the
+    // .dropdown-toggle — which owns dataset.dropdownBound and every hover/focus/click handler
+    // initNavDropdowns bound to it — is left untouched, so NOTHING re-binds. Do NOT call
+    // initNavDropdowns() again: a re-render of the toggle would clear its bound flag and let it add
+    // a second document-level click listener closing over a detached dropdown.
+    function refreshChaptersDropdown() {
+        const menus = document.querySelectorAll(".nav-item.dropdown .dropdown-menu");
+        if (!menus.length) return;
+        const item = chaptersNavItem();
+        const markup = chaptersDropdownItemsMarkup(item ? item.href : "chapters.html", currentPageName());
+        if (markup === chaptersDropdownPainted) return;
+        chaptersDropdownPainted = markup;
+        menus.forEach(function (menu) {
+            menu.innerHTML = markup;
+        });
+    }
+
     function renderNavigation() {
         const page = currentPageName();
         const menus = document.querySelectorAll(".nav-menu");
         if (!menus.length) return;
 
         function chaptersDropdownMarkup(item) {
-            // On touch devices the "Chapters" toggle only opens/closes the menu (it never
-            // navigates), so the directory needs its own entry inside the dropdown.
-            const allLink = `<li><a href="${escapeHTML(safeUrl(item.href))}" class="dropdown-link dropdown-link--all${page === item.href ? " active" : ""}">All Chapters</a></li>`;
-            const chapterLinks = (data.chapters || []).map(function (chapter) {
-                const localHref = chapter.pageHref || `chapter-${chapter.id}.html`;
-                const href = chapterPublicHref(chapter);
-                const isActive = page === localHref;
-                return `<li><a href="${escapeHTML(safeUrl(href))}" class="dropdown-link${isActive ? " active" : ""}">${escapeHTML(chapter.name)}</a></li>`;
-            }).join("");
-
+            chaptersDropdownPainted = chaptersDropdownItemsMarkup(item.href, page);
             const isActive = page === item.href || page.indexOf("chapter-") === 0;
             return `
                 <li class="nav-item dropdown">
@@ -580,8 +645,7 @@
                         ${escapeHTML(item.label)} <span class="dropdown-caret" aria-hidden="true">▾</span>
                     </a>
                     <ul class="dropdown-menu" aria-label="Chapter pages">
-                        ${allLink}
-                        ${chapterLinks}
+                        ${chaptersDropdownPainted}
                     </ul>
                 </li>
             `;
@@ -657,9 +721,25 @@
         linkedin: '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.49 2.49 0 1 1-.02 4.98 2.49 2.49 0 0 1 .02-4.98zM3 9.4h4V21H3zM9.6 9.4h3.83v1.58h.05c.53-.95 1.84-1.95 3.78-1.95 4.04 0 4.79 2.6 4.79 5.98V21h-4v-5.28c0-1.26-.02-2.88-1.8-2.88-1.8 0-2.07 1.37-2.07 2.79V21h-3.98z"/></svg>'
     };
 
+    // The footer's only data-driven values (everything else in it is hardcoded above/below).
+    function footerDataSignature() {
+        const social = data.socialLinks || {};
+        return [contactEmail, social.instagram, social.linkedin].join("|");
+    }
+    var footerPaintedSignature = "";
+
+    // Same story as refreshChaptersDropdown: the footer is painted from the seed/snapshot before the
+    // fetch resolves. renderFooter binds no listeners (pure innerHTML), so re-running it is safe —
+    // but only do it when a value actually changed, so the common case repaints nothing.
+    function refreshFooter() {
+        if (footerDataSignature() === footerPaintedSignature) return;
+        renderFooter();
+    }
+
     function renderFooter() {
         const footerContainer = document.querySelector(".footer .container");
         if (!footerContainer) return;
+        footerPaintedSignature = footerDataSignature();
 
         const quickLinks = [
             ["Home", "index.html"],
@@ -894,57 +974,133 @@
         hideSectionWhenEmpty("#chapters-directory-grid");
     }
 
-    // Pin positions for the chapters-page maps, as PERCENTAGES of the map frame (left%, top%).
-    // These are PROJECTED from each city's real lat/lng — not eyeballed. florida.svg is treated as
-    // equirectangular over Florida's bounding box; world.svg is a Miller cylindrical projection
-    // (verified by reproducing the russia.svg/turkey.svg crop latitudes to within ~2px). Chapters
-    // carry no geo data, so positions live here (like the hardcoded `stats`/`FOUNDERS`); a chapter id
-    // with no entry simply gets no pin, and each pin's name/status/href still resolve live from
-    // data.chapters. World pins collapse the four South-Florida chapters into one "Florida" marker.
+    // Pin positions for the chapters-page + home maps, as PERCENTAGES of the map frame (left%, top%).
+    // These are PROJECTED from each place's real lat/lng — not eyeballed. See the "Map-projection
+    // note" in CLAUDE.md for the two calibrated models:
+    //   • florida-roads.svg (and the inset florida-se-roads.svg) = Albers conic — n 0.60283700,
+    //     C 1.35122133, lng0 -96, X = 479.96 + 1264.138·ρ·sin θ, Y = -1332.38 + 1264.138·ρ·cos θ.
+    //     Those two files are GENERATED from public-domain geodata with that exact projection
+    //     (tools/maps/build.py), so real roads, coastline and bays line up with these pins.
+    //   • world.svg = a hand-drawn pseudocylindrical outline; North-American pins use a local affine
+    //     fit (x = 432.1872 + 0.7217·lat + 2.6924·lng, y = 360.4426 - 3.5132·lat + 0.1962·lng).
+    // Chapters carry no geo data, so positions live here (like the hardcoded `stats`/`FOUNDERS`); a
+    // chapter id with no entry simply gets no pin, and each pin's name/status/href still resolve live
+    // from data.chapters. World pins collapse the SE-Florida chapters into one "Florida" marker.
     // The SE-Florida chapters are only ~40 mi apart, so on the Florida map their dots correctly sit
     // close together on the SE coast — labels float LEFT (inland) to stay legible.
-    // dy = vertical label offset (px): the four SE-coast dots sit within ~2% of each other, so
-    // their labels are staggered into an evenly spaced inland column instead of overlapping.
+    // dy = vertical label offset (px): the SE-coast dots sit within ~7% of each other, so their
+    // labels are staggered into an evenly spaced inland column instead of overlapping.
+    // dx = extra horizontal push (px) away from the dot: it keeps the five stacked SE labels in a
+    // column that ends WEST of the dot cluster, so no pill ever sits on a neighbour's dot.
     const FLORIDA_MAP_PINS = [
-        { id: "gainesville", x: 67.6, y: 24.2 },
-        { id: "coral-springs", x: 91.9, y: 70.7, side: "left", dy: -16 },
-        { id: "ahs", x: 93.4, y: 72.8, side: "left", dx: 26 },
-        { id: "cypress", x: 90.4, y: 73.1, side: "left", dy: 18 },
-        { id: "miami", x: 92.8, y: 77.8, side: "left", dy: 14 },
-        { id: "doral", x: 90.9, y: 77.0, side: "left", dy: 46 }
+        { id: "gainesville", x: 63.2, y: 23.4 },
+        { id: "coral-springs", x: 92.2, y: 67.6, side: "left", dy: -26, dx: 4 },
+        { id: "ahs", x: 92.9, y: 69.6, side: "left", dy: -14, dx: 8 },
+        { id: "cypress", x: 91.1, y: 70.3, side: "left", dy: 2 },
+        { id: "doral", x: 92.2, y: 74.2, side: "left", dy: 8, dx: 4 },
+        { id: "miami", x: 94.2, y: 74.7, side: "left", dy: 27, dx: 16 }
     ];
+    // The four North-American dots sit within ~75px of each other on a 570px frame while their
+    // labels are 70-90px wide, so the labels are fanned vertically instead of all floating inland:
+    // Los Angeles rises (with a leader line, since its lift is longer than the pill), New York sits
+    // on its dot's line and Virginia drops below. Virginia floating LEFT used to bury the Los
+    // Angeles dot under its pill — the dot was unclickable and the pill read as its label.
     const WORLD_MAP_PINS = [
-        { id: "ahs", label: "Florida", x: 24.5, y: 41.4, side: "left" },
-        { id: "los-angeles", label: "Los Angeles", x: 14.2, y: 38.0, dy: -42 }, // west edge: label floats right + up (side:left clipped "Los Angeles" off the frame's left edge on the 2-col world map); dy lifts it clear of the east-coast cluster
-        { id: "new-york", label: "New York", x: 26.6, y: 34.3 },
-        { id: "virginia", label: "Virginia", x: 26.0, y: 36.5, side: "left" },
-        { id: "russia", label: "Russia", x: 57.9, y: 25.0 },
+        { id: "ahs", label: "Florida", x: 24.5, y: 39.7, side: "left", dy: 7 }, // projected from the FL centroid (27.9,-81.7) so the aggregate dot sits wholly on the peninsula
+        { id: "los-angeles", label: "Los Angeles", x: 14.6, y: 35.1, dy: -34 }, // west edge: label floats right (side:left clipped "Los Angeles" off the frame's left edge) and rises clear of the New York / Virginia pills its 86px pill would otherwise reach
+        { id: "new-york", label: "New York", x: 27.6, y: 32.7, dy: -2 },
+        { id: "virginia", label: "Virginia", x: 26.8, y: 34.9, dy: 14 },
+        { id: "russia", label: "Russia", x: 57.2, y: 25.6 },
         { id: "turkey", label: "Turkey", x: 55.5, y: 34.2 }
     ];
-    // Home "Our Reach" map only: countries where BFBL outreach/donation drives have reached, NOT
-    // chapters — so no id/status/href; they render as static (non-link) red pins. Same Miller
-    // projection as WORLD_MAP_PINS (country centroids: Haiti 18.97,-72.29 · Peru -9.19,-75.02 ·
-    // India 20.59,78.96).
+    // Home "Our Reach" map only: countries where BFBL outreach/donation work has reached, NOT
+    // chapters — so they carry no chapter id, but they DO carry an href to the page that documents
+    // the work, which makes them real links (hover = clickable). Country centroids projected with the
+    // same world.svg model (Haiti 18.97,-72.29 · Peru -9.19,-75.02 · India 20.59,78.96).
     const WORLD_OUTREACH_PINS = [
-        { label: "Haiti", x: 27.1, y: 45.8, cls: "pin-outreach" },
-        { label: "Peru", x: 26.3, y: 59.5, cls: "pin-outreach" },
-        { label: "India", x: 69.5, y: 45.0, cls: "pin-outreach" }
+        { label: "Haiti", x: 26.5, y: 45.1, cls: "pin-outreach", href: "impact.html#donations", title: "Haiti — games donated via House of New Vision and Hope" },
+        { label: "Peru", x: 25.4, y: 59.4, cls: "pin-outreach", href: "ongoing-initiatives.html", title: "Peru — school fundraiser (AHS chapter)" },
+        // pin-edge-right: the dot lands ~90% across the world-reach crop, so on narrow frames the
+        // right-floating label clips off the edge — the class flips it inland ≤640px (CSS).
+        { label: "India", x: 70.8, y: 44.4, cls: "pin-outreach pin-edge-right", href: "ongoing-initiatives.html", title: "India — Tamil Nadu school bathroom fundraiser (Cypress Bay)" }
     ];
 
+    // --- Home "South Florida" inset (images/maps/florida-se-roads.svg) ---------------------------
+    // The inset is its own generated map (tools/maps/build.py) drawn at viewBox FLORIDA_SE_CROP —
+    // the same ~7× zoom into the same Albers plane as the state map, so a place lands at the same
+    // spot on both. Every stroke is divided by 176/24 there, which is exactly how much more zoomed
+    // in it is. Inset percentages come STRAIGHT from the Albers projection (see the model above),
+    // remapped to the crop box — NOT converted from the rounded full-map %s, which would multiply
+    // their rounding error by 176/24:
+    //   x% = (X - crop.x) / crop.w · 100 ,  y% = (Y - crop.y) / crop.h · 100
+    const FLORIDA_SE_CROP = { x: 780, y: 526.5, w: 24, h: 26 };
+    const FLORIDA_VIEWBOX = { x: 630, y: 435, w: 176, h: 152 };
+    const FLORIDA_SE_CHAPTER_PINS = [
+        { id: "coral-springs", x: 51.4, y: 43.4, dy: -4 },
+        { id: "ahs", x: 56.6, y: 54.9, side: "left", dx: 12, dy: -2 },
+        { id: "cypress", x: 43.3, y: 59.3, side: "left" },
+        { id: "doral", x: 51.1, y: 82.0, side: "left" },
+        { id: "miami", x: 65.5, y: 84.7, dy: 4 }
+    ];
+    // Places the chapters actually serve — senior residences, shelters, hospitals and children's
+    // homes. Not chapters (no id), but every one links to the page documenting that work.
+    // "Hollywood" is deliberately ONE marker: Five Star Premier and Joe DiMaggio are 1.6 km apart,
+    // so at any zoom this map can carry their dots overlap into a single blob and the upper pill
+    // covered the lower dot's click target. One pill naming both is honest and stays clickable.
+    const FLORIDA_IMPACT_PINS = [
+        { label: "Palomino Gardens", x: 51.6, y: 12.8, cls: "pin-outreach", href: "impact.html#seniors", title: "Palomino Gardens — one-on-one senior tech help" },
+        { label: "Plantation visits", x: 53.8, y: 53.7, cls: "pin-outreach", side: "left", dy: -24, href: "impact.html#seniors", title: "Plantation — recurring senior visits" },
+        { label: "Mamma’s Curry", x: 59.1, y: 53.5, cls: "pin-outreach", dy: -24, href: "impact.html#kids", title: "Mamma’s Curry Christmas celebration — 100+ games donated" },
+        { label: "Broward Health", x: 64.6, y: 55.8, cls: "pin-outreach", href: "impact.html#kids", title: "Broward Health Medical Center — pediatric patient visit" },
+        { label: "Palace at Weston", x: 46.7, y: 61.5, cls: "pin-outreach", side: "left", dx: 12, dy: 12, href: "impact.html#seniors", title: "The Palace at Weston — digital-safety workshops" },
+        { label: "Hollywood", x: 62.8, y: 62.6, cls: "pin-outreach", dy: 4, href: "impact.html#donations", title: "Hollywood — Five Star Premier Residences senior tech support and Joe DiMaggio Children’s Hospital game donations" },
+        { label: "His House", x: 58.0, y: 69.0, cls: "pin-outreach", side: "left", dy: 8, href: "impact.html#donations", title: "His House Children’s Home — 70+ games, 15+ iPads" },
+        { label: "Lotus House", x: 64.5, y: 82.5, cls: "pin-outreach", dy: -14, href: "past-events.html", title: "Lotus House Shelter — digital-safety & financial-literacy event" },
+        { label: "Nicklaus", x: 57.3, y: 87.6, cls: "pin-outreach", side: "left", dy: 6, href: "impact.html#donations", title: "Nicklaus Children’s Hospital — board games donated" }
+    ];
+    // The inset is a ~7× zoom of a silhouette with no interior geography, so on its own it reads as
+    // a plain green rectangle. A small full-state locator in the corner — the crop outlined on the
+    // familiar Florida shape — says WHERE the zoom is. Decorative: aria-hidden, inert, no hover.
+    function floridaLocatorMarkup() {
+        const c = FLORIDA_SE_CROP, f = FLORIDA_VIEWBOX;
+        const pct = function (a, b) { return Math.round(a / b * 10000) / 100; };
+        const box = `left:${pct(c.x - f.x, f.w)}%;top:${pct(c.y - f.y, f.h)}%;width:${pct(c.w, f.w)}%;height:${pct(c.h, f.h)}%`;
+        return `
+            <span class="map-locator" aria-hidden="true">
+                <img src="images/maps/florida.svg" alt="" width="176" height="152">
+                <span class="map-locator-box" style="${box}"></span>
+            </span>`;
+    }
+    // --- Home "Our Reach" world map crop (images/maps/world-reach.svg) ---------------------------
+    // world-reach.svg is world.svg with the viewBox cropped to "79 78 659 335" — the pin spread
+    // (western North America → India, northern Russia → Peru) — so the pins fill the frame instead
+    // of floating in empty ocean. WORLD_MAP_PINS/WORLD_OUTREACH_PINS keep FULL-map %s (chapters.html
+    // renders them as-is); the home renderer remaps each pin into the crop, so no second pin table.
+    const WORLD_REACH_CROP = { x: 79, y: 78, w: 659, h: 335 };
+    function worldReachPin(pin) {
+        // Full-map % → world.svg viewBox units (×9.5 / ×6.2, viewBox 950×620) → % of the crop box.
+        return Object.assign({}, pin, {
+            x: Math.round((pin.x * 9.5 - WORLD_REACH_CROP.x) / WORLD_REACH_CROP.w * 10000) / 100,
+            y: Math.round((pin.y * 6.2 - WORLD_REACH_CROP.y) / WORLD_REACH_CROP.h * 10000) / 100
+        });
+    }
+
     // Chapter-hero locator map: Florida chapters show the Florida outline (so the dot %s line up with
-    // FLORIDA_MAP_PINS); everyone else shows their OWN state/country outline. Dots are PROJECTED from
-    // each city's real lat/lng — FL/NY/VA equirectangular over the shape's bounding box; russia/turkey
-    // use the same Miller projection as world.svg (those SVGs are crops of it). Each SVG fills the box,
-    // so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
+    // FLORIDA_MAP_PINS — keep the two tables in LOCKSTEP); everyone else shows their OWN state/country
+    // outline. Dots are PROJECTED from each city's real lat/lng — FL via the Albers fit above, NY/VA/CA
+    // equirectangular over the shape's bounding box. russia.svg/turkey.svg are CROPS of world.svg, so
+    // their dots are that chapter's WORLD_MAP_PINS point in world.svg units (x%·9.5, y%·6.2) remapped
+    // into the crop viewBox — the same city then lands in the same place on both maps. Each SVG fills
+    // the box, so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
     function chapterLocatorConfig(id) {
-        const FL = { gainesville: [67.6, 24.2], "coral-springs": [91.9, 70.7], ahs: [93.4, 72.8], cypress: [90.4, 73.1], miami: [92.8, 77.8], doral: [90.9, 77.0] };
+        const FL = { gainesville: [63.2, 23.4], "coral-springs": [92.2, 67.6], ahs: [92.9, 69.6], cypress: [91.1, 70.3], miami: [94.2, 74.7], doral: [92.2, 74.2] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         const R = {
             "los-angeles": { map: "images/maps/california.svg", x: 59.0, y: 80.8, aspect: "0.859" },
             "new-york": { map: "images/maps/new-york.svg", x: 70.7, y: 89.9, aspect: "1.279" },
             "virginia": { map: "images/maps/virginia.svg", x: 87.5, y: 83.4, aspect: "1.679" },
-            "russia":   { map: "images/maps/russia.svg",   x: 13.3, y: 68.7, aspect: "1.714" },
-            "turkey":   { map: "images/maps/turkey.svg",   x: 18.9, y: 23.1, aspect: "2.088" }
+            "russia":   { map: "images/maps/russia.svg",   x: 11.6, y: 70.2, aspect: "1.714" },
+            "turkey":   { map: "images/maps/turkey.svg",   x: 19.1, y: 24.0, aspect: "2.091" }
         };
         return R[id] || null;
     }
@@ -958,18 +1114,28 @@
     function mapPinMarkup(pin, forceStatus) {
         const labelDy = typeof pin.dy === "number" && pin.dy !== 0 ? `--label-dy:${pin.dy}px;` : "";
         const labelDx = typeof pin.dx === "number" && pin.dx !== 0 ? `--label-dx:${7 + pin.dx}px;` : "";
+        // A label pushed further than its own pill height reads as belonging to nothing, so it gets
+        // a hairline leader back to its dot (Los Angeles on the world maps).
+        const dy = typeof pin.dy === "number" ? pin.dy : 0;
+        const lead = Math.abs(dy) >= 20
+            ? `<span class="geo-pin-lead${dy > 0 ? " geo-pin-lead--down" : ""}" style="--label-lead:${Math.abs(dy) - 8}px"></span>`
+            : "";
         const pos = `left:${pin.x}%;top:${pin.y}%;${labelDy}${labelDx}`;
         const sideCls = pin.side === "left" ? " geo-pin--left" : "";
         // Optional label suffix that HIDES on small screens (long labels near the map edge clip there).
         const note = pin.labelNote ? `<span class="geo-pin-label-note">${escapeHTML(pin.labelNote)}</span>` : "";
-        // No id → a static, NON-chapter pin (home-map outreach markers). It isn't a link, so it must
-        // not look interactive: .geo-pin--static opts out of the hover treatment (hover = clickable).
+        // No id → a NON-chapter pin (outreach country / Florida service site). With an href it is a
+        // real link and gets the normal hover treatment; without one it renders as an inert
+        // .geo-pin--static span, since hover feedback must only ever mean "clickable".
         if (!pin.id) {
-            return `
-            <span class="geo-pin geo-pin--static ${escapeHTML(pin.cls || "")}${sideCls}" style="${pos}">
+            const body = `${lead}
                 <span class="geo-pin-dot"></span>
-                <span class="geo-pin-label">${escapeHTML(pin.label || "")}${note}</span>
-            </span>`;
+                <span class="geo-pin-label">${escapeHTML(pin.label || "")}${note}</span>`;
+            const cls = `geo-pin ${escapeHTML(pin.cls || "")}${sideCls}`;
+            if (!pin.href) return `<span class="${cls} geo-pin--static" style="${pos}">${body}</span>`;
+            return `
+            <a class="${cls}" style="${pos}"
+               href="${escapeHTML(safeUrl(pin.href))}" title="${escapeHTML(pin.title || pin.label || "")}">${body}</a>`;
         }
         const chapter = chapterById(pin.id);
         if (!chapter) return "";
@@ -984,36 +1150,50 @@
         const title = pin.title || `${chapter.name} — ${realStatus}`;
         return `
             <a class="geo-pin ${pinCls}" style="${pos}"
-               href="${escapeHTML(safeUrl(href))}" title="${escapeHTML(title)}">
+               href="${escapeHTML(safeUrl(href))}" title="${escapeHTML(title)}">${lead}
                 <span class="geo-pin-dot"></span>
                 <span class="geo-pin-label">${escapeHTML(label)}${note}</span>
             </a>`;
+    }
+
+    // Every chapter pin on the HOME maps is forced GREEN to match the two-item legend there
+    // (green = chapters, red = outreach); status colouring stays a chapters-page concern.
+    function greenChapterPins(pins) {
+        return pins.map(function (pin) { return mapPinMarkup(pin, "Active"); }).join("");
     }
 
     function renderChapterMaps() {
         const florida = document.querySelector("#map-florida");
         const world = document.querySelector("#map-world");
         const homeWorld = document.querySelector("#map-world-home");
-        if (!florida && !world && !homeWorld) return;
+        const homeFloridaSe = document.querySelector("#map-florida-se");
+        if (!florida && !world && !homeWorld && !homeFloridaSe) return;
         if (florida) florida.insertAdjacentHTML("beforeend", FLORIDA_MAP_PINS.map(mapPinMarkup).join(""));
         if (world) world.insertAdjacentHTML("beforeend", WORLD_MAP_PINS.map(mapPinMarkup).join(""));
+        if (homeFloridaSe) {
+            homeFloridaSe.insertAdjacentHTML("beforeend",
+                floridaLocatorMarkup() + greenChapterPins(FLORIDA_SE_CHAPTER_PINS) + FLORIDA_IMPACT_PINS.map(function (pin) {
+                    return mapPinMarkup(pin);
+                }).join(""));
+        }
         if (homeWorld) {
-            // Home "Our Reach" map: every chapter pin is forced GREEN to match the two-item legend
-            // (green = chapters, red = outreach) — status colouring stays a chapters-page concern.
-            // The Florida pin aggregates the FL cluster (live count from FLORIDA_MAP_PINS) and links
-            // to the directory rather than one chapter's page.
+            // Every pin is remapped into the world-reach.svg crop (worldReachPin, a fresh copy per
+            // pin). The Florida pin aggregates the FL cluster (live count from FLORIDA_MAP_PINS) and
+            // links to the directory rather than one chapter's page.
             const flCount = FLORIDA_MAP_PINS.length;
-            const chapterPins = WORLD_MAP_PINS.map(function (pin) {
-                const homePin = pin.id === "ahs"
-                    ? Object.assign({}, pin, {
+            const chapterPins = greenChapterPins(WORLD_MAP_PINS.map(function (pin) {
+                const p = worldReachPin(pin);
+                return p.id === "ahs"
+                    ? Object.assign(p, {
                         labelNote: ` · ${flCount} chapters`,
                         href: "chapters.html",
                         title: `Florida — ${flCount} chapters`
                     })
-                    : pin;
-                return mapPinMarkup(homePin, "Active");
+                    : p;
+            }));
+            const outreachPins = WORLD_OUTREACH_PINS.map(function (pin) {
+                return mapPinMarkup(worldReachPin(pin));
             }).join("");
-            const outreachPins = WORLD_OUTREACH_PINS.map(function (pin) { return mapPinMarkup(pin); }).join("");
             homeWorld.insertAdjacentHTML("beforeend", chapterPins + outreachPins);
         }
     }
@@ -1127,7 +1307,9 @@
     function renderChapterProfilePage() {
         const chapterId = (document.body && document.body.dataset ? document.body.dataset.chapterId : "") || "";
         if (!chapterId) return;
-        document.body.classList.add("page-chapter"); // green accent for chapter profile pages
+        // Inert runtime hook: kept as a handle for per-page CSS/JS, but nothing targets it today
+        // (chapter profiles get their green accent from the base :root, not from this class).
+        document.body.classList.add("page-chapter");
 
         ensureChapterProfileLayout();
 
@@ -1403,6 +1585,9 @@
         } else {
             document.body.appendChild(main);
         }
+
+        // The chapter hero only exists now, so the overlay navbar can finally observe it.
+        initNavOverlay();
     }
 
     function renderGalleryPreview() {
@@ -1718,19 +1903,16 @@
         syncStoryCardHeight(card, flipped);
     }
 
-    // Page-level a11y/meta basics injected once per page (DRY across every static shell since the
-    // site is fully JS-driven): a skip link, an id on <main>, and the mobile theme-color.
+    // Page-level a11y basics injected once per page (DRY across every static shell since the site is
+    // fully JS-driven): a skip link and an id on <main>.
+    // theme-color is NOT injected here any more — it is a STATIC <meta name="theme-color"
+    // content="#FCFAF5"> in every page's <head>. Injecting it took ~250ms, long enough for mobile
+    // browser chrome to paint its default colour and then visibly recolour on every navigation.
+    // Idempotent: main.id is set before the skip-link bail-out, so callers may run this twice (once
+    // from renderChrome, once after a chapter page injects its <main>).
     function ensureSkipLink() {
         const main = document.querySelector("main");
         if (main && !main.id) main.id = "main-content";
-        if (!document.querySelector('meta[name="theme-color"]')) {
-            const meta = document.createElement("meta");
-            meta.name = "theme-color";
-            // --paper as sRGB hex: theme-color must match the page/navbar background — the old
-            // dark green painted a dark band of browser chrome over a near-white page on mobile.
-            meta.content = "#FCFAF5";
-            document.head.appendChild(meta);
-        }
         if (document.querySelector(".skip-link")) return;
         const link = document.createElement("a");
         link.className = "skip-link";
@@ -1754,14 +1936,97 @@
             document.body.classList.toggle("nav-open", isOpen);
         });
 
-        navMenu.querySelectorAll("a").forEach(function (link) {
-            link.addEventListener("click", function () {
-                navMenu.classList.remove("active");
-                hamburger.classList.remove("active");
-                hamburger.setAttribute("aria-expanded", "false");
-                document.body.classList.remove("nav-open");
+        // Closing the drawer on link clicks is DELEGATED to the menu itself rather than bound per
+        // <a>: refreshChaptersDropdown() replaces the dropdown's <li>s after the Firestore fetch
+        // lands, which would silently drop per-link handlers and leave the drawer open when a
+        // chapter link is tapped. (Re-running initMobileNavigation instead is not an option — it
+        // would double-bind the hamburger.)
+        navMenu.addEventListener("click", function (event) {
+            const link = event.target instanceof Element ? event.target.closest("a") : null;
+            if (!link || !navMenu.contains(link)) return;
+            navMenu.classList.remove("active");
+            hamburger.classList.remove("active");
+            hamburger.setAttribute("aria-expanded", "false");
+            document.body.classList.remove("nav-open");
+        });
+    }
+
+    // HERO PAGES: on any page carrying the static body class "nav-overlay" the navbar sits fixed
+    // over the page's opening hero and goes transparent while that hero is behind it
+    // (body.nav-overlay CSS), turning solid again the moment the hero scrolls past — paper-coloured
+    // links would be unreadable on the light page body. The SOLID bar is the CSS default and
+    // .is-over-hero is what this adds, so a blocked script (or a renderer that threw before this
+    // ran) leaves a readable navbar rather than an invisible one. Gated on body.nav-overlay + the
+    // page's first hero, so every other page (admin, design system, test harnesses) keeps the plain
+    // sticky navbar and this is a no-op there.
+    // Safe to call repeatedly: it tears down the previous observer first (navOverlayObserver is
+    // declared at the top of this IIFE — see the note there). Called at parse time from
+    // renderChrome() (so the bar reads transparent from the first paint, without waiting on the
+    // Firestore fetch that gates initRender) and once more from ensureChapterProfileLayout() when it
+    // injects a chapter hero.
+    //
+    // body.nav-overlay CROSS-FADES the bar between solid and transparent, which must NOT run for the
+    // initial state: any first paint landing before this executes shows the solid default and would
+    // then visibly fade to transparent. So the transition is CSS-gated on body.nav-ready, removed
+    // here while the state is applied and restored one frame later — every call, because the
+    // chapter-profile re-call flips the bar solid→transparent long after first paint too.
+    var navReadyGeneration = 0;
+    function enableNavTransitions() {
+        const generation = ++navReadyGeneration;
+        const raf = window.requestAnimationFrame
+            ? window.requestAnimationFrame.bind(window)
+            : function (fn) { return setTimeout(fn, 16); };
+        // TWO frames, not one: the state applied above has to be recalculated and painted with
+        // transitions still OFF first. Adding the class in the SAME frame would fold both changes
+        // into one style recalculation, and the browser animates whenever the after-change style
+        // has a transition — which is the fade this exists to suppress.
+        raf(function () {
+            raf(function () {
+                if (generation !== navReadyGeneration) return; // superseded by a later call
+                document.body.classList.add("nav-ready");
             });
         });
+    }
+
+    function initNavOverlay() {
+        const navbar = document.querySelector(".navbar");
+        if (!navbar || !document.body.classList.contains("nav-overlay")) return;
+        document.body.classList.remove("nav-ready");
+        // First hero in document order: .home-hero (home), .hero-editorial (interior pages) or
+        // .chapter-hero (chapter profiles — injected later by ensureChapterProfileLayout, which
+        // calls this again once the hero exists).
+        const hero = document.querySelector(".home-hero, .hero-editorial, .chapter-hero");
+        if (navOverlayObserver) {
+            navOverlayObserver.disconnect();
+            navOverlayObserver = null;
+        }
+        // No hero to sit over, or no IntersectionObserver (very old browsers): leave the bar solid.
+        if (!hero || !("IntersectionObserver" in window)) {
+            navbar.classList.remove("is-over-hero");
+            enableNavTransitions();
+            return;
+        }
+
+        // Initial state from GEOMETRY, mirroring the observer's own rootMargin condition below
+        // (hero still crossing the band under the fixed bar). Adding .is-over-hero unconditionally
+        // was wrong for any load that is ALREADY scrolled when this runs — a mid-page reload, a
+        // back-restore — where the bar painted transparent over light content until the observer's
+        // first callback corrected it (a visible flash, or a 220ms cross-fade once nav-ready has
+        // landed). Matching the observer makes its first callback a no-op.
+        // Not the same thing as an anchor deep-link (impact.html#seniors): Chrome runs the fragment
+        // scroll AFTER this script, starting from y=0, and html{scroll-behavior:smooth} animates it,
+        // so the bar correctly starts transparent and the solid fade is scroll-driven.
+        const navH = navbar.offsetHeight || 76;
+        const heroRect = hero.getBoundingClientRect();
+        navbar.classList.toggle("is-over-hero", heroRect.bottom > navH);
+        navOverlayObserver = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                navbar.classList.toggle("is-over-hero", entry.isIntersecting);
+            });
+        }, { rootMargin: "-" + navH + "px 0px 0px 0px", threshold: 0 });
+
+        navOverlayObserver.observe(hero);
+        enableNavTransitions();
     }
 
     function initSmoothScroll() {
@@ -2136,162 +2401,6 @@
         '</article>';
     }
 
-    // Donation nudges: a dismissable bottom ribbon for returning visitors + a one-time
-    // welcome modal (shown once per visitor). Both are gentle, Wikipedia/Khan-style asks — never a
-    // takeover — and lead to the donate hub (donate.html). localStorage keys are versioned so the
-    // ask can be re-run later (bump the suffix) without every past visitor being re-counted.
-    var DONATE_MODAL_SEEN_KEY = "bfbl_donate_modal_seen_v1";
-    var DONATE_BANNER_DISMISSED_KEY = "bfbl_donate_banner_dismissed_v1";
-
-    function donateFlagGet(key) {
-        try { return localStorage.getItem(key); } catch (e) { return null; } // private mode → best effort
-    }
-    function donateFlagSet(key) {
-        try { localStorage.setItem(key, "1"); } catch (e) { /* localStorage blocked — skip */ }
-    }
-
-    function initDonateNudges() {
-        // Public pages only. Admin pages load admin.js (not this file), but guard defensively anyway.
-        var pathname = String(location.pathname || "").toLowerCase();
-        if (/admin/.test(pathname) || document.body.classList.contains("page-donate")) return;
-        var href = escapeHTML(safeUrl(donateHubUrl));
-        if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) initDonateBanner(href);
-        initDonateModal(href);
-    }
-
-    function initDonateBanner(href) {
-        if (document.querySelector(".donate-banner")) return;
-        if (donateFlagGet(DONATE_BANNER_DISMISSED_KEY)) return;
-
-        document.body.insertAdjacentHTML("beforeend",
-            '<div class="donate-banner" role="region" aria-label="Support Bytes for Better Lives">' +
-                '<div class="donate-banner-inner">' +
-                    '<svg class="donate-banner-icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M12 21s-7.6-4.7-10.1-9.4C.3 8.2 2 4.8 5.3 4.8c2 0 3.4 1.2 4.1 2.4.7-1.2 2.1-2.4 4.1-2.4 3.3 0 5 3.4 3.4 6.8C19.4 16.3 12 21 12 21z" fill="currentColor"/></svg>' +
-                    '<p class="donate-banner-text">Help fund devices for local schools and seniors — it takes 30 seconds.</p>' +
-                    '<a class="donate-banner-cta" href="' + href + '">Donate</a>' +
-                    '<button class="donate-banner-close" type="button" aria-label="Dismiss donation banner"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></button>' +
-                '</div>' +
-            '</div>');
-
-        var banner = document.querySelector(".donate-banner");
-        var bodyObserver = window.MutationObserver ? new MutationObserver(syncBannerSpace) : null;
-
-        // Reserve exactly the banner's height at the page bottom so the fixed bar never hides the
-        // footer — measured (not a hardcoded value) because the ribbon wraps to two lines on mobile.
-        function syncBannerSpace() {
-            var hiddenByNav = document.body.classList.contains("nav-open");
-            document.body.style.paddingBottom = banner.classList.contains("is-visible") && !hiddenByNav ? (banner.offsetHeight + "px") : "";
-        }
-        // Force a reflow so the off-screen start state is committed, THEN reveal in the same tick —
-        // this triggers the slide-in transition reliably even in a backgrounded tab (where
-        // requestAnimationFrame is paused), unlike an rAF-gated reveal.
-        void banner.getBoundingClientRect();
-        banner.classList.add("is-visible");
-        syncBannerSpace();
-        window.addEventListener("resize", syncBannerSpace);
-        if (bodyObserver) bodyObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
-
-        function dismissBanner() {
-            banner.classList.remove("is-visible");
-            document.body.style.paddingBottom = "";
-            donateFlagSet(DONATE_BANNER_DISMISSED_KEY);
-            if (bodyObserver) bodyObserver.disconnect();
-            window.setTimeout(function () { if (banner.parentNode) banner.parentNode.removeChild(banner); }, 320);
-        }
-        banner.querySelector(".donate-banner-close").addEventListener("click", dismissBanner);
-        // Clicking through to donate counts as engaging — don't nag on the next visit.
-        banner.querySelector(".donate-banner-cta").addEventListener("click", function () {
-            donateFlagSet(DONATE_BANNER_DISMISSED_KEY);
-        });
-    }
-
-    function initDonateModal(href) {
-        if (document.getElementById("donate-modal")) return;
-        if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) return;
-
-        document.body.insertAdjacentHTML("beforeend",
-            '<div class="donate-modal" id="donate-modal" role="dialog" aria-modal="true" aria-labelledby="donate-modal-title" aria-describedby="donate-modal-body">' +
-                '<div class="donate-modal-card">' +
-                    '<button class="donate-modal-close" type="button" aria-label="Close"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></button>' +
-                    '<p class="donate-modal-kicker">Support the mission</p>' +
-                    '<h2 class="donate-modal-title" id="donate-modal-title">A small gift bridges the digital divide</h2>' +
-                    '<p class="donate-modal-body" id="donate-modal-body">Bytes for Better Lives is student-led and volunteer-run. A gift as small as <strong>$5</strong> helps put a tablet in a senior’s hands and devices in local classrooms, and every dollar goes straight to the work.</p>' +
-                    '<div class="donate-modal-actions">' +
-                        '<a class="btn btn-donate donate-modal-cta" href="' + href + '">Donate in 30 seconds</a>' +
-                        '<button class="btn btn-secondary donate-modal-dismiss" type="button">Maybe later</button>' +
-                    '</div>' +
-                    '<p class="donate-modal-fineprint">100% volunteer-run · a registered nonprofit (EIN 42-2241292)</p>' +
-                '</div>' +
-            '</div>');
-
-        var modal = document.getElementById("donate-modal");
-        var modalCard = modal.querySelector(".donate-modal-card");
-        var opener = null;
-        var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        var openTimer = null;
-        modal.setAttribute("tabindex", "-1");
-
-        function openModal() {
-            if (modal.classList.contains("active")) return;
-            donateFlagSet(DONATE_MODAL_SEEN_KEY); // once per visitor, whether or not they act
-            opener = document.activeElement;
-            modal.classList.add("active");
-            document.body.classList.add("modal-open");
-            if (modalCard) {
-                modalCard.setAttribute("tabindex", "-1");
-                modalCard.focus();
-            } else {
-                modal.focus();
-            }
-        }
-        function closeModal() {
-            modal.classList.remove("active");
-            document.body.classList.remove("modal-open");
-            if (openTimer) {
-                window.clearTimeout(openTimer);
-                openTimer = null;
-            }
-            if (opener && typeof opener.focus === "function") opener.focus();
-            window.setTimeout(function () { if (modal.parentNode) modal.parentNode.removeChild(modal); }, 320);
-        }
-        function hasBlockingDialog() {
-            return !modal.classList.contains("active") && document.body.classList.contains("modal-open");
-        }
-        function tryOpenModal() {
-            if (modal.classList.contains("active")) return;
-            if (donateFlagGet(DONATE_MODAL_SEEN_KEY)) return;
-            if (hasBlockingDialog()) {
-                openTimer = window.setTimeout(tryOpenModal, 600);
-                return;
-            }
-            openTimer = null;
-            openModal();
-        }
-
-        modal.querySelector(".donate-modal-close").addEventListener("click", closeModal);
-        modal.querySelector(".donate-modal-dismiss").addEventListener("click", closeModal);
-        // The Donate link navigates to the hub; dismiss the modal behind it.
-        modal.querySelector(".donate-modal-cta").addEventListener("click", closeModal);
-        modal.addEventListener("click", function (event) { if (event.target === modal) closeModal(); });
-        document.addEventListener("keydown", function (event) {
-            if (!modal.classList.contains("active")) return;
-            if (event.key === "Escape") { closeModal(); return; }
-            if (event.key !== "Tab") return;
-            var focusables = Array.from(modal.querySelectorAll('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])'))
-                .filter(function (el) { return el.offsetParent !== null && !el.disabled && el.tabIndex >= 0; });
-            if (!focusables.length) return;
-            var first = focusables[0];
-            var last = focusables[focusables.length - 1];
-            if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) { event.preventDefault(); last.focus(); }
-            else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) { event.preventDefault(); first.focus(); }
-        });
-
-        // A short beat before the ask feels less like a takeover; if another dialog is open, wait
-        // until it closes before showing the donation modal.
-        if (reduce) window.setTimeout(tryOpenModal, 0);
-        else window.setTimeout(tryOpenModal, 1200);
-    }
-
     function initCounters() {
         if (!("IntersectionObserver" in window)) return;
         const counters = document.querySelectorAll('.animated-counter');
@@ -2357,6 +2466,15 @@
         });
     }
 
+    // Chrome first, synchronously at parse time: script.js is a plain end-of-<body> script, so the
+    // navbar, the footer container and any static hero are already in the DOM. Waiting for
+    // initRender (gated on the Firestore fetch, up to 3s) is what made the bar sit logo-only — and
+    // showed a solid navbar over the hero — for a few hundred ms on every navigation.
+    // ⚠️ MUST STAY THE LAST STATEMENT IN THIS IIFE. Function declarations hoist, but the
+    // module-level `const`s do NOT: calling renderChrome() higher up put SOCIAL_ICONS (and, via
+    // initRender later, the map-pin tables) in the temporal dead zone, so renderFooter threw, the
+    // whole IIFE aborted mid-way and every later const stayed permanently uninitialised.
+    renderChrome();
 })();
 
 let emailModalTrigger = null;

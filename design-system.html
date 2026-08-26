@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FCFAF5">
+    <meta name="robots" content="noindex">
+    <meta name="description" content="Bytes for Better Lives — living design system: tokens, components, and rules, rendered from the site's own styles.css.">
+    <title>Design System | Bytes for Better Lives</title>
+    <link rel="icon" type="image/avif" href="images/logo.avif">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900&display=swap">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Style-guide chrome only — built entirely from the design tokens it documents, so this page
+           stays on-brand and never introduces values the system doesn't already have. */
+        body { padding-bottom: var(--space-4xl); }
+        .ds-main { max-width: 1180px; margin-inline: auto; padding-inline: var(--space-lg); }
+        .ds-section { padding-block: var(--space-3xl); border-top: 1px solid var(--line); }
+        .ds-section:first-of-type { border-top: 0; }
+        .ds-lede { max-width: 60ch; color: var(--muted); font-size: 1.05rem; }
+        .ds-eyebrow { font-family: var(--font-label); text-transform: uppercase; letter-spacing: 0.16em;
+            font-size: 0.72rem; font-weight: 600; color: var(--accent-dark); margin-bottom: var(--space-sm); }
+
+        /* Swatches */
+        .ds-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: var(--space-md); margin-top: var(--space-lg); }
+        .ds-swatch { border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+            background: var(--paper); }
+        .ds-swatch-chip { height: 84px; }
+        .ds-swatch-meta { padding: var(--space-sm) var(--space-md) var(--space-md); display: grid; gap: 2px; }
+        .ds-mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.78rem; }
+        .ds-swatch-name { color: var(--ink); font-weight: 700; }
+        .ds-swatch-val { color: var(--muted); word-break: break-word; }
+
+        /* Generic specimen surface for component demos */
+        .ds-specimen { margin-top: var(--space-lg); padding: var(--space-2xl);
+            background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+        .ds-specimen + .ds-specimen { margin-top: var(--space-md); }
+        .ds-specimen--paper { background: var(--paper); }
+        .ds-row { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: center; }
+        .ds-stack { display: grid; gap: var(--space-lg); }
+        .ds-cols { display: grid; gap: var(--space-lg); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+        .ds-caption { margin-top: var(--space-sm); color: var(--muted); font-size: 0.85rem; }
+        .ds-code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.8rem;
+            color: var(--accent-dark); background: var(--accent-soft); padding: 2px 8px; border-radius: var(--radius-sm); }
+
+        /* Type specimens */
+        .ds-type { display: grid; gap: var(--space-xl); margin-top: var(--space-lg); }
+        .ds-type-row { display: grid; gap: 4px; padding-bottom: var(--space-lg); border-bottom: 1px solid var(--line); }
+        .ds-type-label { font-family: ui-monospace, monospace; font-size: 0.75rem; color: var(--muted); }
+        .ds-display-xl { font-family: var(--font-display); font-weight: 600; font-size: clamp(2.4rem, 5vw, 3.6rem);
+            line-height: 1.05; color: var(--ink); }
+        .ds-display-lg { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+            color: var(--ink); }
+        .ds-body-lg { font-family: var(--font-body); font-size: 1.15rem; color: var(--ink-soft); max-width: 60ch; }
+        .ds-body { font-family: var(--font-body); font-size: 1rem; color: var(--ink-soft); max-width: 60ch; }
+
+        /* Scale visualisers */
+        .ds-scale { display: grid; gap: var(--space-md); margin-top: var(--space-lg); }
+        .ds-scale-row { display: grid; grid-template-columns: 160px 1fr; align-items: center; gap: var(--space-md); }
+        .ds-scale-bar { height: 20px; background: var(--accent); border-radius: 3px; }
+        .ds-radius-grid, .ds-shadow-grid { display: grid; gap: var(--space-lg);
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); margin-top: var(--space-lg); }
+        .ds-radius-box { height: 96px; background: var(--accent-soft); border: 1px solid var(--accent);
+            display: grid; place-items: end center; padding: var(--space-xs); }
+        .ds-shadow-box { height: 96px; background: var(--paper); border-radius: 8px;
+            display: grid; place-items: center; color: var(--muted); }
+        .ds-shadow-grid { padding: var(--space-md); }
+
+        /* Theme (per-page accent) tiles */
+        /* One accent site-wide, so this holds a single tile — cap it so the card doesn't stretch
+           the full column width around a swatch's worth of content. */
+        .ds-theme-grid { display: grid; gap: var(--space-lg); grid-template-columns: repeat(auto-fit, minmax(240px, 320px));
+            margin-top: var(--space-lg); }
+        .ds-theme { padding: var(--space-xl); border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+        .ds-theme h3 { font-family: var(--font-display); color: var(--accent-dark); margin: 0 0 4px; }
+        .ds-theme .ds-mini-underline { width: 40px; height: 4px; border-radius: 999px; background: var(--accent); margin-bottom: var(--space-md); }
+
+        .ds-note { margin-top: var(--space-lg); padding: var(--space-lg); border-radius: 8px;
+            background: var(--accent-soft); color: var(--ink); border: 1px solid color-mix(in oklch, var(--accent) 30%, transparent); }
+        .ds-rules { display: grid; gap: var(--space-md); margin-top: var(--space-lg); padding: 0; list-style: none; }
+        .ds-rules li { padding: var(--space-md) var(--space-lg); background: var(--paper); border: 1px solid var(--line);
+            border-radius: 8px; color: var(--ink-soft); }
+        .ds-rules strong { color: var(--ink); }
+        .ds-toc { display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-md); margin-top: var(--space-lg); }
+        .ds-toc a { font-family: var(--font-label); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem;
+            font-weight: 500; color: var(--accent-dark); text-decoration: none; padding: 6px 12px;
+            border: 1px solid var(--line); border-radius: 4px; }
+        .ds-toc a:hover { border-color: var(--accent); }
+    </style>
+</head>
+<!-- No body class: page-* accents are retired, page-home now scopes only home's own hero/intro/stat-band
+     pairing (which would mis-render the impact band specimen below), and nav-overlay is for pages with
+     a navbar — this page has none. -->
+<body>
+    <header class="hero hero-editorial">
+        <div class="hero-content">
+            <p class="eyebrow">Design System</p>
+            <h1>Bytes for Better Lives — the parts we build with.</h1>
+            <p>A living reference generated from this repo's own <code>styles.css</code>. Every token and component below renders from the real stylesheet — change the system, and this page changes with it.</p>
+        </div>
+    </header>
+
+    <main class="ds-main">
+        <nav class="ds-toc" aria-label="Sections">
+            <a href="#foundations">Foundations</a>
+            <a href="#type">Typography</a>
+            <a href="#color">Color</a>
+            <a href="#accents">Accent</a>
+            <a href="#heroes">Heroes</a>
+            <a href="#radii">Radii &amp; shadow</a>
+            <a href="#spacing">Spacing</a>
+            <a href="#buttons">Buttons</a>
+            <a href="#headers">Section motif</a>
+            <a href="#cards">Cards</a>
+            <a href="#stats">Stat band</a>
+            <a href="#badges">Badges &amp; chips</a>
+            <a href="#bands">Editorial bands</a>
+            <a href="#rules">Principles</a>
+        </nav>
+
+        <!-- FOUNDATIONS -->
+        <section class="ds-section" id="foundations">
+            <p class="ds-eyebrow">Foundations</p>
+            <h2 class="ds-display-lg">Warm + bold, mint-led editorial</h2>
+            <p class="ds-lede">The 2026 redesign blends DECA's confident colour-blocking with a warm, human nonprofit
+                voice. Signature colour is <strong>SY Glacier Mint</strong>; type is rounded-geometric (Gabarito) over a
+                clean geometric body (Mulish). No serifs. It should read intentional and editorial — never templated.</p>
+        </section>
+
+        <!-- TYPOGRAPHY -->
+        <section class="ds-section" id="type">
+            <p class="ds-eyebrow">Typography</p>
+            <h2 class="ds-display-lg">Two families, three roles</h2>
+            <p class="ds-lede">Loaded via <code>&lt;link&gt;</code> in every page head (never CSS <code>@import</code> —
+                that blocked first paint). Any new page shell copies the three font links. Gabarito sets
+                blacker than the retired Nunito, so the whole display/label weight scale sits one notch
+                down: 700 / 600 / 550 / 500.</p>
+            <div class="ds-type">
+                <div class="ds-type-row">
+                    <span class="ds-type-label">--font-display · Gabarito 600 · headings</span>
+                    <p class="ds-display-xl">Bridging the digital divide.</p>
+                </div>
+                <div class="ds-type-row">
+                    <span class="ds-type-label">--font-body · Mulish · prose</span>
+                    <p class="ds-body-lg">Patient, hands-on help with phones, iPads, laptops, video calls, and everyday
+                        digital tasks — so seniors feel confident and no classroom goes without devices.</p>
+                </div>
+                <div class="ds-type-row">
+                    <span class="ds-type-label">--font-label · Gabarito uppercase · kickers, buttons, nav</span>
+                    <p class="section-kicker" style="margin:0;">Senior Tech Help</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLOR -->
+        <section class="ds-section" id="color">
+            <p class="ds-eyebrow">Color</p>
+            <h2 class="ds-display-lg">OKLCH token palette</h2>
+            <p class="ds-lede">All colours are custom properties in <code>:root</code>. Mint (<code>--green</code>) failed
+                CTA contrast, so it's reserved for soft washes; primary buttons fill <code>--green-dark</code>.</p>
+
+            <h3 class="ds-body-lg" style="margin-top:var(--space-xl);font-weight:700;color:var(--ink);">Brand — mint + shades</h3>
+            <div class="ds-swatches" data-swatch-group>
+                <div class="ds-swatch" data-token="--green"><div class="ds-swatch-chip" style="background:var(--green)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--green</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--green-dark"><div class="ds-swatch-chip" style="background:var(--green-dark)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--green-dark</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--green-deep"><div class="ds-swatch-chip" style="background:var(--green-deep)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--green-deep</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--green-soft"><div class="ds-swatch-chip" style="background:var(--green-soft)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--green-soft</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+            </div>
+
+            <h3 class="ds-body-lg" style="margin-top:var(--space-xl);font-weight:700;color:var(--ink);">Data colours — gold · coral · teal (never page accents)</h3>
+            <div class="ds-swatches" data-swatch-group>
+                <div class="ds-swatch" data-token="--gold"><div class="ds-swatch-chip" style="background:var(--gold)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--gold</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--gold-dark"><div class="ds-swatch-chip" style="background:var(--gold-dark)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--gold-dark</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--gold-deep"><div class="ds-swatch-chip" style="background:var(--gold-deep)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--gold-deep</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--gold-soft"><div class="ds-swatch-chip" style="background:var(--gold-soft)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--gold-soft</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--coral"><div class="ds-swatch-chip" style="background:var(--coral)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--coral</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--coral-dark"><div class="ds-swatch-chip" style="background:var(--coral-dark)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--coral-dark</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--coral-deep"><div class="ds-swatch-chip" style="background:var(--coral-deep)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--coral-deep</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--coral-soft"><div class="ds-swatch-chip" style="background:var(--coral-soft)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--coral-soft</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--teal"><div class="ds-swatch-chip" style="background:var(--teal)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--teal</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--teal-dark"><div class="ds-swatch-chip" style="background:var(--teal-dark)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--teal-dark</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--teal-deep"><div class="ds-swatch-chip" style="background:var(--teal-deep)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--teal-deep</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--teal-soft"><div class="ds-swatch-chip" style="background:var(--teal-soft)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--teal-soft</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+            </div>
+
+            <h3 class="ds-body-lg" style="margin-top:var(--space-xl);font-weight:700;color:var(--ink);">Neutrals &amp; semantic</h3>
+            <div class="ds-swatches" data-swatch-group>
+                <div class="ds-swatch" data-token="--paper"><div class="ds-swatch-chip" style="background:var(--paper)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--paper</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--surface"><div class="ds-swatch-chip" style="background:var(--surface)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--surface</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--surface-strong"><div class="ds-swatch-chip" style="background:var(--surface-strong)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--surface-strong</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--ink"><div class="ds-swatch-chip" style="background:var(--ink)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--ink</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--ink-soft"><div class="ds-swatch-chip" style="background:var(--ink-soft)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--ink-soft</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--muted"><div class="ds-swatch-chip" style="background:var(--muted)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--muted</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--line"><div class="ds-swatch-chip" style="background:var(--line)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--line</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--footer-bg"><div class="ds-swatch-chip" style="background:var(--footer-bg)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--footer-bg</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--danger"><div class="ds-swatch-chip" style="background:var(--danger)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--danger</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+                <div class="ds-swatch" data-token="--danger-soft"><div class="ds-swatch-chip" style="background:var(--danger-soft)"></div><div class="ds-swatch-meta"><span class="ds-mono ds-swatch-name">--danger-soft</span><span class="ds-mono ds-swatch-val" data-token-val></span></div></div>
+            </div>
+        </section>
+
+        <!-- ACCENT -->
+        <section class="ds-section" id="accents">
+            <p class="ds-eyebrow">Accent</p>
+            <h2 class="ds-display-lg">One accent, site-wide</h2>
+            <p class="ds-lede">Every page runs the same brand green: <code>--accent</code> /
+                <code>--accent-soft</code> / <code>--accent-dark</code> are set once in <code>:root</code> and there are
+                no <code>body.page-*</code> overrides. Accent drives kickers, underlines, hero tint, band washes, card
+                hover and stat numerals. <code>--accent-dark</code> sits a shade deeper than <code>--accent</code> for
+                the two-tone kicker layering.</p>
+            <div class="ds-theme-grid">
+                <div class="ds-theme" style="--accent:var(--green-dark);--accent-soft:var(--green-soft);--accent-dark:var(--green-deep);">
+                    <h3>Green</h3><div class="ds-mini-underline"></div>
+                    <p class="ds-mono" style="color:var(--muted);">every page</p>
+                    <div class="ds-row" style="margin-top:var(--space-md);"><a class="btn btn-primary">Primary</a><span class="status-badge status-active">Active</span></div>
+                </div>
+            </div>
+            <p class="ds-lede" style="margin-top:var(--space-lg);">Gold, coral and teal survive in <code>:root</code> as
+                <strong>data colours</strong>, never as a page mood: the four-colour program-tile cycle, gold
+                <code>.pin-launching</code> map pins, hollow coral <code>.pin-outreach</code> rings, status badges and
+                <code>--danger</code>. They encode what a thing IS — reach for them only for that.</p>
+        </section>
+
+        <!-- HEROES -->
+        <section class="ds-section" id="heroes">
+            <p class="ds-eyebrow">Components · Heroes</p>
+            <h2 class="ds-display-lg">One green-ink field, photo or not</h2>
+            <p class="ds-lede">Two treatments, one colour. <code>.home-hero</code> and photo chapter heroes
+                (<code>.chapter-hero</code>) lay the scrim over a real photograph; <code>.hero-editorial</code> — this
+                page's own header — and <code>.chapter-hero--editorial</code> run the same field over a green-ink
+                ground instead. No per-page hero colours.</p>
+            <ul class="ds-rules">
+                <li><strong>The field.</strong> <code>ink 86% + --green-deep</code> at a 92° 72 → 66 → 62% falloff, plus
+                    a faint dot-grid and a top-left glow — both held down so the brightest pixel still clears 7:1
+                    against paper copy.</li>
+                <li><strong>Never a text-shadow.</strong> If hero type gets lost, deepen the wash. Photo chapter heroes
+                    also open with a scrim across the navbar band for exactly that reason.</li>
+                <li><strong>Overlay navbar.</strong> Pages carrying <code>body.nav-overlay</code> run the bar fixed and
+                    transparent over the hero — <code>.is-over-hero</code>, added by <code>initNavOverlay()</code>.
+                    Solid is the default, so a blocked script can never hide the nav. Every hero on such a page re-adds
+                    <code>--nav-height</code> as top padding. This page has no navbar, so it skips the class.</li>
+            </ul>
+        </section>
+
+        <!-- RADII & SHADOW -->
+        <section class="ds-section" id="radii">
+            <p class="ds-eyebrow">Radii &amp; shadow</p>
+            <h2 class="ds-display-lg">Square corners, set per component</h2>
+            <p class="ds-lede">Components carry their own radius: controls 4px, cards and surfaces 8px, icon chips 6px.
+                True data pills — status badges, roster and partner name chips — stay 999px; avatars stay 50%.</p>
+            <div class="ds-radius-grid">
+                <div><div class="ds-radius-box" style="border-radius:4px"></div><p class="ds-mono ds-caption">4px · buttons, inputs, nav links</p></div>
+                <div><div class="ds-radius-box" style="border-radius:8px"></div><p class="ds-mono ds-caption">8px · cards, panels, surfaces</p></div>
+                <div><div class="ds-radius-box" style="border-radius:6px"></div><p class="ds-mono ds-caption">6px · icon chips</p></div>
+                <div><div class="ds-radius-box" style="border-radius:999px"></div><p class="ds-mono ds-caption">999px · data pills</p></div>
+            </div>
+            <p class="ds-caption" style="margin-top:var(--space-xl);"><strong>Legacy token scale</strong> — still in <code>:root</code>; only the skip-link, the social icon buttons and the story chips still read it (<code>--radius-md</code>).</p>
+            <div class="ds-radius-grid">
+                <div><div class="ds-radius-box" style="border-radius:var(--radius-sm)"></div><p class="ds-mono ds-caption">--radius-sm · <span data-token="--radius-sm"><span data-token-val></span></span></p></div>
+                <div><div class="ds-radius-box" style="border-radius:var(--radius-md)"></div><p class="ds-mono ds-caption">--radius-md · <span data-token="--radius-md"><span data-token-val></span></span></p></div>
+                <div><div class="ds-radius-box" style="border-radius:var(--radius-lg)"></div><p class="ds-mono ds-caption">--radius-lg · <span data-token="--radius-lg"><span data-token-val></span></span></p></div>
+                <div><div class="ds-radius-box" style="border-radius:var(--radius-xl)"></div><p class="ds-mono ds-caption">--radius-xl · <span data-token="--radius-xl"><span data-token-val></span></span></p></div>
+                <div><div class="ds-radius-box" style="border-radius:var(--radius-2xl)"></div><p class="ds-mono ds-caption">--radius-2xl · <span data-token="--radius-2xl"><span data-token-val></span></span></p></div>
+            </div>
+            <div class="ds-shadow-grid ds-specimen" style="margin-top:var(--space-xl);">
+                <div class="ds-shadow-box" style="box-shadow:var(--shadow-sm)"><span class="ds-mono">--shadow-sm</span></div>
+                <div class="ds-shadow-box" style="box-shadow:var(--shadow-md)"><span class="ds-mono">--shadow-md</span></div>
+                <div class="ds-shadow-box" style="box-shadow:var(--shadow-lg)"><span class="ds-mono">--shadow-lg</span></div>
+            </div>
+        </section>
+
+        <!-- SPACING -->
+        <section class="ds-section" id="spacing">
+            <p class="ds-eyebrow">Spacing</p>
+            <h2 class="ds-display-lg">Spacing scale</h2>
+            <div class="ds-scale">
+                <div class="ds-scale-row"><span class="ds-mono">--space-2xs</span><div class="ds-scale-bar" style="width:var(--space-2xs)"></div></div>
+                <div class="ds-scale-row"><span class="ds-mono">--space-xs</span><div class="ds-scale-bar" style="width:var(--space-xs)"></div></div>
+                <div class="ds-scale-row"><span class="ds-mono">--space-sm</span><div class="ds-scale-bar" style="width:var(--space-sm)"></div></div>
+                <div class="ds-scale-row"><span class="ds-mono">--space-md</span><div class="ds-scale-bar" style="width:var(--space-md)"></div></div>
+                <div class="ds-scale-row"><span class="ds-mono">--space-lg</span><div class="ds-scale-bar" style="width:var(--space-lg)"></div></div>
+                <div class="ds-scale-row"><span class="ds-mono">--space-xl</span><div class="ds-scale-bar" style="width:var(--space-xl)"></div></div>
+                <div class="ds-scale-row"><span class="ds-mono">--space-2xl</span><div class="ds-scale-bar" style="width:var(--space-2xl)"></div></div>
+                <div class="ds-scale-row"><span class="ds-mono">--space-3xl</span><div class="ds-scale-bar" style="width:var(--space-3xl)"></div></div>
+                <div class="ds-scale-row"><span class="ds-mono">--space-4xl</span><div class="ds-scale-bar" style="width:var(--space-4xl)"></div></div>
+            </div>
+        </section>
+
+        <!-- BUTTONS -->
+        <section class="ds-section" id="buttons">
+            <p class="ds-eyebrow">Components · Buttons</p>
+            <h2 class="ds-display-lg">Square-cornered buttons</h2>
+            <p class="ds-lede">Primary CTAs fill <code>--green-dark</code> with paper text. Buttons and controls sit at
+                4px, cards and surfaces at 8px, icon chips at 6px; true data pills stay 999px. Hover feedback signals
+                clickability — reserved for actual controls.</p>
+            <div class="ds-specimen ds-specimen--paper">
+                <div class="ds-row">
+                    <a class="btn btn-primary">See Our Impact</a>
+                    <a class="btn btn-secondary">Start a Chapter</a>
+                    <a class="btn-donate">Donate</a>
+                </div>
+                <p class="ds-caption"><span class="ds-code">.btn .btn-primary</span> · <span class="ds-code">.btn .btn-secondary</span> · <span class="ds-code">.btn-donate</span></p>
+            </div>
+        </section>
+
+        <!-- SECTION MOTIF -->
+        <section class="ds-section" id="headers">
+            <p class="ds-eyebrow">Components · Section motif</p>
+            <h2 class="ds-display-lg">Kicker + title + underline</h2>
+            <div class="ds-specimen ds-specimen--paper">
+                <div class="section-header">
+                    <p class="section-kicker">Our Vision</p>
+                    <h2 class="section-title">Technology access that feels human.</h2>
+                    <p class="section-description">Uppercase Gabarito kicker in <code>--accent-dark</code>, a 48px
+                        <code>--accent</code> underline under the title, and a muted lede.</p>
+                </div>
+                <p class="ds-caption"><span class="ds-code">.section-kicker</span> + <span class="ds-code">.section-title</span> + <span class="ds-code">.section-description</span></p>
+            </div>
+        </section>
+
+        <!-- CARDS -->
+        <section class="ds-section" id="cards">
+            <p class="ds-eyebrow">Components · Cards</p>
+            <h2 class="ds-display-lg">Program tiles &amp; chapter cards</h2>
+            <p class="ds-lede">Program tiles are <strong>flat</strong> (no hover — they aren't links). Chapter cards
+                <strong>are</strong> links, so they keep the hover lift. Colour comes from a coloured chip or a
+                data-driven pill — never a decorative top/left line.</p>
+
+            <div class="ds-specimen">
+                <p class="ds-mono ds-caption" style="margin-bottom:var(--space-md);">.service-card — program tiles (flat), accent chip cycles green/gold/coral/teal</p>
+                <div class="service-grid ds-cols">
+                    <article class="service-card">
+                        <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M12 15.2c-1.9-1.5-2.9-2.5-2.9-3.7a1.7 1.7 0 0 1 2.9-1.1 1.7 1.7 0 0 1 2.9 1.1c0 1.2-1 2.2-2.9 3.7z"/></svg></span>
+                        <h3>Senior Tech Help</h3>
+                        <p>Patient, hands-on help with phones, iPads, laptops, video calls, email, and everyday digital tasks.</p>
+                    </article>
+                    <article class="service-card">
+                        <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.5" width="18" height="12.5" rx="2"/><path d="m7.5 12 3-3 2 2 3.5-3.5"/><path d="M12 16v4.5M8.5 20.5h7"/></svg></span>
+                        <h3>Digital Literacy</h3>
+                        <p>Clear lessons that teach students, families, and community members to use technology with confidence.</p>
+                    </article>
+                    <article class="service-card">
+                        <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 19 5.6v5.2c0 4.5-3 7.8-7 9.4-4-1.6-7-4.9-7-9.4V5.6z"/><path d="m9 11.6 2.1 2.1L15.2 9.6"/></svg></span>
+                        <h3>Online Safety</h3>
+                        <p>Practical presentations that help seniors recognize scams, phishing, unsafe links, and privacy risks.</p>
+                    </article>
+                </div>
+            </div>
+
+            <div class="ds-specimen">
+                <p class="ds-mono ds-caption" style="margin-bottom:var(--space-md);">.chapter-card — whole-card link (hover lift), status pill + "Led by" + view arrow</p>
+                <div class="cards-grid cards-grid--feature ds-cols">
+                    <a class="chapter-card" href="#" aria-label="View Doral Chapter (demo)">
+                        <div class="chapter-card-header">
+                            <div><h3>Doral Chapter</h3><p>Doral, FL, USA</p></div>
+                            <span class="status-badge status-launching">Launching Chapter</span>
+                        </div>
+                        <div class="chapter-lead">
+                            <span class="avatar-initials" aria-hidden="true" style="width:44px;height:44px;">AP</span>
+                            <div><span class="chapter-lead-eyebrow">Led by</span><strong>Asvika Prakash</strong></div>
+                        </div>
+                        <p class="chapter-card-desc">Launching chapter expanding BFBL senior tech help, digital literacy education, and community outreach in Doral.</p>
+                        <span class="chapter-card-go" aria-hidden="true">View chapter →</span>
+                    </a>
+                    <a class="chapter-card chapter-card--feature" href="#" aria-label="View AHS Chapter (demo)">
+                        <div class="chapter-card-header">
+                            <div><h3>AHS Chapter</h3><p>Plantation, FL, USA</p></div>
+                            <span class="status-badge status-executive">Founding Chapter</span>
+                        </div>
+                        <div class="chapter-lead">
+                            <span class="avatar-initials" aria-hidden="true" style="width:44px;height:44px;">BF</span>
+                            <div><span class="chapter-lead-eyebrow">Led by</span><strong>Founding team</strong></div>
+                        </div>
+                        <p class="chapter-card-desc">The founding chapter where Bytes for Better Lives began — the model every new chapter builds on.</p>
+                        <span class="chapter-card-go" aria-hidden="true">View chapter →</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAT BAND -->
+        <section class="ds-section" id="stats">
+            <p class="ds-eyebrow">Components · Stat band</p>
+            <h2 class="ds-display-lg">Editorial impact band</h2>
+            <p class="ds-lede">Big Gabarito numerals in <code>--accent-dark</code> with <code>tabular-nums</code> (so the
+                count-up doesn't jitter) and neutral hairline dividers on a light neutral ground — the mint stays on the
+                type, not the band. Ladders 5 → 3 → 2 columns; never 1-col.</p>
+            <div class="ds-specimen" style="padding:0;overflow:hidden;">
+                <div class="impact-band" style="margin:0;">
+                    <div class="container">
+                        <div class="stats-grid">
+                            <article class="stat-card"><div class="stat-number">$8,450</div><div class="stat-label">Fundraised</div><p class="stat-note">for technology access and outreach</p></article>
+                            <article class="stat-card"><div class="stat-number">2,350+</div><div class="stat-label">Donations Amassed</div><p class="stat-note">games, devices, and supplies</p></article>
+                            <article class="stat-card"><div class="stat-number">1,500+</div><div class="stat-label">Students Reached</div><p class="stat-note">through education and drives</p></article>
+                            <article class="stat-card"><div class="stat-number">3,500+</div><div class="stat-label">Seniors Helped</div><p class="stat-note">with tech help and safety lessons</p></article>
+                            <article class="stat-card"><div class="stat-number">10</div><div class="stat-label">Chapters</div><p class="stat-note">active and launching chapter network</p></article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BADGES & CHIPS -->
+        <section class="ds-section" id="badges">
+            <p class="ds-eyebrow">Components · Badges &amp; chips</p>
+            <h2 class="ds-display-lg">Status pills &amp; roster chips</h2>
+            <div class="ds-specimen ds-specimen--paper">
+                <p class="ds-mono ds-caption" style="margin-bottom:var(--space-md);">.status-badge — true 999px pill, uppercase label</p>
+                <div class="ds-row">
+                    <span class="status-badge status-active">Active Chapter</span>
+                    <span class="status-badge status-launching">Launching Chapter</span>
+                    <span class="status-badge status-executive">Founding Chapter</span>
+                    <span class="status-badge status-prospective">Prospective Chapter</span>
+                </div>
+            </div>
+            <div class="ds-specimen">
+                <p class="ds-mono ds-caption" style="margin-bottom:var(--space-md);">.roster-chip — compact avatar + name + title (volunteers)</p>
+                <div class="roster-chips ds-row">
+                    <div class="roster-chip"><span class="roster-chip-avatar"><span class="avatar-initials" aria-hidden="true" style="width:100%;height:100%;">HC</span></span><span class="roster-chip-meta"><strong>Hailey Contreras</strong><span>Historian</span></span></div>
+                    <div class="roster-chip"><span class="roster-chip-avatar"><span class="avatar-initials" aria-hidden="true" style="width:100%;height:100%;">AH</span></span><span class="roster-chip-meta"><strong>Andre Hernandez</strong><span>Treasurer</span></span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- EDITORIAL BANDS -->
+        <section class="ds-section" id="bands">
+            <p class="ds-eyebrow">Components · Editorial bands</p>
+            <h2 class="ds-display-lg">Dark beats &amp; soft washes</h2>
+            <p class="ds-lede"><code>.surface-band</code> (soft accent wash), <code>.band--tint</code>, and
+                <code>.band--ink</code> (dark) carry <code>.editorial-quote</code> and oversized <code>.band-figure</code>
+                numerals — the founder quote, the "3,500+" beats, and the dark closing CTAs.</p>
+            <div class="ds-specimen" style="padding:0;overflow:hidden;">
+                <section class="section band--ink" style="margin:0;">
+                    <div class="container">
+                        <blockquote class="editorial-quote">
+                            “We started Bytes for Better Lives because a grandparent couldn't join a video call and a
+                            classroom didn't have enough devices. Technology should leave no one behind.”
+                            <cite>Aaron Pinto &amp; Pranav Rai · Co-Founders</cite>
+                        </blockquote>
+                    </div>
+                </section>
+            </div>
+            <div class="ds-specimen" style="padding:0;overflow:hidden;margin-top:var(--space-md);">
+                <section class="section surface-band" style="margin:0;">
+                    <div class="container">
+                        <p class="band-figure">3,500+</p>
+                        <p class="section-description" style="margin:0;">seniors helped — one patient, in-person session at a time.</p>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <!-- PRINCIPLES -->
+        <section class="ds-section" id="rules">
+            <p class="ds-eyebrow">Principles</p>
+            <h2 class="ds-display-lg">The hard rules</h2>
+            <ul class="ds-rules">
+                <li><strong>Hover feedback signals clickability — and only that.</strong> A non-clickable element must never glow, lift, or change on hover. The lift (<code>translateY</code> + shadow) is reserved for whole-card links (<code>.chapter-card</code>, <code>.chapter-leadership-card</code>). Everything else is flat.</li>
+                <li><strong>Corners are square, site-wide.</strong> Controls 4px, cards and surfaces 8px, icon chips 6px. Only true data pills (999px) and avatars (50%) keep their shape.</li>
+                <li><strong>No decorative top/left lines on blocks.</strong> No accent spines or strips; accent is carried by a coloured numeral, chip, or data-driven pill.</li>
+                <li><strong>Never render an empty section.</strong> Any data-driven section hides itself (<code>display:none</code>) when it has nothing to show — no bare headings over empty grids.</li>
+                <li><strong>No text-shadows in any hero.</strong> The declarations are deleted, not overridden. If type is lost over a photo, deepen the hero wash.</li>
+                <li><strong>Mint is a wash, not a CTA fill.</strong> <code>--green</code> failed contrast for buttons; primary CTAs fill <code>--green-dark</code> with paper text.</li>
+                <li><strong>Accent-dark sits a shade below accent.</strong> <code>--accent-dark</code> is deeper than <code>--accent</code> so the kicker text layers under its underline bar. One green accent site-wide — gold, coral and teal are data colours, not page moods.</li>
+                <li><strong>Fonts load via <code>&lt;link&gt;</code>, not CSS <code>@import</code>.</strong> The three font links live in every page head — copy them into any new page shell.</li>
+            </ul>
+            <div class="ds-note">
+                <strong>Where the truth lives:</strong> this page links the real <code>styles.css</code> and reuses the
+                exact component markup rendered by <code>script.js</code>. It's the reference, but the stylesheet and
+                <code>script.js</code> are the source of truth — edit those, and this page reflects the change on reload.
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Fill each token's live computed value — so the swatches/scales always show what styles.css
+        // actually resolves to, not a hardcoded copy that could drift.
+        (function () {
+            var root = getComputedStyle(document.documentElement);
+            document.querySelectorAll('[data-token]').forEach(function (el) {
+                var name = el.getAttribute('data-token');
+                var val = root.getPropertyValue(name).trim();
+                var out = el.querySelector('[data-token-val]');
+                if (out) out.textContent = val || '—';
+            });
+        })();
+    </script>
+</body>
+</html>

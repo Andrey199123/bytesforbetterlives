@@ -72,11 +72,25 @@ if (!firebaseReady) {
         el.textContent = text;
         el.style.color = isError ? "#b00020" : "var(--ink-soft)";
     }
+    // The public site serves repeat visits from a localStorage snapshot of the last live read
+    // (firebase-data.js, up to SNAPSHOT_MAX_AGE_MS old), so an admin who saves and then clicks
+    // through to the site could see their own edit missing for minutes. Drop the snapshot after
+    // every successful write — a prefix sweep, not one literal key, so bumping SNAPSHOT_VERSION
+    // can't silently strand this. Scope: this clears the key on the SAME ORIGIN only; a chapter
+    // subdomain (vercel.json redirects) has its own localStorage and ages out via the 10-min TTL.
+    function clearPublicSnapshot() {
+        try {
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const k = localStorage.key(i);
+                if (k && k.indexOf("bfbl:data:v") === 0) localStorage.removeItem(k);
+            }
+        } catch (err) { /* localStorage blocked — the snapshot just ages out on its own */ }
+    }
     function scheduleSave(key, writeFn) {
         setStatus("Saving…");
         clearTimeout(saveTimers[key]);
         saveTimers[key] = setTimeout(async function () {
-            try { await writeFn(); setStatus("All changes saved ✓"); }
+            try { await writeFn(); clearPublicSnapshot(); setStatus("All changes saved ✓"); }
             catch (err) { setStatus("Save failed: " + (err.message || err), true); }
         }, 600);
     }
@@ -844,7 +858,7 @@ if (!firebaseReady) {
         galleryImages.forEach(function (im, index) {
             const src = typeof im === "string" ? im : (im && im.src) || "";
             const cell = document.createElement("div");
-            cell.style.cssText = "position:relative; border:1px solid var(--line); border-radius:var(--radius-md); overflow:hidden;";
+            cell.style.cssText = "position:relative; border:1px solid var(--line); border-radius:8px; overflow:hidden;";
             cell.innerHTML = `
                 <img src="${escapeAttr(src)}" data-zoom="${escapeAttr(src)}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" onerror="this.src='images/logo.avif'">
                 <button class="btn btn-secondary" type="button" data-gremove="${index}" style="position:absolute; top:4px; right:4px; padding:0.1rem 0.5rem; font-size:0.85rem;">✕</button>
@@ -1319,7 +1333,7 @@ if (!firebaseReady) {
     // ---- Structure (categories + chapters) ----
     function structRow(value, renameAttr, removeAttr, index) {
         return '<div style="display:flex; align-items:center; gap:0.5rem; padding:0.4rem 0.6rem; border:1px solid var(--line); border-radius:8px;">'
-            + '<input ' + renameAttr + '="' + index + '" value="' + escapeAttr(value) + '" style="flex:1; font-weight:700; padding:0.3rem 0.45rem; border:1px solid var(--line); border-radius:6px; font:inherit;">'
+            + '<input ' + renameAttr + '="' + index + '" value="' + escapeAttr(value) + '" style="flex:1; font-weight:700; padding:0.3rem 0.45rem; border:1px solid var(--line); border-radius:4px; font:inherit;">'
             + '<button class="btn btn-secondary" type="button" ' + removeAttr + '="' + index + '" style="padding:0.15rem 0.55rem;">Remove</button></div>';
     }
     function renderStructure() {

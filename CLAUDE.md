@@ -17,8 +17,10 @@ education, donations, a growing chapter network).
   --prod` using secrets `VERCEL_TOKEN`/`VERCEL_ORG_ID`/`VERCEL_PROJECT_ID`. So **file/code edits go
   live by committing + pushing to `main`** — no manual deploy command. Vercel's own git integration is
   intentionally OFF in `vercel.json` (`git.deploymentEnabled:false`, `github.enabled:false`) so deploys
-  happen ONLY via the Action. **Content** edits (Firestore via admin) are live instantly; **file/code**
-  edits need the push-to-`main` deploy.
+  happen ONLY via the Action. **Content** edits (Firestore via admin) go live on the next uncached
+  load — a repeat visit within 10 min may still be served the localStorage snapshot (see the snapshot
+  section under Firebase); the admin clears that key on every successful save, so the editor's own
+  browser is never stale. **File/code** edits need the push-to-`main` deploy.
 - **Firebase is the BACKEND only** (Firestore + Auth + Storage), not the host. `firebase.json` +
   `.firebaserc` (project `project-686d62b7-14f5-43c7-acc`) remain for **rules/Storage deploys**
   (`npx firebase deploy --only firestore:rules,storage`). `firebase-tools` is a local devDependency;
@@ -59,6 +61,29 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
   `data.people` via `resolvePersonRef()`/`personByName()`. Add any new chapter lead to `data.people`.
 
 ### `script.js` — rendering + behavior
+- **Render pipeline — page CHROME renders SYNCHRONOUSLY, body content waits on data.**
+  `renderChrome()` owns `renderNavigation` → `initNavDropdowns` → `renderFooter` → `syncDonateLinks`
+  → `ensureSkipLink` → `initMobileNavigation` → `initNavOverlay`, and runs at **parse time**, not
+  behind `BFBL_DATA_READY` — that wait is what used to leave the bar logo-only for ~250ms on every
+  navigation (the tab-switch flash). `initRender` keeps only the data-driven body renderers.
+  - ⚠️ **`renderChrome()` must stay the LAST statement of the IIFE.** Module-level `const`s above it
+    are in the temporal dead zone earlier, so calling it higher up makes `renderFooter` throw on
+    `SOCIAL_ICONS` and aborts the whole IIFE.
+  - ⚠️ **Call it exactly ONCE.** `initNavDropdowns`/`initMobileNavigation` add listeners with no
+    re-entry guard — a second call toggles the hamburger twice per click (opens, instantly closes).
+  - The only genuinely data-dependent chrome is the **Chapters dropdown `<li>`s** and the **footer**
+    (email/socials). Both are patched afterwards, once data resolves, by `refreshChaptersDropdown()`
+    / `refreshFooter()` — they replace markup only, never the bound `.dropdown-toggle`, and
+    `initNavDropdowns()` is never called again. Drawer-close is delegated on `.nav-menu` precisely
+    because those `<li>`s get replaced.
+  - `initNavOverlay()` is the one chrome initializer that IS re-entrant (full contract under Heroes →
+    `nav-overlay`): it disconnects the previous observer, re-applies the state with `body.nav-ready`
+    off, and re-adds it two frames later so the correction snaps instead of fading. Two call sites
+    only — `renderChrome()` and `ensureChapterProfileLayout()`.
+  - ⚠️ **`var navOverlayObserver;` is declared at the top of the IIFE and must NEVER get an
+    initializer.** The binding hoists but `= null` would run in source order — i.e. after the
+    parse-time call already stored an observer — wiping the reference so no later call could
+    disconnect it, leaving two live observers toggling `.is-over-hero` at different thresholds.
 - `navItems` (~line 21) = navbar links. Impact **stat numbers** = `stats` array (~line 366/501),
   *here, not data.js*.
 - **Analytics** = two injectors in `initRender`: `initVercelAnalytics()` (Vercel Web Analytics) and
@@ -99,7 +124,12 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
 Single stylesheet. Colors are **OKLCH custom properties** in `:root`. **Fonts load via
 `<link rel="preconnect">`+`<link rel="stylesheet">` in every page `<head>`** (public + admin), NOT via
 CSS `@import` (that serialized HTML→styles.css→fonts-CSS→woff2 and blocked first paint) — a new page
-shell must copy the three font `<link>`s.
+shell must copy the three font `<link>`s **verbatim** (2 preconnects + the stylesheet with
+`family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900`). All 42 pages carry the
+identical link; Nunito is retired and must not come back.
+**Same rule, same reason, for two more head/body lines a new shell must copy**: the static
+`<meta name="theme-color" content="#FCFAF5">` right after the viewport meta (see A11y baseline), and
+`class="nav-overlay"` on `<body>` if the page opens with a hero (see Heroes → `nav-overlay`).
 
 ### `images/`
 Subfolders (e.g. `images/work with seniors/`, `images/donations/`, `images/team/`); some names
@@ -108,7 +138,9 @@ contain spaces.
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
 `chapters.html`, `chapter-{ahs,coral-springs,cypress,doral,gainesville,los-angeles,miami,new-york,virginia,russia,turkey}.html`,
-`contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery → lightbox).
+`contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery → lightbox),
+`donate.html` (donate hub — `donateHubUrl` in `script.js` drives every Donate CTA; `renderDonatePage()`),
+`design-system.html` (noindex, not in navbar — living style guide rendering real components from `styles.css`).
 Admin (noindex, not in navbar): `admin.html` (chapter-picker login landing), `members-admin.html`,
 `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `initiatives-admin.html`,
 `fundraisers-admin.html`, `structure-admin.html`; per-chapter scoped `chapter-<id>-admin.html`
@@ -124,41 +156,164 @@ generated from the `chapter-admin.html` template (which also works as `?c=<id>` 
   `our-impact.html` — intentionally merged into `impact.html`.
 - `test-image-loading.html`, `test-preservation.html`, `test-preservation.js`, `test-image-paths.js`
   are stale leftover test harnesses (not live).
+- **Page `<body>` classes** — two static classes doing different jobs:
+  - `page-<name>` (`page-home`, `page-about`, `page-team`, …) is the per-page hook. Since the accent
+    retirement **only `page-home` still drives any CSS** (its photo hero, `.home-intro`, and the
+    stat-band pairing); the others style nothing and are kept only as handles. `page-chapter` is added
+    at RUNTIME by `renderChapterProfilePage()` and is likewise inert now.
+  - **`nav-overlay` is the functional one** — carried by every public page that OPENS with a hero
+    (`index.html` + the 9 interior pages + all 11 `chapter-*.html` stubs) and by nothing else: admin
+    pages, `design-system.html` and the stale `test-*.html` have no top hero and must NOT get it (see
+    Heroes → `nav-overlay`). A new public page with a hero needs it in the `<body>` tag.
 
 ## Design / branding
 **2026-05-31 redesign** — "warm + bold blend" (DECA + youthteaching.org), mint-led; read as
 intentional/editorial, not AI-template.
-- **Type**: `--font-display`=**Nunito** (headings 800); `--font-body`=**Mulish**; `--font-label`=Nunito
-  (kickers/buttons/nav, uppercase). No serif (rejected).
+- **Type (SITE-WIDE, 2026-08)**: `--font-display`+`--font-label`=**Gabarito** (free stand-in for
+  DECA's Gotham Rounded — Rethink Sans was tried and rejected as AI-template; Gotham is commercial);
+  `--font-body`=**Mulish**. No serif (rejected). **Nunito is RETIRED** — gone from `:root`, from every
+  page's fonts `<link>`, and from the whole repo. Both tokens are set once in the base `:root`; there
+  is NO `body.page-home` type override any more.
+  - **Weight scale**: Gabarito sets much blacker than Nunito did at the same number, so the whole
+    display/label scale sits one notch down and those are now the BASE values in each component's own
+    rule — 900→**700**, 800→**600**, 750→**550**, 700→**500**. When adding a display/label component,
+    pick from 500/550/600/700. ⚠️ The re-map applies ONLY to rules whose text renders in Gabarito.
+    **Mulish text keeps its original 400–900 weights** — check the computed `font-family` before
+    touching a `font-weight` (several Mulish rules were mapped down by mistake and reverted).
+  - **No text-shadows in ANY hero** (HARD user rule) — the declarations are deleted, not overridden
+    with `text-shadow:none`. If hero type gets lost over a photo, **deepen the hero wash**; never
+    re-add a shadow. (`.chapter-hero`'s ink gradient was deepened to 72/68/46/20% for exactly this,
+    and its nav-band top scrim to 62/50 when the overlay navbar moved onto chapter pages.)
 - **Brand color = "SY Glacier Mint" `#B4D3AD`** (`--green`; `--green-dark:#4F7A46`, `--green-deep`,
-  `--green-soft`). Primary CTAs (`.btn-primary`,`.btn-donate`) fill `--green-dark`+paper text as **pill
-  buttons** (mint failed contrast, reserved for soft washes).
-- **Per-page accent**: `--accent`/`-soft`/`-dark` default green; `body.page-*` overrides — green
-  (home, impact, chapters, chapter profiles), gold (initiatives, gallery, past-events), teal (about,
-  contact), coral (team). Accent drives kicker/underline, hero tint, band wash, card-hover, stat
-  numerals, program-tile colours. (Blue retired.) Every page keeps `--accent-dark` a shade DEEPER
-  than `--accent` so the kicker text sits below its underline bar (two-tone layering): green uses
-  `--green-deep`, the others use `--gold-deep`/`--teal-deep`/`--coral-deep`.
-- **Warm palette**: `--paper`/`--surface` warm off-white; neutral/deeper shadows; generous radii
-  (`--radius-lg:18px`…`2xl:32px`).
-- **Section motif**: `.section-kicker` (uppercase Nunito, `--accent-dark`, 0.16em) + 48px `--accent`
+  `--green-soft`). Primary CTAs (`.btn-primary`,`.btn-donate`) fill `--green-dark`+paper text as solid
+  **square-cornered (4px)** buttons (mint failed contrast, reserved for soft washes) — same 4px as every
+  other control, site-wide.
+- **ONE accent, SITE-WIDE = brand green** (HARD rule, 2026-08): `--accent`=`--green-dark`,
+  `--accent-soft`=`--green-soft`, `--accent-dark`=`--green-deep`, set once in `:root`. There are **NO
+  `body.page-*` accent overrides** — the gold (initiatives/gallery/past-events), teal (about/contact)
+  and coral (team) blocks were DELETED; four hero colours were the main reason the site read as four
+  products. Do not reintroduce a per-page accent. Accent drives kicker/underline, hero tint, band
+  wash, card-hover, stat numerals. `--accent-dark` stays a shade DEEPER than `--accent` so the kicker
+  text sits below its underline bar (two-tone layering).
+  - The `--gold*`/`--teal*`/`--coral*` tokens STAY in `:root` — they are **data/brand colours, not
+    page accents**, and their consumers must not change: the `.service-icon` 4-colour program-tile
+    cycle (home itself uses it), `.pin-launching` gold map pins, `.pin-outreach` hollow coral rings,
+    status badges, `--danger`. Reach for them only for that kind of encoding.
+- **Warm palette**: `--paper`/`--surface` warm off-white; neutral/deeper shadows. The `--radius-*`
+  tokens still sit in `:root` but are all but dead — only `.skip-link`, `.social-link` and the story
+  chips read `--radius-md`; every other holder now carries a literal px (see the SQUARE-corners rule).
+  The whole dead members-slider CSS block (`.members-viewport`/`-track`/`-chip`/`-count`/`-arrow*`,
+  heading included) is gone — retired renderer, referenced nowhere.
+- **Section motif**: `.section-kicker` (uppercase Gabarito 600, `--accent-dark`, 0.16em) + 48px `--accent`
   underline under `.section-title`; hero `.eyebrow`=`--accent-soft`.
 
-### Heroes — two treatments
-- **Home only** keeps the photo hero (`.home-hero`, `images/hero-banner.jpg`, crop `center 34%`). It
-  overrides base `.hero` with a lighter wash (green `--accent-dark` ~58→20→0%, `--ink` ~50→28→16%) so
-  the photo reads clearly while the left keeps enough darkening for white text. (Banner is real BFBL
-  signage.)
-- **All 8 interior pages** (about, impact, team, ongoing-initiatives, contact, past-events, gallery,
-  chapters DIRECTORY) use **`.hero-editorial`** — a photo-less accent COLOUR-FIELD (directional
-  `--accent-dark`→ink gradient + faint dot-grid + top-left glow), keyed per-page accent. No image →
+### Heroes — two treatments, ONE colour (2026-08 unification)
+Every hero now runs home's green-ink field: a photo hero (home + chapters that have a photo) or the
+photo-less version of the same field (interior pages + photoless chapters). No per-page hero colours.
+The navbar overlays all of them — see `nav-overlay` below.
+- **Home only** keeps the photo hero (`.home-hero`, `images/hero-banner.jpg`, crop `center 34%`).
+  **2026-08 home redesign** (News-Literacy-Project structure on the mint palette) replaced the old
+  light left-heavy wash with ONE strong, near-uniform scrim — `--home-hero-scrim`
+  (`ink` 86% + `green-deep`) at **72→66→62%** across a `92deg` gradient — so white type is legible
+  anywhere on the frame with NO text-shadow (measured ≥7.7:1). Hero is `height:auto` +
+  `min-height:85vh` (auto-ish on mobile), `padding-block` starts at `calc(var(--nav-height) + …)`
+  because the navbar overlays it (below). Content: `.eyebrow` → h1 → subtitle (`max-width:46ch`) → ONE
+  quiet `.hero-arrow-link` ("Our mission and vision →" → about.html, underline on hover); the hero
+  button row was removed (Donate lives in the navbar). All of this lives in the block at the END of
+  `styles.css` — which now holds TWO scopes: the `body.nav-overlay` navbar rules (site-wide, below)
+  and what is still genuinely home-only under `body.page-home` (this hero, `.home-intro`, and the
+  stat-band pairing). Its square-corner pass was deleted when those radii became the site-wide base
+  (see Components). (Banner is real BFBL signage.)
+  - **Hero copy.** Current: eyebrow "Largest and fastest growing youth-led digital equity nonprofit
+    in Florida" (user reinstated this superlative 2026-08-16, overriding the earlier facts-only rule
+    that had replaced it with "Student-led · 11 chapters · 3 countries"), h1 "Technology shouldn't
+    determine opportunity.", subtitle naming the three programs. The eyebrow no longer carries the
+    chapter count, so it's off the add-a-chapter count-bump checklist.
+- **`nav-overlay` — the navbar overlays the hero on EVERY hero page** (was home-only until 2026-08):
+  - **`body.nav-overlay` is a STATIC class in the page's `<body>` tag**, carried by every public page
+    that opens with a hero — `index.html` (which also keeps `page-home`), the 9 `.hero-editorial`
+    interior pages, and all 11 `chapter-*.html` public stubs (their hero is injected at runtime but
+    always present). Pages with no top hero — every `*-admin.html`, `design-system.html`, the stale
+    `test-*.html` — do NOT get it and keep the normal sticky navbar.
+  - **CSS**: the whole overlay rule set is keyed to `body.nav-overlay` (fixed bar; the transparent
+    look — transparent bg/border, paper wordmark/hamburger, `@media(min-width:1181px)` paper links +
+    paper-bg ink-text Donate button — is under **`.is-over-hero`**; link colours are gated on that
+    breakpoint so the paper mobile drawer stays readable). ⚠️ **SOLID is the default, transparent is
+    the JS-applied state** (inverted 2026-08): `body.nav-overlay .navbar` restates no colours, so it
+    inherits the base paper/ink `.navbar` treatment and a blocked script or a renderer that threw
+    can never leave an invisible bar on 20 pages. Do not flip this back to a "transparent by
+    default + JS solidifies" scheme. Home carries both classes and computes exactly what it did when
+    these were `body.page-home` rules.
+    ⚠️ The 220ms bg/border cross-fade lives on **`body.nav-overlay.nav-ready .navbar`**, NOT on
+    `body.nav-overlay .navbar` — solid being the default means the first paint over a hero is the
+    wrong state, and an ungated transition played that correction as a visible solid→transparent
+    fade on every navigation. `initNavOverlay()` applies the initial state, then adds **`nav-ready`**
+    to `<body>` on the next frame, so the first state change snaps and only scroll-driven ones
+    animate. The DESCENDANTS that also flip colour with `.is-over-hero` declare their own
+    transitions (`.nav-link` 150ms, `.btn-donate` 250ms — both LONGER than the bar's 220ms), so they
+    are killed by the mirror rule `body.nav-overlay:not(.nav-ready) .navbar .nav-link, … .btn-donate
+    { transition: none }`. Keep any new overlay transition behind the same gate — including one on a
+    child.
+  - **JS**: `initNavOverlay()` (script.js, gated on `body.nav-overlay` + the page's first hero —
+    `.home-hero, .hero-editorial, .chapter-hero`) sets **`.is-over-hero`** and toggles it with an
+    IntersectionObserver — on while the hero is behind the bar, off once it clears. No hero or no
+    IO → the class stays off (solid). The INITIAL state is derived from GEOMETRY, mirroring the
+    observer's own `rootMargin` condition (`hero.getBoundingClientRect().bottom > navbar.offsetHeight
+    || 76`), never added unconditionally: on a load that is ALREADY scrolled when this runs (mid-page
+    reload / back-restore) the unconditional add painted a transparent bar over light content for a
+    frame until the observer's first callback corrected it. Matching the observer makes that first
+    callback a no-op. ⚠️ It does NOT change anchor deep-links (`impact.html#seniors`): Chrome applies
+    the fragment scroll AFTER the end-of-`<body>` script, from y=0, and `html{scroll-behavior:smooth}`
+    animates it — so the bar starts correctly transparent over the hero and then cross-fades solid as
+    the browser scrolls. That fade is scroll-driven and correct; don't "fix" it here. It is **re-entrant** (disconnects the previous observer) and
+    has exactly TWO call sites: from **`renderChrome()` at script parse time** (`script.js:274`, the
+    end-of-`<body>` script, so the static navbar/hero already exist and the bar reads transparent
+    from the FIRST paint instead of after the up-to-3s Firestore wait), and again at the end of
+    **`ensureChapterProfileLayout()`** (`script.js:1587`), which is where a chapter hero first
+    exists. `initRender` calls neither this nor `renderNavigation()` any more — don't add a third
+    call, it just re-binds chrome listeners and leaks a second observer.
+  - ⚠️ **`position:fixed` takes the bar out of flow**, so EVERY hero type on a nav-overlay page must
+    start at y=0 and re-add the bar's height as top padding —
+    `padding-block: calc(var(--nav-height) + clamp(2rem,5vw,3.5rem)) …`, scoped to
+    `body.nav-overlay` for `.hero-editorial`/`.chapter-hero` (`.home-hero` sets its own identical
+    value). A new hero component needs the same padding or the bar eats its first line.
+- **All 9 interior pages** (about, impact, team, ongoing-initiatives, contact, past-events, gallery,
+  donate, chapters DIRECTORY) use **`.hero-editorial`** — a photo-less field that is now **home's own
+  hero colour**, not a per-page accent: `color-mix(in oklch, var(--ink) 86%, var(--green-deep))` at
+  home's `92deg` **72→66→62%** falloff over a `green-deep`/`ink` ground (there is no photo beneath),
+  plus the faint dot-grid + top-left glow re-tinted to the green family and held down so the
+  brightest pixel still clears 7:1 against paper copy (measured ~9:1 on the nav band, ~14:1 on hero
+  copy). `.chapter-hero--editorial` shares this field verbatim. No image →
   `min-height:clamp(420px,48vh,560px)` + `height:auto` + `overflow:visible` so it grows to fit content.
-  HTML class is `hero hero-editorial`.
+  HTML class is `hero hero-editorial`. Subtitles carry **no colour override** — the old
+  `.hero-editorial p` accent-tinted rule was deleted so they inherit `.hero p`, exactly what home's
+  hero subtitle renders.
 - **Chapter-PROFILE pages** keep their own photo hero (`.chapter-hero`) WHEN the chapter has a real
   `photos[0]`; `renderChapterProfilePage()` sets `--hero-img` to it. `.chapter-hero` overrides the base
-  `.hero` wash with a LIGHT one (accent 36→12→0%, ink 54→30→14%) so the chapter's own photo reads
-  clearly. **Chapters with NO real photo get `.chapter-hero--editorial`** (a photo-less accent
-  colour-field, same recipe as `.hero-editorial`) instead of falling back to the shared `hero-banner.jpg`
+  `.hero` wash with its own (light accent 36→12→0%, ink 72%→68%@55%→46%@78%→20%) so the chapter's own
+  photo still reads while the copy stays legible — the ink gradient carries ALL legibility now that
+  heroes have no text-shadows (it was 54→30→14% and bright banners swallowed the subtitle). It stays
+  deep across the whole copy column and only falls away past 78%, so the right third of the photo —
+  where no copy ever sits — stays bright. Verified ≥5.3:1 on every photo chapter. Its BOX is
+  `height:auto` + `min-height:clamp(560px,62vh,700px)` (not the base `.hero`'s fixed height) so it can
+  grow by the `--nav-height` top padding `nav-overlay` adds instead of clipping.
+  - **Nav-band scrim.** The overlay navbar runs TRANSPARENT over these photos, and its paper links sit
+    in the right third where the ink gradient has already fallen to 20–46% — bright banners took the
+    links to 2.2:1. So the stack now OPENS with a top scrim (`ink` 62%→50%→transparent) that fades out
+    ~72px past `--nav-height`, above every hero's eyebrow: the sanctioned "deepen the wash" remedy,
+    never a text-shadow. Worst per-link case measured 5.8:1 (Cypress Bay, the brightest photo; home's
+    own worst is 4.9:1) and the 390px hamburger 6.4:1 vs its 3:1 floor.
+    ⚠️ It is a **FULL-SIZE layer with PIXEL colour stops**, NOT a `/ 100% <height>` sized layer:
+    `renderChapterProfilePage` sets an inline `background-position` (the per-chapter crop,
+    `--hero-pos`) and background-position applies to EVERY layer, so a strip smaller than the box gets
+    dragged ~68% down the hero and stops covering the navbar entirely. Re-measure per-link on
+    chapter-cypress after touching it.
+  - **Locator map**: the overlay top padding grows the hero, and `.chapter-hero-mark` centres on the
+    PADDING box, so `body.nav-overlay .chapter-hero .chapter-hero-mark` re-centres it with
+    `top: calc(50% + var(--nav-height) / 2)` — otherwise the tallest outline (California, on Los
+    Angeles) paints into the nav band.
+  **Chapters with NO real photo get `.chapter-hero--editorial`** (the shared photo-less green-ink
+  field, same recipe as `.hero-editorial`) instead of falling back to the shared `hero-banner.jpg`
   — whose printed wordmark bled through the light wash and made every photoless chapter look identical.
   The locator map carries identity in both cases. A faint **locator MAP + dot** (`chapterLocatorConfig` +
   `.chapter-hero-locator`/`.hero-locator-map`/`.hero-locator-dot`, hidden on mobile) shows each
@@ -167,9 +322,10 @@ intentional/editorial, not AI-template.
   (country paths). Each region SVG fills the box edge-to-edge so `left/top:%`==map %; dot % is
   **projected from the city's real lat/lng** (see map-projection note below); container `aspect-ratio`
   matches the SVG's bbox.
-- Base `.hero` (accent wash + ink + scrim + `--hero-img`, fixed `height:clamp(560px,62vh,700px)`,
-  mobile→auto) backs `.home-hero`/`.chapter-hero`; `.hero-editorial` overrides background/height. Plain
-  `.hero` falls back to `images/hero-bg.avif`.
+- Base `.hero` (green wash + ink + scrim + `--hero-img`, fixed `height:clamp(560px,62vh,700px)`,
+  mobile→auto) backs `.home-hero`/`.chapter-hero`; `.hero-editorial` overrides background/height, and
+  `.chapter-hero` now overrides the fixed height too (see above). Plain `.hero` falls back to
+  `images/hero-bg.avif`.
 
 ### Components & hard rules
 - **Hover feedback signals CLICKABILITY — and ONLY that** (HARD user rule: a non-clickable element must
@@ -177,13 +333,68 @@ intentional/editorial, not AI-template.
   `.chapter-card`, `.chapter-leadership-card`. Flat (no hover): `.service-card`, `.card`,
   `.partner-strip` logos, all member cards (`.officer-card`/`.leader-card`/`.team-member`/`.person-card`).
   Clickable children inside a flat card keep their own hover.
+- **SQUARE corners SITE-WIDE** (HARD rule, 2026-08 — promoted from home; there is NO `body.page-home`
+  radius override any more, the values are the BASE in each component's own rule, in `styles.css`,
+  `admin.css` and the inline styles in admin HTML/`admin.js`): controls (`.btn`/`.btn-donate`/
+  `.nav-link`, inputs/selects/textareas) → **4px**; cards, panels, surfaces (`.card`/`.service-card`/
+  member cards/`.story-face`/`.map-frame`/`.dropdown-menu`/`.hamburger`/`.contact-form-card`/gallery
+  tiles/`.admin-card`/`.chapter-col`/`.upload-dropzone`/modal + lightbox-image panels) → **8px**; icon
+  chips (`.service-icon`/`.dropdown-link`) → **6px**. Write the literal px, not a `--radius-*` token.
+  KEEP SHAPE: true 999px data pills (`.status-badge`, `.roster-chip`, `.chapter-partner`,
+  `.drive-status`, `.initiative-tag`, `.donate-method-badge`, `.lightbox-info`, `.geo-pin-label`,
+  accent underline bars); the three `--radius-md` survivors (`.skip-link`, `.social-link`, story chips
+  `.story-category`/`.story-overlay-label`); 50% rounds — avatars (`.avatar-initials`/`.avatar-fit`,
+  `.member-chip img`, admin `.photo-fit-crop`) and the circular lightbox/carousel close+prev+next.
+  Rule of thumb: pills carry status/metadata (keep); things you act on are square.
+  `design-system.html` documents the scale and its own `.ds-*` chrome follows it.
 - **No decorative top/left "lines" on blocks** (HARD rule): removed `.service-card::before` top strip
   and `.chapter-card.card-edge-*` left spines; accent carried by coloured numeral / data-driven pill.
-- **Editorial stat band** (`.impact-band`): big Nunito numerals (`--accent-dark`, 900, `tabular-nums`
-  so the count-up doesn't jitter) + hairline dividers on soft accent wash; Home+Impact use the `stats`
-  array. Dividers (`border-left`) are scoped to the desktop 5-up row (`@media min-width:901px`) — on
+- **Editorial stat band** (`.impact-band`): big Gabarito numerals (`--accent-dark`, 700, `tabular-nums`
+  so the count-up doesn't jitter) + neutral hairline dividers on a **light NEUTRAL ground**
+  (`color-mix(in oklch, var(--surface-strong) 55%, var(--paper))` — home's treatment, promoted to the
+  base 2026-08 and now the only one; the old soft-accent wash is gone, so the mint stays on the type
+  and the numerals). Home+Impact use the `stats` array. (Chapter profile "Impact stats" are a
+  DIFFERENT component — `.chapter-stats-row`/`.chapter-stat` bordered cards, not `.impact-band`.)
+  Dividers (`border-left`) are scoped to the desktop 5-up row (`@media min-width:901px`) — on
   stacked/2-col layouts the numeral carries the accent (a left spine there would break the no-lines
   HARD rule). Grid laddering: 5 (≥901px) → 3 (≤900) → 2 (≤680 and ≤440); never 1-col.
+  **Home-scoped only** is its PAIRING with the impact-intro band above it: `0` top padding and the
+  first numeral flushed to the container edge, so the two sections read as one. Other pages keep the
+  band's standalone `--space-2xl` padding.
+  **`#home-impact-stats` carries a `min-height` reservation** (4 steps on the same 901/680/440
+  ladder, separate values for `body.page-impact` because its extra top padding makes the band
+  taller) so the empty container doesn't collapse at first paint and shove the first viewport ~148px
+  when `renderHomeStats()` fills it. Values are the MEASURED settled height at the shortest width in
+  each step, rounded DOWN — the reservation must only ever undershoot, so steady state stays
+  pixel-identical; re-measure with the band filled if the stat copy, the column ladder or the band
+  padding change. This does NOT break "never render an empty section": `renderHomeStats()` builds
+  from a hardcoded array, reads nothing from Firestore, and `hideSectionWhenEmpty()` is never
+  pointed at this id — there is no data-driven empty state to pin open.
+  Two more containers hydrate late and carry the same kind of reservation, on the same
+  only-ever-undershoot doctrine: **`body.page-gallery .gallery-locations { min-height: 100vh }`**
+  (the grid IS the page, so an empty one is a failure state, not a legitimate empty section — but
+  `:has(> .gallery-empty)` releases it, since `data.js` seeds no `galleryImages` and the one-line
+  empty copy would otherwise sit on a viewport of dead white) and
+  **`body[data-chapter-id]:not(:has(main)) { padding-top: 100vh }`** — chapter stubs ship as
+  navbar + footer only until `ensureChapterProfileLayout()` injects the whole `<main>`, so without it
+  the footer paints under the bar and then drops a full page (measured cold CLS 0.82). ⚠️ It is
+  **padding on the `<body>`**, not a margin on the footer: the navbar is `position:fixed`, so the
+  footer is the stub's only in-flow box and its `margin-top` collapses through `<body>` — the body
+  keeps a 0×0 box until `<main>` lands and that jump alone scores 0.45. The `:has()`
+  self-cancels the moment that `<main>` exists. `ongoing-initiatives.html` still shifts cold
+  (~0.377, source the closing `.band--ink`): its three optional sections ship `style="display:none"`,
+  so any CSS reservation inside them is a no-op and reserving outside them would pin empty sections
+  open. Fixing that needs a markup/JS change, not CSS.
+- **Impact-intro band** (`.home-intro`, home only, STATIC markup in `index.html` directly under the
+  hero and directly above `#home-impact-stats`): light neutral band holding ONLY the
+  `.home-intro-title` in `--green-deep` ("Our impact, thanks to your support") — the 2-col grid,
+  "Our work in numbers" CTA and right-column sentence/lede were removed 2026-08 at user request
+  (markup + their CSS deleted); the title alone hands off to the numbers.
+- **Home section order** (`index.html`): hero → impact-intro band → stat band (`#home-impact-stats`)
+  → What We Do → Our Reach map (`#global-reach`, moved down from first) → Board of Directors →
+  Chapters preview → Photo Stories → footer (the founder-quote `band--ink` was removed 2026-08 at
+  user request). Renderers target ids, so
+  reordering the containers is safe; keep every container id.
 - **Program tiles** (`.service-card` in `.service-grid`): `.service-icon` chip (soft tile-colour wash +
   program-specific stroke SVG, defined inline in `renderWhatWeDo`) cycling green/gold/coral/teal via
   `:nth-child(4n+…)`; 3-up desktop. (Replaced the 01-05 numerals — they implied a sequence the programs
@@ -192,7 +403,7 @@ intentional/editorial, not AI-template.
   flex-column). Used on Home chapters preview, Impact Seniors/Kids/Donations, Initiatives
   `#fundraiser-grid`, Past-events.
 - **Editorial dark beats** — `.band--ink` sections with `.editorial-quote` (big quote glyph ::before)
-  and/or `.band-figure` (oversized accent numeral): founder quote on Home, "3,500+" on About, "40+" on
+  and/or `.band-figure` (oversized accent numeral): "3,500+" on About, "40+" on
   Team, dark closing CTAs on Impact/Initiatives/Chapters/Past-events. Bands: `.surface-band`
   (accent-soft 62%), `.band--tint`, `.band--ink`.
 - **Gallery** = dense mosaic (`.photo-gallery-grid` + `.g-feature`/`.g-wide`/`.g-tall` cadence + hover
@@ -203,39 +414,118 @@ intentional/editorial, not AI-template.
   once ("Led by", `chapterLeadPeopleText`) + `.chapter-card-go` "View chapter →". `.chapter-card-desc`
   is `-webkit-line-clamp:3` so cards don't stretch unevenly. Chapter cards ARE links → keep hover lift.
   (Dead `card-edge-*` classes removed from `chapterDirectoryCardMarkup`.)
-- **Chapter location maps** (chapters.html "Where We Are"): two self-contained inline-SVG maps with
-  status-coloured pins — `images/maps/florida.svg` and `images/maps/world.svg` (both PD, recoloured
-  mint). **No third-party map lib/tiles → no CSP change, same-origin** (deliberately NOT
-  Google/Mapbox/Leaflet). `renderChapterMaps()` renders pins from percent tables
+- **Chapter location maps** (chapters.html "Where We Are"): two self-contained SVG maps with
+  status-coloured pins — `images/maps/florida-roads.svg` and `images/maps/world.svg` (both PD,
+  recoloured mint). **No third-party map lib/tiles → no CSP change, same-origin** (deliberately NOT
+  Google/Mapbox/Leaflet — the Florida map is a REAL map with roads, but it is still a static file).
+  `renderChapterMaps()` renders pins from percent tables
   `FLORIDA_MAP_PINS`/`WORLD_MAP_PINS` (chapters carry no geo in Firestore, so hardcoded like
   `stats`/`FOUNDERS`); each pin resolves name/status/href LIVE via `chapterById()`. Image fills
   `.map-frame` edge-to-edge so `left:X%`==X% of map. Pin classes **`.geo-pin`/`.geo-pin-dot`/`.geo-pin-label`**
   (the legacy `.map-pin` teardrop component that used to hijack markup was deleted in the dead-code sweep).
-  - **Map-projection note (how pin %s are derived):** pin positions are PROJECTED from each city's real
-    lat/lng, not eyeballed. `florida.svg` (+ `new-york.svg`/`virginia.svg`/`california.svg`) are equirectangular over the
-    region's bounding box → `x%=(lng-lngW)/(lngE-lngW)`, `y%=(latN-lat)/(latN-latS)`, then mapped into the
-    SVG via its path bbox vs viewBox (each has ~5% padding). `world.svg` (and its crops `russia.svg`/
-    `turkey.svg`, which share its coordinate space) is **Miller cylindrical**: `x=X0+mx·lng`,
-    `y=Y0−k·millerY(lat)` where `millerY(lat)=1.25·ln(tan(π/4+0.4·lat))`. To add/move a pin, compute the
-    %s this way and visually verify against the silhouette; the four SE-Florida chapters legitimately
-    cluster on the SE coast (~40 mi apart), so their labels float left and a couple of dots overlap;
-    per-pin `dy`/`dx` (px) stagger the clustered labels into a readable inland column
-    (`--label-dy`/`--label-dx` on `.geo-pin-label`).
+  - ⚠️ **The two Florida maps are GENERATED, not hand-drawn** (2026-08-18): `florida-roads.svg`
+    (this map) and `florida-se-roads.svg` (the home inset) are built by **`tools/maps/build.py`**
+    from public-domain geodata — Natural Earth (state outline, the Keys, Lake Okeechobee) and
+    TIGER/Line 2023 (roads, county polygons, AREAWATER) — projected with the SAME Albers conic the
+    pin tables were calibrated against, so **every pin % below is unchanged**. `tools/maps/README.md`
+    has the download commands and the traps; the source data is NOT committed. **Do not hand-edit the
+    two files, and never change their `viewBox`** — every pin percentage on the site is expressed in
+    it. The plain silhouette `images/maps/florida.svg` STAYS: it still backs the decorative locators
+    (chapter-hero `chapterLocatorConfig`, and the inset's own corner locator), where road detail
+    would just be noise at ~90px.
+  - Both generated maps keep the **sea transparent** (the `.map-frame` wash behind reads as sea):
+    the state map cuts Lake Okeechobee with `fill-rule="evenodd"`, the inset cuts every water body
+    with an SVG `<mask>` whose water path is also STROKED (dilating water ~150 m — without it the
+    offshore county line antialiases into a stray hairline out at sea). The inset's coastline is a
+    separately DERIVED layer, because a mask cuts the land path's own stroke and the county boundary
+    is offshore anyway.
+  - Detail is scaled to what each map's zoom can carry: the state map (~3.1 px/unit) shows only the
+    interstates + Florida's Turnpike — US highways were built and rejected as ink without a readable
+    feature; the inset (~15.4 px/unit) adds the arterial tier, which is what makes it READ as South
+    Florida (the dense coastal grid stopping dead at the Everglades).
+  - ⚠️ **Stroke scaling is NOT one rule.** The two frames are not in the `176/24` zoom ratio the old
+    files assumed: the state map renders ~570px for 176 units (**3.24 px/unit**) and the inset ~366px
+    for 24 units (**15.25 px/unit**), so px/unit differ by **4.7×, not 7.33×** — dividing a stroke by
+    `176/24` makes the inset line ~0.64× the state's ON SCREEN. So: the **coastline** is matched in
+    PIXELS (`COAST_W_FULL` 0.38 = 1.23px, `COAST_W_SE` 0.08 = 1.22px) because it is the same kind of
+    line on both; the **road tiers** keep the ÷`176/24` convention, which lands them deliberately
+    finer on the inset since it carries ~10× the line density. Both are set in `tools/maps/build.py`.
+    Re-derive them if either frame's rendered width changes.
+  - **Map-projection note (how pin %s are derived) — CALIBRATED 2026-08, supersedes the old
+    "Miller / equirectangular" note, which was wrong:** pin positions are PROJECTED from each place's
+    real lat/lng, not eyeballed.
+    - **`florida-roads.svg`** (viewBox `630 435 176 152`) is an **Albers conic**, not equirectangular:
+      `n=0.60283700`, `C=1.35122133`, `lng0=-96`; `ρ=√(C−2n·sin φ)/n`, `θ=n·(λ−λ0)` in radians;
+      `X=479.96+1264.138·ρ·sin θ`, `Y=−1332.38+1264.138·ρ·cos θ`; then
+      `x%=(X−630)/176·100`, `y%=(Y−435)/152·100`.
+    - **`world.svg`** (+ its crops `russia.svg`/`turkey.svg`/`world-reach.svg`) is a **hand-drawn pseudocylindrical**
+      outline, not Miller. Global fit (λ,φ in radians):
+      `x = 453.159 + λ·(161.7715 − 22.1313·φ² + 0.3638·φ⁴)`,
+      `y = 337.757 − 172.8404·φ + 0.6486·φ³ − 10.4118·φ⁵`; `x%=x/9.5`, `y%=y/6.2`.
+      North-American pins are off by a few px under the global fit, so they use a **local affine**
+      instead: `x = 432.1872 + 0.7217·lat + 2.6924·lng`, `y = 360.4426 − 3.5132·lat + 0.1962·lng`.
+    - `new-york.svg`/`virginia.svg`/`california.svg` stay equirectangular over the shape's bbox →
+      `x%=(lng−lngW)/(lngE−lngW)`, `y%=(latN−lat)/(latN−latS)`, mapped in via path bbox vs viewBox.
+    - `russia.svg`/`turkey.svg` hero locators are CROPS of world.svg, so their dot = that chapter's
+      `WORLD_MAP_PINS` point in world.svg units (`x%·9.5`,`y%·6.2`) remapped into the crop viewBox —
+      the same city then lands identically on both maps. (They previously held stale Miller values.)
+    - To add/move a pin: compute the %s this way, then **visually verify** against the silhouette
+      (serve locally + screenshot), and **audit label-vs-DOT, not just label-vs-label** — a pill
+      sitting on a neighbour's dot hides the marker, mislabels it and steals its click target.
+      The SE-Florida chapters legitimately cluster on the SE coast (~40 mi apart), so their labels
+      float left and a couple of dots overlap; per-pin `dy`/`dx` (px) stagger the clustered labels
+      into a readable inland column (`--label-dy`/`--label-dx` on `.geo-pin-label`, both sides).
+      `--label-dy-scale` (default 1) shrinks a whole frame's stagger when the frame itself shrinks.
+      A `dy` of |20px|+ auto-renders a **hairline leader** (`.geo-pin-lead`, `--label-lead`) back to
+      the dot, so a lifted pill (Los Angeles, whose 86px label would otherwise land on the New
+      York/Virginia dots) still reads as belonging to its marker.
+    - Two DOTS may still overlap where the places genuinely are that close at that scale (New York /
+      Virginia on the world maps, AHS / Plantation on the inset). That is accepted: each label is
+      inside its own `<a>`, so the pill is the real click target and both chapters stay reachable.
+      A LABEL on someone else's dot is not accepted — it hides and mislabels that marker.
   `.pin-active`=green, `.pin-launching`=gold; `.geo-pin--left` floats label inland.
-- **Home "Our Reach" map** (`#global-reach` on `index.html` — FIRST content section, right after the
-  hero): single `world.svg` map (`.reach-map` caps width 900px) reusing the chapters-page pin system,
-  with legend green=chapters / red=outreach. Chapter pins = `WORLD_MAP_PINS` forced GREEN via
-  `mapPinMarkup(pin,"Active")` (2nd arg must be a STRING — bare `.map(mapPinMarkup)` passes the index;
-  it recolours the DOT only — the `title` tooltip always uses the chapter's REAL status);
-  the `ahs` pin becomes an aggregate "Florida · N chapters" (N live from `FLORIDA_MAP_PINS.length`;
-  the suffix is a `labelNote` → `.geo-pin-label-note`, hidden ≤760px so it can't clip the frame edge)
-  and links to `chapters.html` instead of the AHS page. Red pins = `WORLD_OUTREACH_PINS`
-  (Haiti/Peru/India country centroids, same Miller projection) — NOT chapters: id-less pins render as
-  static non-link `<span>`s (`.geo-pin--static`, hover-inert per the clickability HARD rule) with
-  `.pin-outreach` dots — HOLLOW `--coral-dark` rings, so the categories differ by shape, not colour
-  alone (green/coral is a red-green CVD pair). Adding a chapter needs NO extra step here (pin tables are
-  shared); adding an outreach country = one `WORLD_OUTREACH_PINS` entry (project %s per the
-  map-projection note).
+- **Home "Our Reach" PAIR** (`#global-reach` on `index.html` — sits AFTER the What We Do section since
+  the 2026-08 home redesign; restructured 2026-08-16): ONE `.reach-row` grid holding two `.map-card`
+  figures side by side — the **CROPPED world map** `#map-world-home` (`images/maps/world-reach.svg` =
+  world.svg with viewBox cropped to **`79 78 659 335`**, the pin spread W-N-America→India /
+  N-Russia→Peru, so pins fill the frame) next to the **South-Florida inset** `#map-florida-se`
+  (`images/maps/florida-se-roads.svg`, viewBox **`780 526.5 24 26`** — its own generated map at the
+  same ~7× zoom into the same Albers plane; see the generated-maps + stroke-scaling notes under
+  Chapter location maps). The old full-width 900px world map + whole-Florida panel
+  (`#map-florida-home`, `.reach-fl-row`, `.map-inset-region`/`FLORIDA_INSET_REGION`) were REMOVED —
+  do not restore. Columns `2.13fr / 1fr` = ratio of the two aspect ratios (659/335 ÷ 24/26) so the
+  frames land at the same height; **≤1000px** they stack (inset capped 380px). The inset runs 0.68rem
+  labels and NO `--label-dy-scale`: its frame is within ~20px of 370 at every breakpoint (366 / 380 /
+  362), so the px `dy` offsets are simply tuned at that size.
+  Captions reuse `.map-cap`/`.map-cap-sub` ("Worldwide" / "South Florida").
+  - **World-map pins**: `WORLD_MAP_PINS`/`WORLD_OUTREACH_PINS` keep FULL-map %s (chapters.html renders
+    them as-is); the home renderer remaps every pin into the crop via `worldReachPin()` +
+    `WORLD_REACH_CROP` (`x%·9.5`,`y%·6.2` → viewBox units → % of crop box) — NO second pin table, so
+    new/moved world pins need no home-specific work. Chapter pins forced GREEN via
+    `mapPinMarkup(pin,"Active")` (2nd arg must be a STRING — bare `.map(mapPinMarkup)` passes the
+    index; recolours the DOT only, the `title` tooltip keeps the REAL status); the `ahs` pin becomes
+    an aggregate "Florida · N chapters" (N live from `FLORIDA_MAP_PINS.length`; suffix = `labelNote` →
+    `.geo-pin-label-note`, hidden ≤760px) linking to `chapters.html`. Red pins = `WORLD_OUTREACH_PINS`
+    (Haiti/Peru/India centroids) — id-less but with `href` → real `<a>`s; `mapPinMarkup` id-less
+    branch: **href → link; no href → `.geo-pin--static` `<span>`** (hover-inert per the clickability
+    HARD rule). `.pin-outreach` dots are HOLLOW `--coral-dark` rings (shape ≠ colour alone;
+    green/coral is a red-green CVD pair). India carries `pin-edge-right` (dot ~90% across the crop →
+    its label flips inland ≤640px so it can't clip the frame edge). New outreach country = one
+    `WORLD_OUTREACH_PINS` entry (full-map %s per the map-projection note — the crop remap is
+    automatic; give any pin landing near the crop's right edge `pin-edge-right`).
+  - **Inset pins**: `FLORIDA_SE_CHAPTER_PINS` (5 metro chapters, own inset %s) +
+    `FLORIDA_IMPACT_PINS` (9 service-site markers, each a `pin-outreach` link into
+    impact/past-events). Inset %s come STRAIGHT from the Albers X,Y remapped onto `FLORIDA_SE_CROP`
+    (`x%=(X−780)/24·100`, `y%=(Y−526.5)/26·100`) — never converted from the rounded full-map %s,
+    which multiplies their rounding error by 176/24. `stats`/`FOUNDERS`-style hardcoded tables —
+    chapters carry no geo. **"Hollywood" is one marker for two sites** (Five Star Premier + Joe
+    DiMaggio, 1.6 km apart): at any zoom this frame can carry, their dots merge into one blob and the
+    upper pill covered the lower dot's click target — one pill naming both is honest and clickable.
+  - **Inset corner locator** (`floridaLocatorMarkup()` → `.map-locator`/`.map-locator-box`): the crop
+    is a ~7× zoom into a silhouette with NO interior geography, so on its own the panel reads as a
+    plain green rectangle. A small full-state Florida with the crop outlined (derived from
+    `FLORIDA_SE_CROP` ÷ `FLORIDA_VIEWBOX`, so it can't drift from the SVG) says where the zoom is.
+    Decorative: `aria-hidden`, `pointer-events:none`, no hover.
 - **Member rosters**: leadership as cards, volunteers as `.roster-chip` pills (`personChipMarkup`) — on
   chapter profiles and Team volunteers grid.
 - **About** "Our Story" = numbered `.story-rail` timeline; **Impact** partners = `.partner-strip`
@@ -247,13 +537,24 @@ intentional/editorial, not AI-template.
   `contact.html`); `.social-link` = 42px quiet icon button inheriting currentColor. The old full-colour
   raster logos in `images/contact us logo/` are unused (kept only by stale test files). Footer quick
   links include an **Admin** link (`admin.html`) alongside the nav pages (`renderFooter` `quickLinks`).
-- Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Nunito. Responsive hamburger
+- Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Gabarito. Responsive hamburger
   (`initMobileNavigation`, sets `aria-label`/`aria-expanded`). `--muted` darkened (~40% L) for AA;
   interior `.hero h1` + `.section-title`/`h2` get a mobile clamp + `overflow-wrap`.
 - **A11y baseline** (keep when adding pages/components): `:focus-visible` ring = `--accent` outline +
-  paper halo (works on light & dark); skip-link + `<main id>` + `<meta theme-color>` are INJECTED once
-  per page by `ensureSkipLink()` in `script.js` (DRY — don't add them to each static head); `:root`
-  has `color-scheme: light`. Lightbox tiles (`.clickable-image`) are `role=button tabindex=0` + Enter/Space
+  paper halo (works on light & dark); skip-link + `<main id>` are INJECTED once per page by
+  `ensureSkipLink()` in `script.js` (DRY — don't add those two to each static head). **`<meta
+  name="theme-color" content="#FCFAF5">` is STATIC in every page `<head>`**, on the line right after
+  the viewport meta — it used to be injected too, but arriving ~250ms late made mobile browser
+  chrome visibly recolour on every navigation, so a new page shell must copy it verbatim (it is
+  `--paper` as sRGB hex and must match the page/navbar background; a dark value paints a dark band
+  over a near-white page). All 42 head-bearing shells carry it — public, chapter stubs,
+  `design-system.html`, every admin page incl. the `chapter-admin.html` template and its 11
+  generated `chapter-<id>-admin.html`; only the stale `test-*.html` harnesses and the Google
+  verification file are excluded. `:root` has `color-scheme: light`, and `scrollbar-gutter: stable`
+  is set on **both `html` AND `body`** so the post-hydration scrollbar can't sidestep the layout
+  ~15px — `body { overflow-x: hidden }` makes `<body>` the viewport-defining element, the property
+  doesn't inherit, so declaring it only on `html` would be discarded (`body.nav-open`/`.modal-open`
+  still drop the gutter while a drawer/modal is open — pre-existing). Lightbox tiles (`.clickable-image`) are `role=button tabindex=0` + Enter/Space
   (`openLightboxFrom`); both the lightbox and the email modal (`role=dialog aria-modal`) move focus in,
   trap Tab / honor Escape, and restore focus on close. `scrollBehavior()` returns `auto` under reduced
   motion (count-up + JS smooth-scroll respect it). Icon-only buttons need `aria-label` + wrap the glyph
@@ -272,11 +573,12 @@ intentional/editorial, not AI-template.
   (Miami = MAST @ FIU
   students, not an official school club; public page is Miami-only. Chapter admin:
   adina.t.brody09@gmail.com.) Doral = independent chapter (2026–2027 officer cohort), President
-  Asvika Prakash; FL map pin at x:90.9,y:77.0. Los Angeles = independent chapter, no lead assigned yet
+  Asvika Prakash; FL map pin at x:92.2,y:74.2. Los Angeles = independent chapter, no lead assigned yet
   (`leadPeople` empty → directory "Led by" line hides via `chapterHasLead()`); world map pin at
-  x:14.2,y:38.0 with `dy:-42` (NOT `side:left` — as the westernmost pin, a left-floating label clipped
-  off the frame's left edge on the 2-col world map, so the label floats right + up, clear of the
-  east-coast cluster), locator outline `images/maps/california.svg`.
+  x:14.6,y:35.1 with `dy:-34` (NOT `side:left` — as the westernmost pin, a left-floating label clipped
+  off the frame's left edge on the 2-col world map, so the label floats right and rises clear of the
+  New York / Virginia pills its 86px label would otherwise reach; the lift auto-draws a leader line),
+  locator outline `images/maps/california.svg`.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## Git / workflow
@@ -343,7 +645,42 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
 ### Public read & auth/roles
 - **Public read** — `firebase-data.js` (classic script on every page, before `script.js`) fetches
   `site/content` AND the `chapterContent` collection via Firestore REST, merges into `window.BFBL_DATA`,
-  sets `window.BFBL_DATA_READY`. Falls back to `data.js` if empty/unreachable (3s).
+  sets `window.BFBL_DATA_READY`. Falls back to `data.js` if empty/unreachable — the 3s
+  `Promise.race` timeout only exists on a COLD start; a warm start resolves synchronously (below).
+- **localStorage SNAPSHOT (warm start)** — repeat visits are served from a cached copy of the last
+  good LIVE READ — what Firestore itself returned that load (`fresh`), **not** the merged
+  `window.BFBL_DATA` view: key **`bfbl:data:v1`**, shape `{v,t,d}`, ~75KB. `galleryImages` entries are
+  stripped to `src/alt/takenAt/locationName/gps` (`GALLERY_SNAPSHOT_FIELDS`) — the flattened `exif`
+  blobs are ~68% of the payload and nothing public reads them. A snapshot younger than **10 minutes**
+  (`SNAPSHOT_MAX_AGE_MS`) installs into `window.BFBL_DATA` synchronously *before* `script.js` parses
+  and resolves `BFBL_DATA_READY` immediately (measured ~3ms warm vs ~250–350ms cold), which is what
+  lets `initRender` paint live content on its first pass. The live fetch still runs in the
+  background; it replaces whole keys on `window.BFBL_DATA` — `script.js` has already copied them into
+  its own `data` by then — so it refreshes the snapshot for the NEXT navigation and deliberately does
+  **not** re-render the current view (no mid-view content swaps).
+  - ⚠️ **Bump `SNAPSHOT_VERSION`** on any change to the stored shape — the key follows it, so a stale
+    shape can otherwise be served for 10 minutes.
+  - ⚠️ **Never merge onto the installed snapshot.** `fetchAll()` rebuilds `people` from `basePeople`
+    = Firestore's unassigned `people` when non-empty, else `SEED_PEOPLE` (the `data.js` roster
+    captured *before* the snapshot was installed). Using `window.BFBL_DATA.people` there made the
+    snapshot its own input: since production's `site/content.people` is EMPTY, a deleted or renamed
+    member survived every merge (last-wins, no purge) and was re-persisted with a fresh timestamp, so
+    the TTL never expired the ghost. Same reason `fetchAll()` collects every decoded key into a local
+    **`fresh = {}`** (alongside writing it to `window.BFBL_DATA`, merged `chapters`/`people` included)
+    and calls `writeSnapshot(fresh)`: persisting the merged view would carry a field DELETED from
+    Firestore forward and re-stamp it fresh forever.
+  - Snapshots are skipped entirely on **`/admin` paths** (`admin.html`'s chapter picker must never be
+    up to 10 min stale) and are only written after a genuinely LIVE read (`live` = content doc AND at
+    least one chapter doc came back), so an offline load can't cache the `data.js` seed as fresh.
+  - **A successful admin save busts the key** — `admin.js` `clearPublicSnapshot()` runs in
+    `scheduleSave()`'s success path (so it covers site fields, people AND chapters) and sweeps every
+    `bfbl:data:v*` key **on the same origin** — so an editor on www sees their own save immediately.
+    A chapter SUBDOMAIN (`vercel.json` redirects) is a separate origin with its own `localStorage`:
+    those views, and every other visitor, age out via the 10-min TTL — that's the trade, and it's why
+    10 min is the cap. A write made OUTSIDE the admin (`tools/firestore.mjs`)
+    busts nothing: clear the key in devtools, or wait out the TTL, before checking the change.
+  - Every path is `try/catch`'d — missing, blocked (private mode) or full `localStorage` degrades to
+    exactly the old fetch-and-wait behaviour.
 - **Auth** — Google sign-in. **Full admins** edit everything: `ADMIN_EMAILS` in `firebase.js` =
   `firestore.rules` `isFullAdmin()` list (keep in sync). **Chapter admins**: `site/content.chapterAdmins`
   (managed in Structure tab) edit ONLY their `chapterContent/<id>` (page+members), enforced by
@@ -353,7 +690,9 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
   chapterAdmins map), so a chapter admin can't upload FILES unless their email is added there.
 
 ### Admin = one page per tab
-`admin.js` SDK + shared `admin.css`. Tabs are links between pages (not in-page switching). `admin.html`
+`admin.js` SDK + shared `admin.css` (loads AFTER `styles.css`, so `.btn`/`.impact-card` radii come from
+there; admin's own rules follow the same site-wide 4/8/6px scale — incl. the inline `style=` radii in
+the admin HTML and `admin.js`). Tabs are links between pages (not in-page switching). `admin.html`
 is the chapter-picker landing (lists chapters live, each → `chapter-<id>-admin.html`). All pages load
 the same `admin.js`; every `render*()`/listener is null-guarded (`on(id,…)`) so each page renders only
 its section. Google login → **auto-saving** (debounced merge-writes). Add a tab: new `*-admin.html`
@@ -409,14 +748,19 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
     `for f in chapter-*.html; do b=${f#chapter-}; b=${b%.html}; case "$b" in admin|pages-admin|*-admin) continue;; esac; sed -e "s|<body>|<body data-admin-chapter=\"$b\">|" chapter-admin.html > "chapter-$b-admin.html"; done`
     **Full checklist to add a NEW chapter `<id>`** (all surfaces — miss one and the chapter half-exists):
     (1) public `chapter-<id>.html` stub (copy a sibling; set `data-chapter-id` + title + canonical
-    subdomain); (2) `chapter-<id>-admin.html` (re-run the sed loop above); (3) Firestore registry entry
+    subdomain); (2) ⚠️ check the stub's body tag is `<body class="nav-overlay" data-chapter-id="<id>">`
+    — copying a sibling carries `nav-overlay`, but without it the runtime-injected hero renders under a
+    solid sticky bar with no top-padding compensation and the page reads as a different site;
+    (3) `chapter-<id>-admin.html` (re-run the sed loop above); (4) Firestore registry entry
     `{id,pageHref}` in `site/content.chapters` AND a `chapterContent/<id>` doc `{page,members}` (use
-    `tools/firestore.mjs`); (4) map pin — FL chapters → `FLORIDA_MAP_PINS` + `chapterLocatorConfig` FL
-    table in `script.js`; others → `WORLD_MAP_PINS` + a region SVG; (5) bump the `stats` "Chapters"
-    `raw` count in `script.js` AND any hardcoded count prose (e.g. `index.html`, `team.html`);
-    (6) `sitemap.xml` `<loc>` for the subdomain; (7) `vercel.json` subdomain redirect PAIR (.net + .org)
-    — without it the canonical/sitemap subdomain URL just redirects to the homepage; (8) add the chapter
-    lead to the chapter doc's members + `page.leadPeople`; (9) optional: mirror into the `data.js` seed
+    `tools/firestore.mjs`); (5) map pin — FL chapters → `FLORIDA_MAP_PINS` + `chapterLocatorConfig` FL
+    table (LOCKSTEP, same %s) in `script.js`, and if it's in the SE-Florida metro also
+    `FLORIDA_SE_CHAPTER_PINS` (inset %s); others → `WORLD_MAP_PINS` + a region SVG; (6) bump the `stats`
+    "Chapters" `raw` count in `script.js` AND every hardcoded count prose — `index.html`
+    chapters-preview description, `team.html` (the home hero eyebrow no longer carries a count);
+    (7) `sitemap.xml` `<loc>` for the subdomain; (8) `vercel.json` subdomain redirect PAIR (.net + .org)
+    — without it the canonical/sitemap subdomain URL just redirects to the homepage; (9) add the chapter
+    lead to the chapter doc's members + `page.leadPeople`; (10) optional: mirror into the `data.js` seed
     fallback. Grant a chapter admin via `site/content.chapterAdmins` (key = the **lowercased** Google
     email, to match `firestore.rules`); add that email to `storage.rules` too ONLY if they must upload
     photos (existing chapter admins are NOT in `storage.rules`, so they can edit text/members but not
