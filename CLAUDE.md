@@ -225,9 +225,10 @@ The navbar overlays all of them — see `nav-overlay` below.
   stat-band pairing). Its square-corner pass was deleted when those radii became the site-wide base
   (see Components). (Banner is real BFBL signage.)
   - **Hero copy.** Current (user-dictated 2026-08-29): eyebrow "Largest youth-led digital equity
-    501(c)(3) nonprofit in Florida" — the superlative was reinstated 2026-08-16 over the earlier
-    facts-only rule, then trimmed of "and fastest growing"; the 501(c)(3) came from a concurrent
-    upstream commit and was kept. h1 "Technology Should Be for Everyone", subtitle "…bridges the
+    nonprofit in Florida" — the superlative was reinstated 2026-08-16 over the earlier facts-only
+    rule, then trimmed of "and fastest growing". A concurrent upstream commit inserted "501(c)(3)"
+    here; the user had it REMOVED — that status belongs in the footer ledger (`renderFooter`, every
+    page) and on donate.html, not in the hero. h1 "Technology Should Be for Everyone", subtitle "…bridges the
     digital divide through technology access, digital literacy, and community service." The eyebrow
     carries no chapter count, so it's off the add-a-chapter count-bump checklist.
 - **`nav-overlay` — the navbar overlays the hero on EVERY hero page** (was home-only until 2026-08):
