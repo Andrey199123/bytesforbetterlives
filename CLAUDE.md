@@ -224,10 +224,10 @@ The navbar overlays all of them — see `nav-overlay` below.
   and what is still genuinely home-only under `body.page-home` (this hero, `.home-intro`, and the
   stat-band pairing). Its square-corner pass was deleted when those radii became the site-wide base
   (see Components). (Banner is real BFBL signage.)
-  - **Hero copy.** Current: eyebrow "Largest and fastest growing youth-led digital equity nonprofit
-    in Florida" (user reinstated this superlative 2026-08-16, overriding the earlier facts-only rule
-    that had replaced it with "Student-led · 11 chapters · 3 countries"), h1 "Technology shouldn't
-    determine opportunity.", subtitle naming the three programs. The eyebrow no longer carries the
+  - **Hero copy.** Current (user-dictated 2026-08-29): eyebrow "Largest youth-led digital equity
+    nonprofit in Florida" (a superlative the user reinstated 2026-08-16 over the earlier facts-only
+    rule, then trimmed of "and fastest growing"), h1 "Technology Should Be for Everyone", subtitle
+    "…bridges the digital divide through technology access, digital literacy, and community service." The eyebrow no longer carries the
     chapter count, so it's off the add-a-chapter count-bump checklist.
 - **`nav-overlay` — the navbar overlays the hero on EVERY hero page** (was home-only until 2026-08):
   - **`body.nav-overlay` is a STATIC class in the page's `<body>` tag**, carried by every public page
@@ -391,14 +391,20 @@ The navbar overlays all of them — see `nav-overlay` below.
   "Our work in numbers" CTA and right-column sentence/lede were removed 2026-08 at user request
   (markup + their CSS deleted); the title alone hands off to the numbers.
 - **Home section order** (`index.html`): hero → impact-intro band → stat band (`#home-impact-stats`)
-  → What We Do → Our Reach map (`#global-reach`, moved down from first) → Board of Directors →
+  → the problem/programs section (TWO stacked `.section-header`s in ONE `<section>`: "The Gap We’re
+  Working to Close" then "How We Bridge the Digital Divide" over `#what-we-do-grid`; the second one
+  carries `.section-header--stacked` for its top margin) → Our Reach map (`#global-reach`, moved down from first) → Board of Directors →
   Chapters preview → Photo Stories → footer (the founder-quote `band--ink` was removed 2026-08 at
   user request). Renderers target ids, so
   reordering the containers is safe; keep every container id.
-- **Program tiles** (`.service-card` in `.service-grid`): `.service-icon` chip (soft tile-colour wash +
-  program-specific stroke SVG, defined inline in `renderWhatWeDo`) cycling green/gold/coral/teal via
-  `:nth-child(4n+…)`; 3-up desktop. (Replaced the 01-05 numerals — they implied a sequence the programs
-  don't have; numbered markers stay only where order is real, e.g. About's story rail.)
+- **Program tiles** (`.service-card` in `.service-grid`, home): THREE numbered pillars from
+  `renderWhatWeDo` — 01 Provide Access / 02 Build Digital Literacy / 03 Serve Communities, mirroring
+  the hero subtitle triad (user-specified 2026-08-29, replacing the five icon tiles). Marker is
+  `.service-step` (Gabarito 700 `--accent-dark` numeral, `tabular-nums`), NOT the `.service-icon`
+  chip — the numerals are legitimate here because the order is real (like About's story rail); the
+  old unordered 01-05 program numerals are still the thing not to bring back. `.service-icon` (soft
+  tile wash + stroke SVG, green/gold/coral/teal via `:nth-child(4n+…)`) remains in `styles.css` for
+  other `.service-grid` users. 3-up desktop.
 - **`.cards-grid--feature`**: UNIFORM grid (`auto-fit minmax(300px,1fr)`, equal width/height; cards
   flex-column). Used on Home chapters preview, Impact Seniors/Kids/Donations, Initiatives
   `#fundraiser-grid`, Past-events.
