@@ -12,6 +12,14 @@
     <link rel="preconnect" href="https://firestore.googleapis.com">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900&display=swap">
     <link rel="stylesheet" href="styles.css">
+    <!-- The three end-of-<body> scripts build the navbar, the footer and the page's content, so the
+         browser must have them BEFORE it first paints or the bar paints logo-only and the grids
+         paint empty. Without these hints the preload scanner only reaches them at the end of the
+         body, at low priority. MUST-COPY-VERBATIM into every new public shell, like the three font
+         <link>s, the theme-color meta and the nav-overlay body class. -->
+    <link rel="preload" as="script" href="data.js">
+    <link rel="preload" as="script" href="firebase-data.js">
+    <link rel="preload" as="script" href="script.js">
     <link rel="canonical" href="https://www.bytesforbetterlives.net/impact.html">
 
 
@@ -539,6 +547,25 @@
         <div class="container"></div>
     </footer>
 
+    <!-- First-paint state for the overlay navbar. MUST-COPY-VERBATIM into any new public page that
+         opens with a hero. ADD-ONLY: solid stays the CSS default, so JS off, a throw, or a CSP that
+         drops this all still leave the readable bar. It runs before the three scripts below, so the
+         bar is transparent over the hero from the first paint even if they are slow. The `load`
+         handler closes the one failure this introduces — class added and never removed because
+         script.js never reached initNavOverlay(). Its geometry test is PAIRED with the one in
+         initNavOverlay() (script.js): change one, change both. On a chapter stub there is no hero
+         yet (script.js injects it), so it bails by design and the bar stays solid. -->
+    <script>(function(){try{
+      var b=document.body,n=document.querySelector(".navbar");
+      if(!n||!b||!b.classList.contains("nav-overlay"))return;
+      var h=document.querySelector(".home-hero,.hero-editorial,.chapter-hero");
+      if(!h)return;
+      var navH=n.offsetHeight||76;
+      if(h.getBoundingClientRect().bottom>navH)n.classList.add("is-over-hero");
+      addEventListener("load",function(){
+        if(!window.__bfblNavOverlayReady)n.classList.remove("is-over-hero");
+      });
+    }catch(e){}})();</script>
     <script src="data.js"></script>
     <script src="firebase-data.js"></script>
     <script src="script.js"></script>

@@ -110,8 +110,32 @@
     --accent-dark: var(--green-deep);
 }
 
-html {
+/* NO cross-document View Transitions. `@view-transition { navigation: auto; }` was tried here
+   (2026-08-29) to cross-fade the navigation itself, and MEASURED WORSE than the plain cut it
+   replaced: 10 of 22 same-origin navigations painted a full-viewport WHITE frame of >=33ms (0 of 17
+   with it off, reproduced in a headed window with real clicks), and every navigation superimposed
+   the outgoing and incoming pages for ~250ms — both navbars drawn at once, links washed to
+   near-invisible. It also cross-fades INTO an empty page on any cold start, since boot() only paints
+   complete when window.BFBL_DATA_SYNC is set. The site's fix for the inter-document gap is that the
+   new page paints complete in its first frame (see boot() in script.js), not a transition over it.
+   If it is ever revisited: gate it on a `pagereveal` listener that calls
+   e.viewTransition.skipTransition() when !window.BFBL_DATA_SYNC, add
+   ::view-transition-old(root){animation:none}, and re-measure white frames BEFORE shipping. */
+
+/* The ONE exception to the no-smooth-scroll rule below: design-system.html has in-page anchors and
+   does not load script.js's initSmoothScroll(), so without this its jump-links lose their glide. It
+   has no hero and no overlay navbar, so the reason the rule exists cannot bite here. */
+body.page-design-system {
     scroll-behavior: smooth;
+}
+
+html {
+    /* NO scroll-behavior: smooth. It animated the browser's OWN scrolls — Chrome's scroll
+       restoration on reload/back, and the fragment jump for a cross-document #hash link — so the
+       page flew down over ~400ms with the overlay navbar still in its paper-on-paper .is-over-hero
+       state, i.e. white links gliding over white content. In-page anchors keep their glide: they go
+       through initSmoothScroll(), which passes `behavior` explicitly (and returns "auto" under
+       prefers-reduced-motion). Don't re-add it here. */
     /* Every page is a JS-hydrated shell, so it starts short and grows past the viewport a beat
        later. On classic-scrollbar platforms that made the scrollbar appear mid-hydration and shove
        the whole layout ~15px left — a visible sidestep on every navigation. Reserve the gutter up
@@ -681,10 +705,34 @@ li:has(> .dropdown-link--all) {
    body a real box, not just push its one child down. */
 body[data-chapter-id]:not(:has(main)) {
     padding-top: 100vh;
+    /* Paint the reserved viewport in the hero's own ground rather than paper: on a cold load this
+       box IS the first screen for as long as the Firestore fetch takes, and a full viewport of
+       cream reads as a broken page, where the brand field reads as the hero arriving. Self-cancels
+       the moment <main> exists. */
+    background: color-mix(in oklch, var(--green-deep) 55%, var(--ink));
+}
+
+/* script.js now injects that <main> at PARSE TIME (ensureChapterProfileLayout runs before
+   renderChrome), so the rule above self-cancels almost immediately and the hero paints in the first
+   frame. The box is still EMPTY below the hero until renderChapterProfilePage fills it behind the
+   Firestore wait, so the reservation moves onto <main> for that second window and is released by
+   the data-chapter-ready flag. Same doctrine: it may only ever UNDERSHOOT (the smallest settled
+   chapter <main> measures ~1700px), so steady state is pixel-identical. */
+body[data-chapter-id] main:not([data-chapter-ready]) {
+    min-height: 100vh;
 }
 
 .chapter-hero {
-    --hero-img: url("images/hero-banner.jpg");
+    /* NO default image on purpose. initNavOverlay() measures the hero with getBoundingClientRect()
+       the moment <main> is injected — a forced style flush — so ANY url() here is fetched IN FULL
+       and then thrown away a beat later when renderChapterProfilePage either sets the chapter's own
+       photo or switches to the photo-less editorial field (measured: 540KB of hero-banner.jpg on
+       every chapter page). `none` is a valid <bg-image>, so the shorthand below still parses and
+       paints its gradient layers — which is exactly the --editorial look. Do not "restore" a
+       fallback url here: a photoless chapter must NOT fall back to the shared banner anyway (its
+       printed wordmark bleeds through the light chapter-hero wash).
+       Note .chapter-hero also carries class .hero, so this overrides .hero's own --hero-img. */
+    --hero-img: none;
     --hero-pos: center 34%;
     /* The navbar is FIXED over this hero (body.nav-overlay), so the box swaps the base .hero's fixed
        height for auto + the same value as a floor: the hero re-adds --nav-height as top padding
@@ -726,7 +774,14 @@ body[data-chapter-id]:not(:has(main)) {
             color-mix(in oklch, var(--ink) 46%, transparent) 78%,
             color-mix(in oklch, var(--ink) 20%, transparent) 100%),
         linear-gradient(180deg, transparent 56%, color-mix(in oklch, var(--ink) 56%, transparent) 100%),
-        var(--hero-img) var(--hero-pos) / cover no-repeat;
+        /* --hero-img is `none` until renderChapterProfilePage sets the chapter's own photo (see the
+           token above), and every layer above it is semi-transparent — so without a background
+           COLOUR the paper page ground showed through and the un-hydrated hero was a third,
+           washed-out look that then slammed to the photo or to the dark editorial field. This is
+           .chapter-hero--editorial's own ground, so the unfilled state already looks like the
+           photo-less field it may well end up being; a photo covers it completely. */
+        var(--hero-img) var(--hero-pos) / cover no-repeat
+        color-mix(in oklch, var(--green-deep) 55%, var(--ink));
 }
 
 /* ---------------------------------------------------------------------------------------------

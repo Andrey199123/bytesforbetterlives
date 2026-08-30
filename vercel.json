@@ -16,7 +16,16 @@
     { "source": "/", "has": [{ "type": "host", "value": "doral.bytesforbetterlives.net" }], "destination": "/chapter-doral.html", "permanent": false },
     { "source": "/", "has": [{ "type": "host", "value": "russia.bytesforbetterlives.net" }], "destination": "/chapter-russia.html", "permanent": false },
     { "source": "/", "has": [{ "type": "host", "value": "turkey.bytesforbetterlives.net" }], "destination": "/chapter-turkey.html", "permanent": false },
-    { "source": "/", "has": [{ "type": "host", "value": "los-angeles.bytesforbetterlives.net" }], "destination": "/chapter-los-angeles.html", "permanent": false },
     { "source": "/", "has": [{ "type": "host", "value": "los-angeles.bytesforbetterlives.net" }], "destination": "/chapter-los-angeles.html", "permanent": false }
+  ],
+  "headers": [
+    {
+      "source": "/(styles\\.css|script\\.js|data\\.js|firebase-data\\.js)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+    }
   ]
 }

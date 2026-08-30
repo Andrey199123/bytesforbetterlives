@@ -257,10 +257,11 @@
     // behind BFBL_DATA_READY (up to 3s), which is what left the bar logo-only on every navigation.
     // Every renderer it calls null-guards its root, so this is a harmless no-op on pages without a
     // navbar/footer.
-    // ⚠️ CALL EXACTLY ONCE per page, from the LAST statement of this IIFE (see the call site for
-    // why it cannot move up): initNavDropdowns and initMobileNavigation add listeners
+    // ⚠️ CALL EXACTLY ONCE per page, from boot() — the LAST statement of this IIFE (see the call
+    // site for why it cannot move up): initNavDropdowns and initMobileNavigation add listeners
     // (initMobileNavigation with no guard at all — a second call toggles the hamburger twice per
     // click, opening then instantly closing the drawer).
+    var chromeRendered = false;
     function renderChrome() {
         renderNavigation();
         initNavDropdowns();
@@ -270,8 +271,24 @@
         initMobileNavigation();
         // LAST: the overlay navbar's transparent state is JS-applied (solid is the CSS default) and
         // its IntersectionObserver rootMargin measures navbar.offsetHeight, so the bar has to be
-        // filled in first. Called again from ensureChapterProfileLayout() once a chapter hero exists.
+        // filled in first. Called again from ensureChapterProfileLayout() once a chapter hero exists
+        // — but only on the COLD path, where that runs after this (see the flag).
+        chromeRendered = true;
         initNavOverlay();
+    }
+
+    // Renderers that read NOTHING from Firestore or data.js — the impact stat band (`stats`), the
+    // program tiles (`services`) and the donate methods are all hardcoded arrays. They can paint at
+    // parse time on EVERY load, warm or cold, so they are out of initRender and into boot() below.
+    function renderStaticBody() {
+        renderHomeStats();
+        // With the band. It used to sit in initRender, behind the Firestore wait, so on a cold load
+        // the band showed five literal zeroes for as long as that took — and any numeral the reader
+        // had already scrolled past stayed 0 forever, because the observer never fires for what is
+        // behind you (see the scrolled-past branch in initCounters).
+        initCounters();
+        renderWhatWeDo();
+        renderDonatePage();
     }
 
     function initRender() {
@@ -296,27 +313,43 @@
         initStoryCards();
         initRevealEffects();
         initSmoothScroll();
-        initCounters();
-        renderDonatePage();
     }
 
-    // Render the page BODY once the live content (firebase-data.js, if present) has loaded —
-    // falling back to data.js if Firestore is empty/unreachable. Then re-sync data and derive roles
-    // before render. The chrome is already on screen by now (renderChrome, below), so all this pass
-    // owes the navbar/footer is a patch of the two bits live data can actually change.
+    // Render the page BODY from the live content — the data.js seed only if Firestore is empty or
+    // unreachable. Re-syncs data and derives roles first; the chrome is already on screen by then
+    // (renderChrome), so all this pass owes the navbar/footer is a patch of the two bits live data
+    // can actually change.
+    //
+    // ⚠️ RUNS EXACTLY ONCE per page. Two callers race for it and the guard settles which wins:
+    //   - boot(), at parse time, WHEN firebase-data.js installed its localStorage snapshot
+    //     synchronously (window.BFBL_DATA_SYNC) — i.e. every warm start, which is what "switching
+    //     pages" is. The live content is already in window.BFBL_DATA at that moment, so the body
+    //     paints in the FIRST frame instead of a beat after it.
+    //   - the DOMContentLoaded handler below, on a cold start, once the Firestore fetch (or its 3s
+    //     timeout) lands — today's behaviour, unchanged.
+    // Rendering twice is NOT an option: initLightbox/initCarousels/initStoryCards/initSmoothScroll
+    // all bind listeners with no re-entry guard, and initRevealEffects would blank cards the reader
+    // has already scrolled to. On a warm start the two passes would also be identical by
+    // construction — the background fetch deliberately does not re-render the current view.
+    var bodyRendered = false;
+    function renderBodyOnce() {
+        if (bodyRendered) return;
+        bodyRendered = true;
+        Object.assign(data, window.BFBL_DATA || {});
+        donateUrl = data.donateUrl || donateUrl;
+        contactEmail = data.contactEmail || contactEmail;
+        deriveRoles();
+        refreshChaptersDropdown();
+        refreshFooter();
+        initRender();
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
+        if (bodyRendered) return;
         var ready = (window.BFBL_DATA_READY && typeof window.BFBL_DATA_READY.then === "function")
             ? window.BFBL_DATA_READY
             : Promise.resolve();
-        ready.then(function () {
-            Object.assign(data, window.BFBL_DATA || {});
-            donateUrl = data.donateUrl || donateUrl;
-            contactEmail = data.contactEmail || contactEmail;
-            deriveRoles();
-            refreshChaptersDropdown();
-            refreshFooter();
-            initRender();
-        });
+        ready.then(renderBodyOnce);
     });
 
     function initVercelAnalytics() {
@@ -740,6 +773,11 @@
         const footerContainer = document.querySelector(".footer .container");
         if (!footerContainer) return;
         footerPaintedSignature = footerDataSignature();
+        // Guarded like footerDataSignature() already does: this runs inside renderChrome() at parse
+        // time, so a Firestore content doc without socialLinks would throw HERE and abort the rest
+        // of the chrome — syncDonateLinks, ensureSkipLink, initMobileNavigation AND initNavOverlay —
+        // leaving a dead hamburger and a permanently solid bar on every hero page.
+        const social = data.socialLinks || {};
 
         const quickLinks = [
             ["Home", "index.html"],
@@ -782,8 +820,8 @@
                     <h3>Contact</h3>
                     <a href="${escapeHTML(safeUrl("mailto:" + contactEmail))}">${escapeHTML(contactEmail)}</a>
                     <div class="social-links">
-                        <a class="social-link" href="${escapeHTML(safeUrl(data.socialLinks.instagram))}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">${SOCIAL_ICONS.instagram}</a>
-                        <a class="social-link" href="${escapeHTML(safeUrl(data.socialLinks.linkedin))}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" title="LinkedIn">${SOCIAL_ICONS.linkedin}</a>
+                        <a class="social-link" href="${escapeHTML(safeUrl(social.instagram))}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram">${SOCIAL_ICONS.instagram}</a>
+                        <a class="social-link" href="${escapeHTML(safeUrl(social.linkedin))}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" title="LinkedIn">${SOCIAL_ICONS.linkedin}</a>
                     </div>
                 </div>
             </div>
@@ -803,8 +841,8 @@
     }
 
     function renderHomePage() {
-        renderHomeStats();
-        renderWhatWeDo();
+        // renderHomeStats() / renderWhatWeDo() are NOT here any more — they read no data, so they
+        // paint at parse time from renderStaticBody(). Everything below needs live content.
         // Homepage preview shows the board of directors (members flagged person.execBoard).
         renderOfficerGrid("#executive-board-preview", (data.execBoard || []).map(withDisplayTitle), true);
         renderChapterPreview();
@@ -1312,14 +1350,17 @@
         if (!chapter) {
             const missing = document.querySelector("#chapter-not-found");
             if (missing) missing.style.display = "block";
+            markChapterMainReady();
             return;
         }
 
         const titleEl = document.querySelector("#chapter-page-title");
         if (titleEl) titleEl.textContent = chapter.name;
 
-        // Each chapter hero uses its OWN first highlight photo (falls back to the shared banner) +
-        // a faint monogram — so chapter pages stop sharing one identical hero.
+        // Each chapter hero uses its OWN first highlight photo + a faint monogram, so chapter pages
+        // stop sharing one identical hero. NO shared-banner fallback: a chapter without a real photo
+        // gets the photo-less editorial field below (.chapter-hero already paints that field's
+        // ground, see --hero-img in styles.css).
         const heroEl = document.querySelector(".chapter-hero");
         const firstPhoto = chapter.photos && chapter.photos[0] ? chapter.photos[0] : "";
         if (heroEl) {
@@ -1475,11 +1516,29 @@
             }
             ctaSection.style.display = "";
         }
+
+        markChapterMainReady();
+    }
+
+    // The parse-time <main> (see ensureChapterProfileLayout) exists long before its content does, so
+    // styles.css floors it at 100vh until this flag lands — same only-ever-undershoot doctrine as
+    // #home-impact-stats. Called from BOTH exits of renderChapterProfilePage: the success path and
+    // the "chapter not found" branch, so a not-found card is never stranded on a viewport-tall box.
+    function markChapterMainReady() {
+        const main = document.querySelector("body[data-chapter-id] main");
+        if (main) main.setAttribute("data-chapter-ready", "");
     }
 
     function ensureChapterProfileLayout() {
         // Chapter profile pages are intentionally lightweight shells.
         // If the expected containers aren't present, inject the chapter layout so older pages still render.
+        //
+        // Called at PARSE TIME now (see boot() at the end of this IIFE) as well as from
+        // renderChapterProfilePage — the markup below is a pure static template that reads no data,
+        // and injecting it late meant a chapter navigation painted one blank cream viewport (the
+        // 100vh reservation in styles.css) before the dark hero slammed in. So it must be a no-op
+        // on every non-chapter page:
+        if (!document.body || !document.body.dataset || !document.body.dataset.chapterId) return;
         if (document.querySelector("#chapter-page-title")) return;
 
         const footer = document.querySelector(".footer");
@@ -1578,8 +1637,12 @@
             document.body.appendChild(main);
         }
 
-        // The chapter hero only exists now, so the overlay navbar can finally observe it.
-        initNavOverlay();
+        // The chapter hero only exists now, so the overlay navbar can finally observe it — but
+        // ONLY when the chrome is already up. boot() calls this before renderChrome() (the hero has
+        // to exist before renderChrome's own initNavOverlay measures it), and observing a navbar
+        // that has no links yet is dead work that also breaks the documented "exactly two call
+        // sites". On that path renderChrome's call, a moment later, is the one that counts.
+        if (chromeRendered) initNavOverlay();
     }
 
     function renderGalleryPreview() {
@@ -1917,6 +1980,12 @@
         const hamburger = document.querySelector(".hamburger");
         const navMenu = document.querySelector(".nav-menu");
         if (!hamburger || !navMenu) return;
+        // The click listener below has no other guard, so a second call would toggle the drawer
+        // twice per click (open, instantly close). Flag the BUTTON, not .nav-menu: the menu owns the
+        // delegated drawer-close listener, which must be free to rebind when refreshChaptersDropdown
+        // replaces the dropdown <li>s.
+        if (hamburger.dataset.mobileNavBound) return;
+        hamburger.dataset.mobileNavBound = "true";
 
         hamburger.setAttribute("aria-label", "Open navigation menu");
         hamburger.setAttribute("aria-expanded", "false");
@@ -1963,7 +2032,7 @@
     // here while the state is applied and restored one frame later — every call, because the
     // chapter-profile re-call flips the bar solid→transparent long after first paint too.
     var navReadyGeneration = 0;
-    function enableNavTransitions() {
+    function enableNavTransitions(recheck) {
         const generation = ++navReadyGeneration;
         const raf = window.requestAnimationFrame
             ? window.requestAnimationFrame.bind(window)
@@ -1973,14 +2042,28 @@
         // into one style recalculation, and the browser animates whenever the after-change style
         // has a transition — which is the fade this exists to suppress.
         raf(function () {
+            if (generation !== navReadyGeneration) return; // superseded by a later call
+            // LAST CHANCE to correct the state, and it MUST happen in this frame — not the next one
+            // beside `nav-ready`. The browser applies a fragment scroll (impact.html#seniors) and its
+            // own scroll restoration AFTER this script runs, so the geometry read in initNavOverlay
+            // was taken at y=0 and is stale by now; the IntersectionObserver's own correction lands
+            // later still, i.e. after nav-ready has armed the 220ms cross-fade, which paints as
+            // paper links fading over cream. Correcting here, with transitions still off, makes it a
+            // snap. (Measured: doing this in the SAME callback as the class add still animated —
+            // the after-change style already carried the transition.)
+            if (typeof recheck === "function") recheck();
             raf(function () {
-                if (generation !== navReadyGeneration) return; // superseded by a later call
+                if (generation !== navReadyGeneration) return;
                 document.body.classList.add("nav-ready");
             });
         });
     }
 
     function initNavOverlay() {
+        // Handshake with the inline first-paint snippet in every hero page's <body> (it applies
+        // .is-over-hero before this file has even downloaded, then drops it again on `load` unless
+        // this flag says the real observer took over).
+        window.__bfblNavOverlayReady = true;
         const navbar = document.querySelector(".navbar");
         if (!navbar || !document.body.classList.contains("nav-overlay")) return;
         document.body.classList.remove("nav-ready");
@@ -2005,9 +2088,11 @@
         // back-restore — where the bar painted transparent over light content until the observer's
         // first callback corrected it (a visible flash, or a 220ms cross-fade once nav-ready has
         // landed). Matching the observer makes its first callback a no-op.
-        // Not the same thing as an anchor deep-link (impact.html#seniors): Chrome runs the fragment
-        // scroll AFTER this script, starting from y=0, and html{scroll-behavior:smooth} animates it,
-        // so the bar correctly starts transparent and the solid fade is scroll-driven.
+        // An anchor deep-link (impact.html#seniors) is the same problem one step later: Chrome runs
+        // the fragment scroll AFTER this script, from y=0, so this read says "over the hero" and is
+        // stale a moment later. html{scroll-behavior:smooth} is gone (it animated that jump with the
+        // bar still paper-on-paper), and enableNavTransitions() re-runs this test in the frame
+        // before it arms the cross-fade, so the correction snaps instead of fading.
         const navH = navbar.offsetHeight || 76;
         const heroRect = hero.getBoundingClientRect();
         navbar.classList.toggle("is-over-hero", heroRect.bottom > navH);
@@ -2018,7 +2103,9 @@
         }, { rootMargin: "-" + navH + "px 0px 0px 0px", threshold: 0 });
 
         navOverlayObserver.observe(hero);
-        enableNavTransitions();
+        enableNavTransitions(function () {
+            navbar.classList.toggle("is-over-hero", hero.getBoundingClientRect().bottom > navH);
+        });
     }
 
     function initSmoothScroll() {
@@ -2054,8 +2141,14 @@
 
         targets.forEach(function (target) {
             const rect = target.getBoundingClientRect();
-            const alreadyVisible = rect.top < (window.innerHeight - 24) && rect.bottom > 24;
-            if (alreadyVisible) {
+            const inViewport = rect.top < (window.innerHeight - 24) && rect.bottom > 24;
+            // ABOVE the viewport counts as already seen: this pass can run after the reader has
+            // already scrolled (a cold load, a mid-page reload, a back-restore), and marking
+            // something behind them .reveal-ready means it animates in only if they scroll back UP,
+            // which reads as a glitch rather than an entrance. `height > 0` excludes a display:none
+            // element, whose all-zero rect would otherwise look like "scrolled past".
+            const scrolledPast = rect.height > 0 && rect.bottom <= 24;
+            if (inViewport || scrolledPast) {
                 target.classList.add("reveal-in");
                 return;
             }
@@ -2068,7 +2161,13 @@
     function initImageFallbacks(root) {
         const scope = root || document;
         scope.querySelectorAll("img").forEach(function (img) {
-            if (!img.hasAttribute("loading")) img.setAttribute("loading", "lazy");
+            // Lazy ONLY below the fold. Hydrated markup lands after first paint, so stamping
+            // loading="lazy" on an in-viewport <img> (member photos, gallery tiles, the top of a
+            // chapter page) deferred it a second time and made the images visibly pop in one beat
+            // after their cards.
+            if (!img.hasAttribute("loading") && img.getBoundingClientRect().top >= window.innerHeight) {
+                img.setAttribute("loading", "lazy");
+            }
             if (img.dataset.fallbackReady) return;
             img.dataset.fallbackReady = "true";
 
@@ -2413,9 +2512,31 @@
             return formatter.format(value);
         }
 
+        function settle(el) {
+            const target = parseFloat(el.getAttribute("data-target")) || 0;
+            const decimals = parseInt(el.getAttribute("data-decimals"), 10) || 0;
+            el.dataset.animated = "true";
+            el.textContent = (el.getAttribute("data-prefix") || "") +
+                formatValue(target, decimals) + (el.getAttribute("data-suffix") || "");
+        }
+
         const observer = new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
-                if (!entry.isIntersecting) return;
+                if (!entry.isIntersecting) {
+                    // ABOVE the viewport: the reader is already past the band (a mid-page reload, a
+                    // back-restore), and this observer only ever fires again on scroll-back — so
+                    // show the real number rather than leaving a literal 0 behind them. The test
+                    // belongs HERE, not at attach time: this runs from renderStaticBody() at parse
+                    // time, before Chrome applies the fragment scroll / scroll restoration, so
+                    // scrollY is still 0 then and nothing is ever "past" yet.
+                    const past = entry.target;
+                    if (!past.dataset.animated && entry.boundingClientRect.height > 0 &&
+                        entry.boundingClientRect.bottom <= 0) {
+                        settle(past);
+                        observer.unobserve(past);
+                    }
+                    return;
+                }
                 const el = entry.target;
                 if (el.dataset.animated) return;
                 el.dataset.animated = "true";
@@ -2458,15 +2579,42 @@
         });
     }
 
-    // Chrome first, synchronously at parse time: script.js is a plain end-of-<body> script, so the
-    // navbar, the footer container and any static hero are already in the DOM. Waiting for
-    // initRender (gated on the Firestore fetch, up to 3s) is what made the bar sit logo-only — and
-    // showed a solid navbar over the hero — for a few hundred ms on every navigation.
-    // ⚠️ MUST STAY THE LAST STATEMENT IN THIS IIFE. Function declarations hoist, but the
-    // module-level `const`s do NOT: calling renderChrome() higher up put SOCIAL_ICONS (and, via
-    // initRender later, the map-pin tables) in the temporal dead zone, so renderFooter threw, the
-    // whole IIFE aborted mid-way and every later const stayed permanently uninitialised.
-    renderChrome();
+    // EVERYTHING THAT CAN PAINT IN THE FIRST FRAME, synchronously at parse time: script.js is a
+    // plain end-of-<body> script, so the navbar, the footer container, every content container and
+    // any static hero are already in the DOM here. Anything left to initRender (gated on the
+    // Firestore fetch, up to 3s) paints one beat AFTER the page — which is the flash.
+    //
+    // ⚠️ boot() MUST STAY THE LAST STATEMENT IN THIS IIFE, and renderChrome() must be called
+    // EXACTLY ONCE, inside it. Function declarations hoist, but the module-level `const`s do NOT:
+    // calling any of this higher up put SOCIAL_ICONS (and, via initRender, the map-pin tables) in
+    // the temporal dead zone, so renderFooter threw, the whole IIFE aborted mid-way and every later
+    // const stayed permanently uninitialised.
+    //
+    // Order inside boot() is load-bearing:
+    //   1. ensureChapterProfileLayout() — chapter stubs only (it bails on a missing
+    //      data-chapter-id), and ONLY on a warm start. They ship as navbar + footer, so their whole
+    //      <main> — hero included — used to arrive behind the Firestore wait, showing a solid bar
+    //      over one blank cream viewport. The template reads no data, so it can run here; and the
+    //      hero must exist BEFORE renderChrome() for initNavOverlay() to find it on the first pass.
+    //      ⚠️ Gated on the SAME warm-start flag as step 4 on purpose: the template ships a
+    //      placeholder headline and an empty subtitle/description/actions, so injecting it on a
+    //      COLD start put a visibly wrong hero on screen and then re-laid it out when Firestore
+    //      landed (measured 0.44-0.49 CLS on chapter pages, against ~0 for the reserved-blank
+    //      path). Warm, step 4 fills it in this same tick, so nothing is ever seen unfilled.
+    //   2. renderChrome() — needs the navbar filled before initNavOverlay measures offsetHeight.
+    //   3. renderStaticBody() — hardcoded arrays, no data needed, so it always runs here.
+    //   4. renderBodyOnce() — only on a warm start, where the live content is already in
+    //      window.BFBL_DATA. See its own comment for why it is never allowed to run twice.
+    function boot() {
+        // Warm start only — see renderBodyOnce(). Cold starts keep the pre-existing path: the
+        // reserved viewport (styles.css), then layout + content together once the fetch lands.
+        var warm = !!window.BFBL_DATA_SYNC;
+        if (warm) ensureChapterProfileLayout();
+        renderChrome();
+        renderStaticBody();
+        if (warm) renderBodyOnce();
+    }
+    boot();
 })();
 
 let emailModalTrigger = null;

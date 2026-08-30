@@ -15,8 +15,11 @@
 (function () {
     var PROJECT = "project-686d62b7-14f5-43c7-acc";
     var BASE = "https://firestore.googleapis.com/v1/projects/" + PROJECT + "/databases/(default)/documents";
-    var CONTENT_URL = BASE + "/site/content";
-    var CHAPTERS_URL = BASE + "/chapterContent";
+    // ?prettyPrint=false — the REST API indents its JSON by default, which is ~2.7x the bytes for
+    // the same decoded payload (measured 871KB -> 327KB raw on site/content). Same host, so the CSP
+    // allowlist is unaffected, and the decoded shape is identical: no SNAPSHOT_VERSION bump.
+    var CONTENT_URL = BASE + "/site/content?prettyPrint=false";
+    var CHAPTERS_URL = BASE + "/chapterContent?prettyPrint=false";
     var TIMEOUT_MS = 3000; // don't block rendering on a slow/offline network
 
     var SNAPSHOT_VERSION = 1;          // bump whenever the stored shape changes (key follows it)
@@ -244,6 +247,12 @@
         // Warm start: install the last good merged dataset over the data.js seed synchronously,
         // before script.js parses, so its very first render already has live content.
         window.BFBL_DATA = Object.assign({}, window.BFBL_DATA || {}, snapshot);
+        // Signal that the LIVE content is already in window.BFBL_DATA, synchronously, right now.
+        // script.js renders the whole body at parse time when this is set, so a page switch paints
+        // its content in the FIRST frame instead of one beat later; without it script.js keeps the
+        // old behaviour and waits for the fetch (the data.js seed cannot answer "is this section
+        // empty?" honestly, and hide-then-reveal is a worse artifact than the wait).
+        window.BFBL_DATA_SYNC = true;
     }
 
     // Always refresh in the background, snapshot or not. fetchAll() ends in a .catch, so it never

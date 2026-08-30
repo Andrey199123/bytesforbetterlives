@@ -25,6 +25,18 @@ education, donations, a growing chapter network).
   `.firebaserc` (project `project-686d62b7-14f5-43c7-acc`) remain for **rules/Storage deploys**
   (`npx firebase deploy --only firestore:rules,storage`). `firebase-tools` is a local devDependency;
   CLI auths via gcloud ADC (no `firebase login`). Do NOT `firebase deploy --only hosting` — push to `main`.
+- **Caching (`vercel.json` `headers`, added 2026-08-29 for the flash work).** `styles.css`/`script.js`/
+  `data.js`/`firebase-data.js` = `public, max-age=300`; `/images/*` = `public, max-age=86400`. Before
+  this, every navigation revalidated all four code files and the browser painted empty chrome while
+  it waited (measured 7–8 frames / ~145ms on EVERY load). Consequences to know: a code push is live
+  immediately for a new visitor but up to **5 min** later for a returning one (hard-reload bypasses),
+  an image replaced in place (`hero-banner.jpg`, `logo.avif`, `maps/*.svg`) up to **24h** later, and
+  the four code files expire independently so `styles.css` and `script.js` can skew by up to 5 min —
+  which is why there is deliberately **no `stale-while-revalidate`** on them (a stale stylesheet with
+  a fresh script breaks the nav-overlay class handshake) and no `immutable` (needs hashed filenames,
+  i.e. a build step). ⚠️ **`vercel.json` admits NO comment keys** — its schema is
+  `additionalProperties:false`, so a `"//"` key fails `vercel build` and nothing deploys. Rationale
+  lives here instead.
 
 ## Architecture — content is data-driven
 HTML pages are thin shells with **empty containers** that `script.js` fills at runtime. Edit
@@ -61,16 +73,30 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
   `data.people` via `resolvePersonRef()`/`personByName()`. Add any new chapter lead to `data.people`.
 
 ### `script.js` — rendering + behavior
-- **Render pipeline — page CHROME renders SYNCHRONOUSLY, body content waits on data.**
+- **Render pipeline — `boot()` paints EVERYTHING it can at parse time (2026-08-29 anti-flash pass).**
+  The IIFE's last statement is `boot()`, in this order: `ensureChapterProfileLayout()` (warm only) →
+  `renderChrome()` → `renderStaticBody()` → `renderBodyOnce()` (warm only).
   `renderChrome()` owns `renderNavigation` → `initNavDropdowns` → `renderFooter` → `syncDonateLinks`
-  → `ensureSkipLink` → `initMobileNavigation` → `initNavOverlay`, and runs at **parse time**, not
-  behind `BFBL_DATA_READY` — that wait is what used to leave the bar logo-only for ~250ms on every
-  navigation (the tab-switch flash). `initRender` keeps only the data-driven body renderers.
-  - ⚠️ **`renderChrome()` must stay the LAST statement of the IIFE.** Module-level `const`s above it
+  → `ensureSkipLink` → `initMobileNavigation` → `initNavOverlay`. `renderStaticBody()` = the
+  renderers that read NO data (`renderHomeStats` + `initCounters`, `renderWhatWeDo`,
+  `renderDonatePage` — all hardcoded arrays), so they run on every load, warm or cold.
+  - **WARM vs COLD is the whole design.** `firebase-data.js` sets **`window.BFBL_DATA_SYNC`** when it
+    installs its localStorage snapshot synchronously (i.e. on every repeat visit — which is exactly
+    what "switching pages" is). Then the live content is already in `window.BFBL_DATA` at parse time
+    and `boot()` renders the entire body in the FIRST paint. Cold (first visit, private mode, expired
+    snapshot, a chapter SUBDOMAIN's separate origin) falls through to the `DOMContentLoaded` handler
+    behind `BFBL_DATA_READY`, exactly as before — the `data.js` seed cannot honestly answer "is this
+    section empty?", so a seed pass would hide-then-reveal, which is worse than the wait.
+  - ⚠️ **`renderBodyOnce()` runs EXACTLY ONCE**, behind a `bodyRendered` flag, because
+    `initLightbox`/`initCarousels`/`initStoryCards`/`initSmoothScroll` all bind listeners with no
+    re-entry guard and `initRevealEffects` would blank cards the reader has already scrolled to.
+  - ⚠️ **`boot()` must stay the LAST statement of the IIFE.** Module-level `const`s above it
     are in the temporal dead zone earlier, so calling it higher up makes `renderFooter` throw on
     `SOCIAL_ICONS` and aborts the whole IIFE.
-  - ⚠️ **Call it exactly ONCE.** `initNavDropdowns`/`initMobileNavigation` add listeners with no
-    re-entry guard — a second call toggles the hamburger twice per click (opens, instantly closes).
+  - ⚠️ **`renderChrome()` is called exactly ONCE, from inside `boot()`.**
+    `initNavDropdowns`/`initMobileNavigation` add listeners — a second call toggles the hamburger
+    twice per click (opens, instantly closes). `initMobileNavigation` now also self-guards on
+    `hamburger.dataset.mobileNavBound`; don't rely on that instead of calling once.
   - The only genuinely data-dependent chrome is the **Chapters dropdown `<li>`s** and the **footer**
     (email/socials). Both are patched afterwards, once data resolves, by `refreshChaptersDropdown()`
     / `refreshFooter()` — they replace markup only, never the bound `.dropdown-toggle`, and
@@ -79,13 +105,32 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
   - `initNavOverlay()` is the one chrome initializer that IS re-entrant (full contract under Heroes →
     `nav-overlay`): it disconnects the previous observer, re-applies the state with `body.nav-ready`
     off, and re-adds it two frames later so the correction snaps instead of fading. Two call sites
-    only — `renderChrome()` and `ensureChapterProfileLayout()`.
+    only — `renderChrome()` and `ensureChapterProfileLayout()`, and the latter fires **only on the
+    cold path**, gated on a `chromeRendered` flag: on the warm path `boot()` injects the hero BEFORE
+    `renderChrome()`, so observing there would measure a navbar that has no links yet.
+  - **`ensureChapterProfileLayout()` runs at parse time on the WARM path only.** Its template is
+    data-free, so injecting it early is what puts a chapter's hero in the first paint instead of one
+    blank viewport. ⚠️ Do NOT ungate it: the template ships a placeholder `<h1>Chapter</h1>` and empty
+    subtitle/actions, so on a COLD start it painted a visibly wrong hero and then re-laid it out when
+    Firestore landed — **measured 0.44–0.49 CLS**, against ~0 for the reserved-blank path.
+    `renderChapterProfilePage()` flags `main[data-chapter-ready]` (via `markChapterMainReady()`) at
+    BOTH exits — success and "chapter not found" — which releases the CSS reservation.
   - ⚠️ **`var navOverlayObserver;` is declared at the top of the IIFE and must NEVER get an
     initializer.** The binding hoists but `= null` would run in source order — i.e. after the
     parse-time call already stored an observer — wiping the reference so no later call could
     disconnect it, leaving two live observers toggling `.is-over-hero` at different thresholds.
 - `navItems` (~line 21) = navbar links. Impact **stat numbers** = `stats` array (~line 366/501),
   *here, not data.js*.
+- **Count-up + reveal run where their content is rendered.** `initCounters()` lives in
+  `renderStaticBody()` (with the stat band, NOT behind the Firestore wait — it used to show five
+  literal `0`s for the whole cold window). Both it and `initRevealEffects()` also treat an element
+  **already scrolled PAST** as already-seen (guarded on `height > 0`, so a `display:none` box with an
+  all-zero rect doesn't qualify). To be precise about what that buys: neither observer *unobserves* a
+  non-intersecting target, so nothing was stuck forever — it fired again on scroll-BACK, which reads
+  as a glitch (a card animating in, or a numeral counting up, above content you already read).
+  ⚠️ `initCounters()`' version of the test lives INSIDE the observer callback, not at attach time:
+  `boot()` runs before Chrome applies the fragment scroll / scroll restoration, so `scrollY` is still
+  0 then and an attach-time test can never be true.
 - **Analytics** = two injectors in `initRender`: `initVercelAnalytics()` (Vercel Web Analytics) and
   `initPlausible()` (Plausible, cookie-less; `data-domain="bytesforbetterlives.net"` = the ONE
   dashboard site all hosts/subdomains report into; `script.outbound-links.js` variant so external
@@ -127,9 +172,26 @@ CSS `@import` (that serialized HTML→styles.css→fonts-CSS→woff2 and blocked
 shell must copy the three font `<link>`s **verbatim** (2 preconnects + the stylesheet with
 `family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900`). All 42 pages carry the
 identical link; Nunito is retired and must not come back.
-**Same rule, same reason, for two more head/body lines a new shell must copy**: the static
-`<meta name="theme-color" content="#FCFAF5">` right after the viewport meta (see A11y baseline), and
-`class="nav-overlay"` on `<body>` if the page opens with a hero (see Heroes → `nav-overlay`).
+**Same rule, same reason, for FOUR more head/body blocks a new public shell must copy VERBATIM**:
+1. the static `<meta name="theme-color" content="#FCFAF5">` right after the viewport meta (A11y baseline);
+2. `class="nav-overlay"` on `<body>` if the page opens with a hero (Heroes → `nav-overlay`);
+3. the three **`<link rel="preload" as="script">`** for `data.js`/`firebase-data.js`/`script.js` after the
+   `styles.css` link — those three scripts build the navbar, footer and content, so the browser needs them
+   before first paint or the bar paints logo-only. (On `index.html` ONLY they sit *after* the LCP
+   `hero-banner.jpg` image preload, which must claim the connection first.)
+4. the inline **first-paint navbar `<script>`** immediately before `<script src="data.js">` (Heroes →
+   `nav-overlay`).
+Drift checks — both must print nothing:
+`grep -L 'rel="preload" as="script" href="script.js"' $(grep -l 'nav-overlay' *.html)` and
+`grep -L '__bfblNavOverlayReady' $(grep -l 'nav-overlay' *.html)`.
+
+**Cross-document View Transitions** (top of `styles.css`, user-approved 2026-08-29): a top-level
+`@view-transition { navigation: auto; }` cross-fades the navigation itself, so the browser's gap between
+documents is covered by the outgoing page instead of a blank frame. It must stay at the TOP LEVEL (not nested
+in a media query) to be honoured; reduced motion is handled by a `prefers-reduced-motion: reduce` block that
+kills `::view-transition-group/old/new` animations. Same-origin only — Firefox ignores it and a hop to a
+chapter SUBDOMAIN gets the plain cut. ⚠️ It only helps because `boot()` now paints the new page COMPLETE;
+cross-fading into a half-empty page would make pop-in MORE visible.
 
 ### `images/`
 Subfolders (e.g. `images/work with seniors/`, `images/donations/`, `images/team/`); some names
@@ -264,16 +326,35 @@ The navbar overlays all of them — see `nav-overlay` below.
     || 76`), never added unconditionally: on a load that is ALREADY scrolled when this runs (mid-page
     reload / back-restore) the unconditional add painted a transparent bar over light content for a
     frame until the observer's first callback corrected it. Matching the observer makes that first
-    callback a no-op. ⚠️ It does NOT change anchor deep-links (`impact.html#seniors`): Chrome applies
-    the fragment scroll AFTER the end-of-`<body>` script, from y=0, and `html{scroll-behavior:smooth}`
-    animates it — so the bar starts correctly transparent over the hero and then cross-fades solid as
-    the browser scrolls. That fade is scroll-driven and correct; don't "fix" it here. It is **re-entrant** (disconnects the previous observer) and
-    has exactly TWO call sites: from **`renderChrome()` at script parse time** (`script.js:274`, the
+    callback a no-op. ⚠️ **An anchor deep-link (`impact.html#seniors`) is the same staleness one step
+    later**: Chrome applies the fragment scroll AFTER the end-of-`<body>` script, from y=0, so that
+    read says "over the hero" and is wrong a moment later. This used to be excused as a scroll-driven
+    fade because `html{scroll-behavior:smooth}` animated the jump — **that declaration is DELETED**
+    (it also animated Chrome's own scroll restoration on reload/back, flying the page down with the
+    bar still paper-on-paper; in-page anchors keep their glide through `initSmoothScroll()`, which
+    passes `behavior` explicitly — with ONE exception, `body.page-design-system`, which has in-page
+    anchors and does not load `script.js`, so it keeps its own `scroll-behavior: smooth`). So
+    `enableNavTransitions()` now takes a **recheck callback and re-runs the geometry test one frame
+    BEFORE it adds `body.nav-ready`** — ⚠️ not in the same callback: measured, the after-change style
+    already carries the 220ms transition then and the browser animates the very fade this fixes.
+    Even split, arrival at a `#hash` still fades on a throttled CPU (the observer's own correction
+    can land later still); it is much shorter than it was (solid at FCP+165ms vs FCP+365ms, 1 bad
+    frame vs 13), not zero. It is **re-entrant** (disconnects the previous
+    observer) and has exactly TWO call sites: from **`renderChrome()` at script parse time** (the
     end-of-`<body>` script, so the static navbar/hero already exist and the bar reads transparent
-    from the FIRST paint instead of after the up-to-3s Firestore wait), and again at the end of
-    **`ensureChapterProfileLayout()`** (`script.js:1587`), which is where a chapter hero first
-    exists. `initRender` calls neither this nor `renderNavigation()` any more — don't add a third
+    from the FIRST paint instead of after the up-to-3s Firestore wait), and at the end of
+    **`ensureChapterProfileLayout()`**, which fires only on the COLD path (gated on `chromeRendered`
+    — on the warm path `boot()` already injected the hero before `renderChrome()`).
+    `initRender` calls neither this nor `renderNavigation()` any more — don't add a third
     call, it just re-binds chrome listeners and leaks a second observer.
+  - **An INLINE `<script>` in every hero page's `<body>`, right before `<script src="data.js">`,
+    applies `.is-over-hero` before the external scripts have even downloaded** — that is what keeps a
+    solid bar off the hero when the network is slow. It is **ADD-ONLY**: solid stays the CSS default,
+    so JS off, a throw or a CSP drop all still leave the readable bar. Its one new failure mode —
+    class added and never removed because `script.js` never reached `initNavOverlay()` — is closed by
+    an `addEventListener("load")` fallback keyed on **`window.__bfblNavOverlayReady`**, which
+    `initNavOverlay()` sets. ⚠️ Its geometry test is PAIRED with `initNavOverlay()`'s: change one,
+    change both. On a chapter stub there is no hero yet, so it bails by design.
   - ⚠️ **`position:fixed` takes the bar out of flow**, so EVERY hero type on a nav-overlay page must
     start at y=0 and re-add the bar's height as top padding —
     `padding-block: calc(var(--nav-height) + clamp(2rem,5vw,3.5rem)) …`, scoped to
@@ -315,7 +396,12 @@ The navbar overlays all of them — see `nav-overlay` below.
     `top: calc(50% + var(--nav-height) / 2)` — otherwise the tallest outline (California, on Los
     Angeles) paints into the nav band.
   **Chapters with NO real photo get `.chapter-hero--editorial`** (the shared photo-less green-ink
-  field, same recipe as `.hero-editorial`) instead of falling back to the shared `hero-banner.jpg`
+  field, same recipe as `.hero-editorial`). `.chapter-hero` carries **no `--hero-img` fallback at all**
+  (`none`): `initNavOverlay()` measures the hero the moment `<main>` is injected, which forced any
+  default to be fetched in full and thrown away (540KB per chapter page). Its background shorthand
+  therefore ends in an opaque `--editorial` ground colour, so the un-hydrated hero already looks like
+  the field it may become instead of letting the paper page show through the semi-transparent layers.
+  This replaces falling back to the shared `hero-banner.jpg`
   — whose printed wordmark bled through the light wash and made every photoless chapter look identical.
   The locator map carries identity in both cases. A faint **locator MAP + dot** (`chapterLocatorConfig` +
   `.chapter-hero-locator`/`.hero-locator-map`/`.hero-locator-dot`, hidden on mobile) shows each
@@ -377,9 +463,15 @@ The navbar overlays all of them — see `nav-overlay` below.
   (the grid IS the page, so an empty one is a failure state, not a legitimate empty section — but
   `:has(> .gallery-empty)` releases it, since `data.js` seeds no `galleryImages` and the one-line
   empty copy would otherwise sit on a viewport of dead white) and
-  **`body[data-chapter-id]:not(:has(main)) { padding-top: 100vh }`** — chapter stubs ship as
-  navbar + footer only until `ensureChapterProfileLayout()` injects the whole `<main>`, so without it
-  the footer paints under the bar and then drops a full page (measured cold CLS 0.82). ⚠️ It is
+  **`body[data-chapter-id]:not(:has(main)) { padding-top: 100vh }`** — on a COLD start (and with JS
+  off) chapter stubs are still navbar + footer only until `ensureChapterProfileLayout()` injects the
+  whole `<main>`, so without it the footer paints under the bar and then drops a full page (measured
+  cold CLS 0.82). That reserved viewport is also painted in the hero's own ground
+  (`color-mix(in oklch, var(--green-deep) 55%, var(--ink))`), not paper: it IS the first screen for
+  as long as the fetch takes, and a full viewport of cream reads as a broken page. Its warm-path twin
+  is **`body[data-chapter-id] main:not([data-chapter-ready]) { min-height: 100vh }`** — `boot()`
+  injects `<main>` in the first paint there, so the `:has()` rule self-cancels immediately and the
+  reservation has to move onto `<main>` until `renderChapterProfilePage()` flags it ready. ⚠️ It is
   **padding on the `<body>`**, not a margin on the footer: the navbar is `position:fixed`, so the
   footer is the stub's only in-flow box and its `margin-top` collapses through `<body>` — the body
   keeps a 0×0 box until `<main>` lands and that jump alone scores 0.45. The `:has()`
@@ -652,8 +744,10 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
 
 ### Public read & auth/roles
 - **Public read** — `firebase-data.js` (classic script on every page, before `script.js`) fetches
-  `site/content` AND the `chapterContent` collection via Firestore REST, merges into `window.BFBL_DATA`,
-  sets `window.BFBL_DATA_READY`. Falls back to `data.js` if empty/unreachable — the 3s
+  `site/content` AND the `chapterContent` collection via Firestore REST (both URLs carry
+  **`?prettyPrint=false`** — the API indents its JSON by default, 871KB vs 327KB raw for the same
+  decoded payload; same host, so no CSP change, and the decoded shape is identical, so it needs no
+  `SNAPSHOT_VERSION` bump), merges into `window.BFBL_DATA`, sets `window.BFBL_DATA_READY`. Falls back to `data.js` if empty/unreachable — the 3s
   `Promise.race` timeout only exists on a COLD start; a warm start resolves synchronously (below).
 - **localStorage SNAPSHOT (warm start)** — repeat visits are served from a cached copy of the last
   good LIVE READ — what Firestore itself returned that load (`fresh`), **not** the merged
@@ -661,8 +755,10 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
   stripped to `src/alt/takenAt/locationName/gps` (`GALLERY_SNAPSHOT_FIELDS`) — the flattened `exif`
   blobs are ~68% of the payload and nothing public reads them. A snapshot younger than **10 minutes**
   (`SNAPSHOT_MAX_AGE_MS`) installs into `window.BFBL_DATA` synchronously *before* `script.js` parses
-  and resolves `BFBL_DATA_READY` immediately (measured ~3ms warm vs ~250–350ms cold), which is what
-  lets `initRender` paint live content on its first pass. The live fetch still runs in the
+  and resolves `BFBL_DATA_READY` immediately (measured ~3ms warm vs ~250–350ms cold). It also sets
+  **`window.BFBL_DATA_SYNC`**, which is what tells `script.js`'s `boot()` it may render the whole
+  body at PARSE TIME — i.e. inside the first paint, with no pop-in (see the render pipeline under
+  `script.js`). Cold starts have no such flag and keep the old wait. The live fetch still runs in the
   background; it replaces whole keys on `window.BFBL_DATA` — `script.js` has already copied them into
   its own `data` by then — so it refreshes the snapshot for the NEXT navigation and deliberately does
   **not** re-render the current view (no mid-view content swaps).
@@ -758,7 +854,9 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
     (1) public `chapter-<id>.html` stub (copy a sibling; set `data-chapter-id` + title + canonical
     subdomain); (2) ⚠️ check the stub's body tag is `<body class="nav-overlay" data-chapter-id="<id>">`
     — copying a sibling carries `nav-overlay`, but without it the runtime-injected hero renders under a
-    solid sticky bar with no top-padding compensation and the page reads as a different site;
+    solid sticky bar with no top-padding compensation and the page reads as a different site — AND
+    that it carries the three `<link rel="preload" as="script">` and the inline first-paint navbar
+    `<script>` (see the must-copy-verbatim list under `styles.css`; run both drift greps);
     (3) `chapter-<id>-admin.html` (re-run the sed loop above); (4) Firestore registry entry
     `{id,pageHref}` in `site/content.chapters` AND a `chapterContent/<id>` doc `{page,members}` (use
     `tools/firestore.mjs`); (5) map pin — FL chapters → `FLORIDA_MAP_PINS` + `chapterLocatorConfig` FL
@@ -790,9 +888,10 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
   `gstatic`/`apis.google.com`, `*.googleapis.com`/`*.firebasestorage.app`, `formsubmit.co`,
   `plausible.io` (script+connect), Firebase-Auth/Google hosts — keep in sync when adding any
   third-party script/endpoint. `frame-ancestors 'none'`.
-  - ⚠️ **These headers are currently DORMANT in production** (discovered 2026-07-19): they're
-    Firebase-Hosting config, but the site is served by VERCEL and `vercel.json` has NO `headers`
-    block — live responses carry only Vercel's own HSTS. Still keep `firebase.json` in sync (it's
+  - ⚠️ **These SECURITY headers are currently DORMANT in production** (discovered 2026-07-19):
+    they're Firebase-Hosting config, but the site is served by VERCEL. `vercel.json` now has a
+    `headers` block, but it carries **Cache-Control only** (see Tech & how to run) — live responses
+    still carry no CSP and only Vercel's own HSTS. Still keep `firebase.json` in sync (it's
     the intended policy). Do NOT copy it into `vercel.json` as-is: `style-src`/`font-src` predate the
     Google-Fonts `<link>` setup (no `fonts.googleapis.com`/`fonts.gstatic.com`) and would break all
     fonts — porting needs those hosts added and a full page-by-page check first.
