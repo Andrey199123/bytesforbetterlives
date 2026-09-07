@@ -14,7 +14,7 @@
 
 (function () {
     var PROJECT = "project-686d62b7-14f5-43c7-acc";
-    var BASE = "https://firestore.googleapis.com/v1/projects/" + PROJECT + "/databases/(default)/documents";
+    var BASE = "https://bfbl-api.bytesforbetterlives.workers.dev";
     // ?prettyPrint=false — the REST API indents its JSON by default, which is ~2.7x the bytes for
     // the same decoded payload (measured 871KB -> 327KB raw on site/content). Same host, so the CSP
     // allowlist is unaffected, and the decoded shape is identical: no SNAPSHOT_VERSION bump.
