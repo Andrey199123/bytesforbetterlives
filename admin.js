@@ -207,9 +207,12 @@ if (!firebaseReady) {
     // because it can carry active script (stored-XSS risk if ever opened directly from Storage).
     const ALLOWED_MEDIA_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/avif", "video/mp4", "video/webm", "video/quicktime"];
     function isAllowedMedia(file) {
+        const name = (file && file.name || "").toLowerCase();
         const t = (file && file.type || "").toLowerCase();
-        if (!t) return /\.(png|jpe?g|gif|webp|avif|mp4|webm|mov)$/i.test((file && file.name) || ""); // some browsers leave type blank
-        return ALLOWED_MEDIA_TYPES.indexOf(t) !== -1;
+        // Be very permissive for any video or image MIME type
+        if (t.startsWith("image/") || t.startsWith("video/")) return true;
+        // Fallback to extension check if MIME is weird (like application/octet-stream for .mov on some OSes)
+        return /\.(png|jpe?g|gif|webp|avif|mp4|webm|mov)$/i.test(name);
     }
     function notAllowedMedia(file) {
         if (!isAllowedMedia(file)) {
@@ -475,7 +478,7 @@ if (!firebaseReady) {
                         ${it.image ? `<img src="${escapeAttr(it.image)}" alt="" class="init-flyer-thumb" onerror="this.style.display='none'">` : ""}
                         <div class="upload-dropzone upload-dropzone-sm" data-iflyerzone="${i}">
                             <span>${it.image ? "Replace flyer/image — drop or click" : "Drop or click to add a flyer/image"}</span>
-                            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" data-iflyer="${i}" style="display:none;">
+                            <input type="file" accept="image/*,video/*" data-iflyer="${i}" style="display:none;">
                         </div>
                         ${it.image ? `<button class="btn btn-secondary" type="button" data-iflyer-remove="${i}" style="padding:0.2rem 0.7rem;">Remove flyer/image</button>` : ""}
                     </div>
@@ -573,7 +576,7 @@ if (!firebaseReady) {
                     <label>Chapter <select data-fr-chapter="${i}">${chapterOptions(f.chapterId)}</select></label>
                     <div class="upload-dropzone upload-dropzone-sm" data-frzone="${i}">
                         <span>${f.image ? "Replace image — drop or click" : "Drop or click to add an image"}</span>
-                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" data-frimg="${i}" style="display:none;">
+                        <input type="file" accept="image/*,video/*" data-frimg="${i}" style="display:none;">
                     </div>
                 </div>`;
         }).join("");
@@ -736,7 +739,7 @@ if (!firebaseReady) {
                 <label>Photo path <input data-field="photo" data-i="${index}" value="${escapeAttr(person.photo || "")}"></label>
                 <div class="upload-dropzone upload-dropzone-sm" data-photozone="${index}">
                     <span>Drop or click to upload photo</span>
-                    <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" data-upload="${index}" style="display:none;">
+                    <input type="file" accept="image/*,video/*" data-upload="${index}" style="display:none;">
                 </div>
                 ${hasRealPhoto(person.photo) ? `
                 <div class="photo-fit">
@@ -1173,7 +1176,7 @@ if (!firebaseReady) {
                     ${it && it.image ? `<img src="${escapeAttr(it.image)}" alt="" class="init-flyer-thumb" onerror="this.style.display='none'">` : ""}
                     <div class="upload-dropzone upload-dropzone-sm" data-initflyerzone data-ci="${ci}" data-ii="${ii}">
                         <span>${it && it.image ? "Replace flyer/image — drop or click" : "Drop or click to add a flyer/image"}</span>
-                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" data-initflyer data-ci="${ci}" data-ii="${ii}" style="display:none;">
+                        <input type="file" accept="image/*,video/*" data-initflyer data-ci="${ci}" data-ii="${ii}" style="display:none;">
                     </div>
                     ${it && it.image ? `<button type="button" class="btn btn-secondary admin-list-x" data-initflyer-remove data-ci="${ci}" data-ii="${ii}">Remove flyer/image</button>` : ""}
                 </div>
@@ -1237,7 +1240,7 @@ if (!firebaseReady) {
                 ${partnersEditorMarkup(c, index)}
                 <div style="font-weight:700; font-size:0.8rem; color:var(--ink-soft); margin-top:0.4rem;">Chapter highlights (${c.photos.length})</div>
                 <div class="gallery-grid-admin">${photosHtml}</div>
-                <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" multiple data-cphoto-upload="${index}" style="display:none;"></label>
+                <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/*,video/*" multiple data-cphoto-upload="${index}" style="display:none;"></label>
             `;
             editor.appendChild(card);
         });
