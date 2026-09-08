@@ -208,8 +208,8 @@ if (!firebaseReady) {
     const ALLOWED_MEDIA_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/avif", "video/mp4", "video/webm", "video/quicktime"];
     function isAllowedMedia(file) {
         const t = (file && file.type || "").toLowerCase();
-        if (!t) return /\.(png|jpe?g|gif|webp|avif)$/i.test((file && file.name) || ""); // some browsers leave type blank
-        return RASTER_IMAGE_TYPES.indexOf(t) !== -1;
+        if (!t) return /\.(png|jpe?g|gif|webp|avif|mp4|webm|mov)$/i.test((file && file.name) || ""); // some browsers leave type blank
+        return ALLOWED_MEDIA_TYPES.indexOf(t) !== -1;
     }
     function notAllowedMedia(file) {
         if (!isAllowedMedia(file)) {
