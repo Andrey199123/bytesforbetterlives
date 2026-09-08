@@ -309,10 +309,70 @@ if (!firebaseReady) {
         try {
             const snap = await getDoc(contentRef);
             d = snap.exists() ? snap.data() : {};
+            
+            // --- TEMPORARY MIGRATION SCRIPT ---
+            let migrated = false;
+            function fixUrls(obj) {
+                if (!obj) return obj;
+                if (typeof obj === 'string' && obj.includes('firebasestorage.googleapis.com')) {
+                    try {
+                        const url = new URL(obj);
+                        const pathPart = url.pathname.split('/o/')[1];
+                        const decodedPath = decodeURIComponent(pathPart);
+                        const filename = decodedPath.replace(/\//g, '-');
+                        migrated = true;
+                        return `/images/firebase/${filename}`;
+                    } catch(e) {}
+                }
+                if (Array.isArray(obj)) return obj.map(fixUrls);
+                if (typeof obj === 'object') {
+                    for (let k in obj) {
+                        obj[k] = fixUrls(obj[k]);
+                    }
+                }
+                return obj;
+            }
+            fixUrls(d);
+            if (migrated) {
+                console.log("Migrating master Firebase URLs to GitHub paths...");
+                await setDoc(contentRef, d);
+            }
+            // --- END MIGRATION SCRIPT ---
+            
             chapterDocs = {};
             const cc = await getDocs(collection(db, "chapterContent"));
             cc.forEach(function (docSnap) {
                 const data = docSnap.data() || {};
+                
+                // --- TEMPORARY MIGRATION SCRIPT ---
+                let chapterMigrated = false;
+                function fixChapterUrls(obj) {
+                    if (!obj) return obj;
+                    if (typeof obj === 'string' && obj.includes('firebasestorage.googleapis.com')) {
+                        try {
+                            const url = new URL(obj);
+                            const pathPart = url.pathname.split('/o/')[1];
+                            const decodedPath = decodeURIComponent(pathPart);
+                            const filename = decodedPath.replace(/\//g, '-');
+                            chapterMigrated = true;
+                            return `/images/firebase/${filename}`;
+                        } catch(e) {}
+                    }
+                    if (Array.isArray(obj)) return obj.map(fixChapterUrls);
+                    if (typeof obj === 'object') {
+                        for (let k in obj) {
+                            obj[k] = fixChapterUrls(obj[k]);
+                        }
+                    }
+                    return obj;
+                }
+                fixChapterUrls(data);
+                if (chapterMigrated) {
+                    console.log(`Migrating chapter ${docSnap.id} Firebase URLs to GitHub paths...`);
+                    setDoc(docSnap.ref, data);
+                }
+                // --- END MIGRATION SCRIPT ---
+                
                 chapterDocs[docSnap.id] = { page: data.page || {}, members: Array.isArray(data.members) ? data.members : [] };
             });
         } catch (err) {
