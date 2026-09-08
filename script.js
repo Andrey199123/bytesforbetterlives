@@ -201,6 +201,16 @@
             return;
         }
 
+        var videos = imgs.filter(function(im) { return /\.(mp4|webm|mov)$/i.test(im.src) || (im.src && im.src.indexOf('/video/upload/') !== -1); }).length;
+        var photos = imgs.length - videos;
+        var subtitle = document.querySelector(".page-gallery .hero-subtitle");
+        if (subtitle && imgs.length > 0) {
+            var str = [];
+            if (photos > 0) str.push(photos + " photo" + (photos !== 1 ? "s" : ""));
+            if (videos > 0) str.push(videos + " video" + (videos !== 1 ? "s" : ""));
+            subtitle.textContent = "A collection of " + str.join(" and ") + " from BFBL service days, events, donations, and chapter activities. Tap any media to view it full screen.";
+        }
+
         // Time anchors = located photos; they pull in nearby-in-time photos that lost their GPS.
         var anchors = [];
         imgs.forEach(function (im) {

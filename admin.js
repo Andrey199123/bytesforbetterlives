@@ -180,17 +180,40 @@ if (!firebaseReady) {
     // "storage/unauthorized" error, so guard up front for a clear message and always send an
     // explicit image content type (some browsers leave file.type blank).
     
-    async function uploadToCloudinary(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', 'BytesForBetterLives');
-        const res = await fetch('https://api.cloudinary.com/v1_1/rwga4efb/auto/upload', {
-            method: 'POST',
-            body: formData
+    function uploadToCloudinary(file, onProgress) {
+        return new Promise((resolve, reject) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('upload_preset', 'BytesForBetterLives');
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://api.cloudinary.com/v1_1/rwga4efb/auto/upload');
+            
+            if (onProgress) {
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        onProgress(Math.round((e.loaded / e.total) * 100));
+                    }
+                };
+            }
+            
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const data = JSON.parse(xhr.responseText);
+                    resolve(data.secure_url);
+                } else {
+                    try {
+                        const data = JSON.parse(xhr.responseText);
+                        reject(new Error(data.error.message));
+                    } catch(err) {
+                        reject(new Error("Upload failed"));
+                    }
+                }
+            };
+            
+            xhr.onerror = () => reject(new Error("Network error"));
+            xhr.send(formData);
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error.message);
-        return data.secure_url;
     }
 
     const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
@@ -630,7 +653,7 @@ if (!firebaseReady) {
         if (notAllowedMedia(file)) return;
         setStatus("Uploading image…");
         try {
-            fundraisers[i].image = await uploadToCloudinary(file);
+            fundraisers[i].image = await uploadToCloudinary(file, (p) => setStatus(`Uploading image… (${p}%)`));
             renderFundraisers();
             autosave("fundraisers", fundraisers);
         } catch (err) {
@@ -881,7 +904,7 @@ if (!firebaseReady) {
         if (notAllowedMedia(file)) return;
         setStatus("Uploading photo…");
         try {
-            people[i].photo = await uploadToCloudinary(file);
+            people[i].photo = await uploadToCloudinary(file, (p) => setStatus(`Uploading photo… (${p}%)`));
             renderPeople();
             autosave("people", people);
         } catch (err) {
@@ -899,7 +922,7 @@ if (!firebaseReady) {
         if (!chapter.initiatives[ii]) chapter.initiatives[ii] = { title: "", description: "", url: "" };
         setStatus("Uploading flyer…");
         try {
-            chapter.initiatives[ii].image = await uploadToCloudinary(file);
+            chapter.initiatives[ii].image = await uploadToCloudinary(file, (p) => setStatus(`Uploading flyer… (${p}%)`));
             if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
             if (typeof rerender === "function") rerender();
             autosave("chapters", chapters);
@@ -969,7 +992,9 @@ if (!firebaseReady) {
             const file = ok[i];
             setStatus("Uploading " + (i + 1) + " of " + ok.length + "…");
             try {
-                const secure_url = await uploadToCloudinary(file);
+                const secure_url = await uploadToCloudinary(file, (p) => {
+                    setStatus(`Uploading ${i + 1} of ${ok.length}… (${p}%)`);
+                });
                 galleryImages.push({ src: secure_url, alt: file.name.replace(/\.[^.]+$/, "") });
                 done++;
                 renderGallery();
