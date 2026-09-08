@@ -179,6 +179,20 @@ if (!firebaseReady) {
     // Storage rules reject files >= 10 MB or non-image content types with a generic
     // "storage/unauthorized" error, so guard up front for a clear message and always send an
     // explicit image content type (some browsers leave file.type blank).
+    
+    async function uploadToCloudinary(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'BytesForBetterLives');
+        const res = await fetch('https://api.cloudinary.com/v1_1/rwga4efb/image/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error.message);
+        return data.secure_url;
+    }
+
     const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
     function tooBig(file) {
         if (file.size >= MAX_UPLOAD_BYTES) {
@@ -553,10 +567,7 @@ if (!firebaseReady) {
         if (notRasterImage(file)) return;
         setStatus("Uploading image…");
         try {
-            const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
-            const storageRef = ref(storage, "fundraisers/" + Date.now() + "-" + safe);
-            await uploadBytes(storageRef, file, uploadMeta(file));
-            fundraisers[i].image = await getDownloadURL(storageRef);
+            fundraisers[i].image = await uploadToCloudinary(file);
             renderFundraisers();
             autosave("fundraisers", fundraisers);
         } catch (err) {
@@ -807,10 +818,7 @@ if (!firebaseReady) {
         if (notRasterImage(file)) return;
         setStatus("Uploading photo…");
         try {
-            const safe = (people[i].name || "member").toLowerCase().replace(/[^a-z0-9]+/g, "-");
-            const storageRef = ref(storage, "people/" + safe + "-" + Date.now() + "-" + file.name);
-            await uploadBytes(storageRef, file, uploadMeta(file));
-            people[i].photo = await getDownloadURL(storageRef);
+            people[i].photo = await uploadToCloudinary(file);
             renderPeople();
             autosave("people", people);
         } catch (err) {
@@ -828,10 +836,7 @@ if (!firebaseReady) {
         if (!chapter.initiatives[ii]) chapter.initiatives[ii] = { title: "", description: "", url: "" };
         setStatus("Uploading flyer…");
         try {
-            const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
-            const storageRef = ref(storage, "initiatives/" + (chapter.id || "chapter") + "/" + Date.now() + "-" + safe);
-            await uploadBytes(storageRef, file, uploadMeta(file));
-            chapter.initiatives[ii].image = await getDownloadURL(storageRef);
+            chapter.initiatives[ii].image = await uploadToCloudinary(file);
             if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
             if (typeof rerender === "function") rerender();
             autosave("chapters", chapters);
@@ -896,13 +901,11 @@ if (!firebaseReady) {
             const file = ok[i];
             setStatus("Uploading " + (i + 1) + " of " + ok.length + "…");
             try {
-                const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
-                const storageRef = ref(storage, "gallery/" + Date.now() + "-" + i + "-" + safe);
-                await uploadBytes(storageRef, file, uploadMeta(file));
-                galleryImages.push({ src: await getDownloadURL(storageRef), alt: file.name.replace(/\.[^.]+$/, "") });
+                const secure_url = await uploadToCloudinary(file);
+                galleryImages.push({ src: secure_url, alt: file.name.replace(/\.[^.]+$/, "") });
                 done++;
-                renderGallery();                       // show thumbnails as they land
-                autosave("galleryImages", galleryImages); // debounced — persists once at the end
+                renderGallery();
+                autosave("galleryImages", galleryImages);
             } catch (err) {
                 failed++;
             }
