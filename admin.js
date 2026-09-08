@@ -184,7 +184,7 @@ if (!firebaseReady) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', 'BytesForBetterLives');
-        const res = await fetch('https://api.cloudinary.com/v1_1/rwga4efb/image/upload', {
+        const res = await fetch('https://api.cloudinary.com/v1_1/rwga4efb/auto/upload', {
             method: 'POST',
             body: formData
         });
@@ -193,10 +193,10 @@ if (!firebaseReady) {
         return data.secure_url;
     }
 
-    const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+    const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
     function tooBig(file) {
         if (file.size >= MAX_UPLOAD_BYTES) {
-            setStatus('Upload failed: "' + file.name + '" is ' + (file.size / 1048576).toFixed(1) + ' MB — the limit is 10 MB. Please compress or resize it first.', true);
+            setStatus('Upload failed: "' + file.name + '" is ' + (file.size / 1048576).toFixed(1) + ' MB — the limit is 100 MB. Please compress or resize it first.', true);
             return true;
         }
         return false;
@@ -205,15 +205,15 @@ if (!firebaseReady) {
 
     // Raster images only — must mirror the allowlist in storage.rules. SVG is intentionally excluded
     // because it can carry active script (stored-XSS risk if ever opened directly from Storage).
-    const RASTER_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/avif"];
-    function isRasterImage(file) {
+    const ALLOWED_MEDIA_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/avif", "video/mp4", "video/webm", "video/quicktime"];
+    function isAllowedMedia(file) {
         const t = (file && file.type || "").toLowerCase();
         if (!t) return /\.(png|jpe?g|gif|webp|avif)$/i.test((file && file.name) || ""); // some browsers leave type blank
         return RASTER_IMAGE_TYPES.indexOf(t) !== -1;
     }
-    function notRasterImage(file) {
-        if (!isRasterImage(file)) {
-            setStatus('Upload failed: "' + (file && file.name) + '" must be a PNG, JPEG, GIF, WebP, or AVIF image (SVG and other formats are not allowed).', true);
+    function notAllowedMedia(file) {
+        if (!isAllowedMedia(file)) {
+            setStatus('Upload failed: "' + (file && file.name) + '" must be an image or video (SVG and other formats are not allowed).', true);
             return true;
         }
         return false;
@@ -415,7 +415,7 @@ if (!firebaseReady) {
                         ${it.image ? `<img src="${escapeAttr(it.image)}" alt="" class="init-flyer-thumb" onerror="this.style.display='none'">` : ""}
                         <div class="upload-dropzone upload-dropzone-sm" data-iflyerzone="${i}">
                             <span>${it.image ? "Replace flyer/image — drop or click" : "Drop or click to add a flyer/image"}</span>
-                            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-iflyer="${i}" style="display:none;">
+                            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" data-iflyer="${i}" style="display:none;">
                         </div>
                         ${it.image ? `<button class="btn btn-secondary" type="button" data-iflyer-remove="${i}" style="padding:0.2rem 0.7rem;">Remove flyer/image</button>` : ""}
                     </div>
@@ -513,7 +513,7 @@ if (!firebaseReady) {
                     <label>Chapter <select data-fr-chapter="${i}">${chapterOptions(f.chapterId)}</select></label>
                     <div class="upload-dropzone upload-dropzone-sm" data-frzone="${i}">
                         <span>${f.image ? "Replace image — drop or click" : "Drop or click to add an image"}</span>
-                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-frimg="${i}" style="display:none;">
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" data-frimg="${i}" style="display:none;">
                     </div>
                 </div>`;
         }).join("");
@@ -564,7 +564,7 @@ if (!firebaseReady) {
     async function uploadFundraiserImage(i, file) {
         if (!fundraisers[i] || !file) return;
         if (tooBig(file)) return;
-        if (notRasterImage(file)) return;
+        if (notAllowedMedia(file)) return;
         setStatus("Uploading image…");
         try {
             fundraisers[i].image = await uploadToCloudinary(file);
@@ -676,7 +676,7 @@ if (!firebaseReady) {
                 <label>Photo path <input data-field="photo" data-i="${index}" value="${escapeAttr(person.photo || "")}"></label>
                 <div class="upload-dropzone upload-dropzone-sm" data-photozone="${index}">
                     <span>Drop or click to upload photo</span>
-                    <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-upload="${index}" style="display:none;">
+                    <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" data-upload="${index}" style="display:none;">
                 </div>
                 ${hasRealPhoto(person.photo) ? `
                 <div class="photo-fit">
@@ -815,7 +815,7 @@ if (!firebaseReady) {
     async function uploadMemberPhoto(i, file) {
         if (!people[i] || !file) return;
         if (tooBig(file)) return;
-        if (notRasterImage(file)) return;
+        if (notAllowedMedia(file)) return;
         setStatus("Uploading photo…");
         try {
             people[i].photo = await uploadToCloudinary(file);
@@ -831,7 +831,7 @@ if (!firebaseReady) {
     async function uploadInitiativeFlyer(chapter, ii, file, rerender) {
         if (!chapter || !file) return;
         if (tooBig(file)) return;
-        if (notRasterImage(file)) return;
+        if (notAllowedMedia(file)) return;
         if (!Array.isArray(chapter.initiatives)) chapter.initiatives = [];
         if (!chapter.initiatives[ii]) chapter.initiatives[ii] = { title: "", description: "", url: "" };
         setStatus("Uploading flyer…");
@@ -864,8 +864,13 @@ if (!firebaseReady) {
             const src = typeof im === "string" ? im : (im && im.src) || "";
             const cell = document.createElement("div");
             cell.style.cssText = "position:relative; border:1px solid var(--line); border-radius:8px; overflow:hidden;";
+            const isVideo = /\.(mp4|webm|mov)$/i.test(src) || src.includes('/video/upload/');
+            const mediaTag = isVideo 
+                ? `<video src="${escapeAttr(src)}" data-zoom="${escapeAttr(src)}" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" autoplay loop muted playsinline></video>`
+                : `<img src="${escapeAttr(src)}" data-zoom="${escapeAttr(src)}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" onerror="this.src='images/logo.avif'">`;
+            
             cell.innerHTML = `
-                <img src="${escapeAttr(src)}" data-zoom="${escapeAttr(src)}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" onerror="this.src='images/logo.avif'">
+                ${mediaTag}
                 <button class="btn btn-secondary" type="button" data-gremove="${index}" style="position:absolute; top:4px; right:4px; padding:0.1rem 0.5rem; font-size:0.85rem;">✕</button>
             `;
             editor.appendChild(cell);
@@ -886,13 +891,13 @@ if (!firebaseReady) {
     // Many photos at once; oversized files are skipped individually (the rest still upload), with
     // a live "Uploading i of N…" counter.
     async function uploadGalleryFiles(fileList) {
-        const all = Array.from(fileList || []).filter(function (f) { return f && isRasterImage(f); });
+        const all = Array.from(fileList || []).filter(function (f) { return f && isAllowedMedia(f); });
         if (!all.length) return;
 
         const ok = all.filter(function (f) { return f.size < MAX_UPLOAD_BYTES; });
         const skipped = all.length - ok.length;
         if (!ok.length) {
-            setStatus("All " + all.length + " file(s) exceed the 10 MB limit — nothing uploaded.", true);
+            setStatus("All " + all.length + " file(s) exceed the 100 MB limit — nothing uploaded.", true);
             return;
         }
 
@@ -1108,7 +1113,7 @@ if (!firebaseReady) {
                     ${it && it.image ? `<img src="${escapeAttr(it.image)}" alt="" class="init-flyer-thumb" onerror="this.style.display='none'">` : ""}
                     <div class="upload-dropzone upload-dropzone-sm" data-initflyerzone data-ci="${ci}" data-ii="${ii}">
                         <span>${it && it.image ? "Replace flyer/image — drop or click" : "Drop or click to add a flyer/image"}</span>
-                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" data-initflyer data-ci="${ci}" data-ii="${ii}" style="display:none;">
+                        <input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" data-initflyer data-ci="${ci}" data-ii="${ii}" style="display:none;">
                     </div>
                     ${it && it.image ? `<button type="button" class="btn btn-secondary admin-list-x" data-initflyer-remove data-ci="${ci}" data-ii="${ii}">Remove flyer/image</button>` : ""}
                 </div>
@@ -1172,7 +1177,7 @@ if (!firebaseReady) {
                 ${partnersEditorMarkup(c, index)}
                 <div style="font-weight:700; font-size:0.8rem; color:var(--ink-soft); margin-top:0.4rem;">Chapter highlights (${c.photos.length})</div>
                 <div class="gallery-grid-admin">${photosHtml}</div>
-                <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif" multiple data-cphoto-upload="${index}" style="display:none;"></label>
+                <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/avif,video/mp4,video/webm,video/quicktime" multiple data-cphoto-upload="${index}" style="display:none;"></label>
             `;
             editor.appendChild(card);
         });
@@ -1312,7 +1317,7 @@ if (!firebaseReady) {
                 const files = Array.from(input.files || []);
                 if (!files.length || !chapters[ci]) return;
                 if (files.some(tooBig)) { input.value = ""; return; }
-                if (files.some(notRasterImage)) { input.value = ""; return; }
+                if (files.some(notAllowedMedia)) { input.value = ""; return; }
                 setStatus("Uploading " + files.length + " photo(s)…");
                 try {
                     if (!Array.isArray(chapters[ci].photos)) chapters[ci].photos = [];

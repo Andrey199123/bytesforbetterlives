@@ -166,8 +166,13 @@
         var titleAttr = dateStr ? ' title="' + escapeHTML(dateStr) + '"' : "";
         var dataAttrs = (dateStr ? ' data-taken="' + escapeHTML(dateStr) + '"' : "") +
             (loc ? ' data-location="' + escapeHTML(loc) + '"' : "");
+        var isVideo = /\.(mp4|webm|mov)$/i.test(src) || src.includes('/video/upload/');
+        var mediaTag = isVideo 
+            ? '<video class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '"' + titleAttr + dataAttrs + ' autoplay loop muted playsinline data-fallback="images/logo.avif"></video>'
+            : '<img class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '"' + titleAttr + dataAttrs + ' loading="lazy" decoding="async" data-fallback="images/logo.avif">';
+            
         return '<figure class="' + cls + '">' +
-            '<img class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '"' + titleAttr + dataAttrs + ' loading="lazy" decoding="async" data-fallback="images/logo.avif">' +
+            mediaTag +
             (caption ? '<figcaption>' + escapeHTML(caption) + '</figcaption>' : '') +
             '</figure>';
     }
