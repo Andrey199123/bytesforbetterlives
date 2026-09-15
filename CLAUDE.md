@@ -195,7 +195,8 @@ cross-fading into a half-empty page would make pop-in MORE visible.
 
 ### `images/`
 Subfolders (e.g. `images/work with seniors/`, `images/donations/`, `images/team/`); some names
-contain spaces.
+contain spaces. **`images/programs/`** (no spaces) holds the home program-tile photos under the
+fixed `<slug>-{580,1160}.{avif,jpg}` naming — see Program tiles under Components.
 
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
@@ -491,14 +492,57 @@ The navbar overlays all of them — see `nav-overlay` below.
   Chapters preview → Photo Stories → footer (the founder-quote `band--ink` was removed 2026-08 at
   user request). Renderers target ids, so
   reordering the containers is safe; keep every container id.
-- **Program tiles** (`.service-card` in `.service-grid`, home): THREE numbered pillars from
-  `renderWhatWeDo` — 01 Provide Access / 02 Build Digital Literacy / 03 Serve Communities, mirroring
-  the hero subtitle triad (user-specified 2026-08-29, replacing the five icon tiles). Marker is
+- **Program tiles** (`.service-card.service-card--photo` in `.service-grid.service-grid--photo`,
+  home `#what-we-do-grid`): **FOUR PHOTO pillars** from `renderWhatWeDo` — 01 Provide Access /
+  02 Teach Digital Literacy / 03 Support Education / 04 Mobilize Community. Titles, body copy and
+  alt text are **verbatim from the user's changes doc (2026-09-15)** — do not rewrite them (this
+  replaced the three photo-less tiles of 2026-08-29, which had replaced five icon tiles). Marker is
   `.service-step` (Gabarito 700 `--accent-dark` numeral, `tabular-nums`), NOT the `.service-icon`
-  chip — the numerals are legitimate here because the order is real (like About's story rail); the
-  old unordered 01-05 program numerals are still the thing not to bring back. `.service-icon` (soft
-  tile wash + stroke SVG, green/gold/coral/teal via `:nth-child(4n+…)`) remains in `styles.css` for
-  other `.service-grid` users. 3-up desktop.
+  chip — the numerals are legitimate here because the order is real (access → literacy → education
+  → community, like About's story rail); the old unordered 01-05 program numerals are still the
+  thing not to bring back.
+  - **Layout**: `.service-grid--photo` is a fixed **2-up** grid, **1-col ≤700px** (not the base
+    `auto-fit`). `.service-card--photo` zeroes the card's padding/min-height/gap so the photo sits
+    **flush on top**, edge to edge; the 8px corners + `overflow:hidden` that clip it come from the
+    base `.service-card`. `.service-media` is a `4/3` `aspect-ratio` figure (`object-fit:cover`) on
+    a soft mint ground; `.service-body` carries the padding (`--space-lg --space-xl --space-xl`,
+    `--space-lg` all round ≤680px, where a sibling rule also re-zeroes `.service-card--photo`'s
+    padding). No hover, no radius of its own, no decorative bar, no text-shadow.
+    ⚠️ **BOTH `.service-card--photo` and `.service-body` need `align-content: start`** — don't
+    delete either. Both are grids of auto rows, and the grid row stretches every card in a row to
+    the tallest one's height; with the default `align-content: normal` (= stretch) that spare
+    height is split across ALL the auto tracks, so the tile with the SHORTER copy opened a paper
+    gap under its 4/3 photo and started its numeral/heading/copy ~15px lower than its neighbour's
+    (measured at 1440: `.service-step` at 252 vs 238). `start` packs the tracks to the top and the
+    slack falls where it belongs, at the bottom of the card.
+  - **Photo assets are a FIXED contract** — `images/programs/<slug>-{580,1160}.{avif,jpg}`, exactly
+    580×435 and 1160×870 (4:3), metadata stripped, sRGB; slugs `provide-access`,
+    `teach-digital-literacy`, `support-education`, `mobilize-community`. Markup is `<picture>` +
+    AVIF `<source>` with a JPEG `<img>` fallback, both `srcset` 580w/1160w, `sizes`
+    `(max-width:700px) calc(100vw - 40px), (max-width:1220px) calc(50vw - 32px), 578px`,
+    `width/height` 1160×870, `loading=lazy decoding=async`. A NEW pillar = a new array entry + that
+    same four-file set.
+    - **Provenance / how to regenerate**: the four originals are the JPEGs embedded in the user's
+      2026-09-15 changes doc (`pdfimages -j`), not committed. Two are already 4:3 (2048×1536,
+      uncropped): `support-education`, `mobilize-community`. The two portraits take the full-width
+      4:3 window — `provide-access` 1406×2048 → 1404×1053 at y=123 (**top 6%**: the window is 51.4%
+      of the source and the subjects span 13.5–66%, so feet can't fit; 6% lands the bottom edge
+      mid-shin, ~12% cuts through the shoes and past ~14% clips the right-hand head),
+      `teach-digital-literacy` 1536×2048 →
+      1536×1152 at y=307 (**top 15%**: keeps the whole presentation screen with headroom and cuts
+      above the presenter's knee). Encoded with sharp — AVIF q55/effort 6 + mozjpeg q78 progressive,
+      except `mobilize-community` (busy outdoor frame) at **q40/q71** to hold the ≤100KB AVIF /
+      ≤180KB JPEG budget at 1160. `.withMetadata()` is never called, so EXIF/GPS/ICC are dropped.
+      ⚠️ The repo's own `node_modules/sharp` ships only `@img/sharp-darwin-x64` — on an arm64 Mac it
+      throws "Could not load the sharp module"; install a matching sharp outside the repo to re-run.
+  - ⚠️ The `<img>`s carry **`data-no-fallback="1"`**, which makes `initImageFallbacks()` skip them:
+    a missing program photo must degrade to `.service-media`'s own mint box, never to the
+    `logo.avif` placeholder or the padded contain-fit it gives other broken images.
+  - `renderWhatWeDo()` stays **data-free** and in `renderStaticBody()`, so the tiles paint at parse
+    time on every load; `aspect-ratio` + `width`/`height` mean a slow photo shifts nothing.
+  `.service-icon` (soft tile wash + stroke SVG, green/gold/coral/teal via `:nth-child(4n+…)`)
+  remains in `styles.css` for other `.service-grid` users — the plain `.service-grid`/`.service-card`
+  (e.g. the `design-system.html` specimens) is untouched by every `--photo` rule.
 - **`.cards-grid--feature`**: UNIFORM grid (`auto-fit minmax(300px,1fr)`, equal width/height; cards
   flex-column). Used on Home chapters preview, Impact Seniors/Kids/Donations, Initiatives
   `#fundraiser-grid`, Past-events.
@@ -670,10 +714,15 @@ The navbar overlays all of them — see `nav-overlay` below.
 - Chapter cities (for map dots): AHS→Plantation FL, Cypress Bay→Weston/Cypress Bay FL,
   Gainesville→Gainesville FL, Coral Springs→Coral Springs FL, Miami→Miami FL, Doral→Doral FL,
   New York→NYC, Virginia→Virginia Beach VA, Russia→Moscow, Turkey→Istanbul, Los Angeles→Los Angeles CA.
+  **FL pins re-projected 2026-09-15 from venue addresses** (AHS = the SCHOOL at 12200 W Broward Blvd,
+  not the Plantation city centroid 7.5 km east; Mamma's Curry = the charity's REGISTERED address,
+  event venue unconfirmed; "Plantation visits" stays a city marker — no named venue) — AHS/cypress/miami
+  moved on all three FL tables, so their `dy` stagger was re-tuned in the same change.
   (Miami = MAST @ FIU
   students, not an official school club; public page is Miami-only. Chapter admin:
   adina.t.brody09@gmail.com.) Doral = independent chapter (2026–2027 officer cohort), President
-  Asvika Prakash; FL map pin at x:92.2,y:74.2. Los Angeles = independent chapter, no lead assigned yet
+  Asvika Prakash; FL map pin at x:92.2,y:74.2. Doral IS mirrored in the `data.js` seed (checklist
+  step 10 stays optional, but without it a cold start with Firestore unreachable drops its pin). Los Angeles = independent chapter, no lead assigned yet
   (`leadPeople` empty → directory "Led by" line hides via `chapterHasLead()`); world map pin at
   x:14.6,y:35.1 with `dy:-34` (NOT `side:left` — as the westernmost pin, a left-floating label clipped
   off the frame's left edge on the 2-col world map, so the label floats right and rises clear of the

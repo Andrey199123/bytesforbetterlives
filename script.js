@@ -900,34 +900,60 @@
         const root = document.querySelector("#what-we-do-grid");
         if (!root) return;
 
-        // Three numbered pillars mirroring the hero triad (access · literacy · community service).
-        // The numerals ARE meaningful order here (user-specified 2026-08-29), unlike the retired
-        // 01-05 program numerals — they read as a sequence: get devices in hands, teach their use,
-        // then keep serving the community around them.
+        // Four numbered pillars, copy verbatim from the user's changes doc (2026-09-15).
+        // The numerals ARE meaningful order here, unlike the retired 01-05 program numerals —
+        // they read as a sequence: get devices in hands, teach their use, back the schooling
+        // around them, then hand the work to a new student-led chapter.
+        // Photos: images/programs/<slug>-{580,1160}.{avif,jpg}, all 4:3 (580x435 / 1160x870).
+        // Data-free by design — this renders inside the first paint (renderStaticBody).
+        const sizes = "(max-width: 700px) calc(100vw - 40px), (max-width: 1220px) calc(50vw - 32px), 578px";
         const services = [
             {
                 step: "01",
                 title: "Provide Access",
-                text: "iPad, device, and board-game drives that put working technology and learning tools directly into the hands of students, seniors, and families."
+                text: "We donate devices to underserved communities, giving students and families the tools they need to learn and connect.",
+                photo: "provide-access",
+                alt: "Three volunteers holding donated iPads at the front desk of His House Children’s Home"
             },
             {
                 step: "02",
-                title: "Build Digital Literacy",
-                text: "Hands-on tech help and classroom presentations that teach people to use their devices confidently — and to spot scams, phishing, and privacy risks."
+                title: "Teach Digital Literacy",
+                text: "We teach people of all ages to use technology safely and effectively — from seniors learning new devices to foster children navigating the digital world.",
+                photo: "teach-digital-literacy",
+                alt: "A volunteer presents a “Why Digital Literacy Matters” lesson on a classroom screen"
             },
             {
                 step: "03",
-                title: "Serve Communities",
-                text: "Student-led chapters that carry the work into new communities, partnering with schools, senior residences, and local organizations."
+                title: "Support Education",
+                text: "We provide school supplies and educational resources to underserved students, helping them succeed in school and build the foundation for greater access to technology.",
+                photo: "support-education",
+                alt: "Volunteers and children holding donated drawing books and games in a Boys & Girls Club gym"
+            },
+            {
+                step: "04",
+                title: "Mobilize Community",
+                text: "We establish student-led chapters in communities and neighborhoods, expanding our reach and empowering more young people to bridge the digital divide.",
+                photo: "mobilize-community",
+                alt: "Chapter members gathered behind a Bytes for Better Lives banner"
             }
         ];
 
         root.innerHTML = services.map(function (service) {
+            const slug = escapeHTML(service.photo);
+            const sizesAttr = escapeHTML(sizes);
             return `
-                <article class="service-card">
-                    <span class="service-step" aria-hidden="true">${escapeHTML(service.step)}</span>
-                    <h3>${escapeHTML(service.title)}</h3>
-                    <p>${escapeHTML(service.text)}</p>
+                <article class="service-card service-card--photo">
+                    <figure class="service-media">
+                        <picture>
+                            <source type="image/avif" srcset="images/programs/${slug}-580.avif 580w, images/programs/${slug}-1160.avif 1160w" sizes="${sizesAttr}">
+                            <img src="images/programs/${slug}-1160.jpg" srcset="images/programs/${slug}-580.jpg 580w, images/programs/${slug}-1160.jpg 1160w" sizes="${sizesAttr}" width="1160" height="870" loading="lazy" decoding="async" data-no-fallback="1" alt="${escapeHTML(service.alt)}">
+                        </picture>
+                    </figure>
+                    <div class="service-body">
+                        <span class="service-step" aria-hidden="true">${escapeHTML(service.step)}</span>
+                        <h3>${escapeHTML(service.title)}</h3>
+                        <p>${escapeHTML(service.text)}</p>
+                    </div>
                 </article>
             `;
         }).join("");
@@ -1040,10 +1066,10 @@
     const FLORIDA_MAP_PINS = [
         { id: "gainesville", x: 63.2, y: 23.4 },
         { id: "coral-springs", x: 92.2, y: 67.6, side: "left", dy: -26, dx: 4 },
-        { id: "ahs", x: 92.9, y: 69.6, side: "left", dy: -14, dx: 8 },
-        { id: "cypress", x: 91.1, y: 70.3, side: "left", dy: 2 },
-        { id: "doral", x: 92.2, y: 74.2, side: "left", dy: 8, dx: 4 },
-        { id: "miami", x: 94.2, y: 74.7, side: "left", dy: 27, dx: 16 }
+        { id: "ahs", x: 92.1, y: 69.9, side: "left", dy: -14, dx: 8 },
+        { id: "cypress", x: 91.2, y: 70.8, side: "left", dy: 4 },
+        { id: "doral", x: 92.2, y: 74.2, side: "left", dy: 11, dx: 4 },
+        { id: "miami", x: 94.1, y: 74.5, side: "left", dy: 32, dx: 16 }
     ];
     // The four North-American dots sit within ~75px of each other on a 570px frame while their
     // labels are 70-90px wide, so the labels are fanned vertically instead of all floating inland:
@@ -1082,10 +1108,10 @@
     const FLORIDA_VIEWBOX = { x: 630, y: 435, w: 176, h: 152 };
     const FLORIDA_SE_CHAPTER_PINS = [
         { id: "coral-springs", x: 51.4, y: 43.4, dy: -4 },
-        { id: "ahs", x: 56.6, y: 54.9, side: "left", dx: 12, dy: -2 },
-        { id: "cypress", x: 43.3, y: 59.3, side: "left" },
+        { id: "ahs", x: 50.6, y: 56.5, side: "left", dx: 12, dy: -9 },
+        { id: "cypress", x: 44.0, y: 62.1, side: "left", dy: 20 },
         { id: "doral", x: 51.1, y: 82.0, side: "left" },
-        { id: "miami", x: 65.5, y: 84.7, dy: 4 }
+        { id: "miami", x: 65.2, y: 83.7, dy: 4 }
     ];
     // Places the chapters actually serve — senior residences, shelters, hospitals and children's
     // homes. Not chapters (no id), but every one links to the page documenting that work.
@@ -1095,11 +1121,13 @@
     const FLORIDA_IMPACT_PINS = [
         { label: "Palomino Gardens", x: 51.6, y: 12.8, cls: "pin-outreach", href: "impact.html#seniors", title: "Palomino Gardens — one-on-one senior tech help" },
         { label: "Plantation visits", x: 53.8, y: 53.7, cls: "pin-outreach", side: "left", dy: -24, href: "impact.html#seniors", title: "Plantation — recurring senior visits" },
-        { label: "Mamma’s Curry", x: 59.1, y: 53.5, cls: "pin-outreach", dy: -24, href: "impact.html#kids", title: "Mamma’s Curry Christmas celebration — 100+ games donated" },
+        // Projected from the charity's REGISTERED address (1021 NW 6th St, Fort Lauderdale); the
+        // event venue itself is unconfirmed, so this marks the organization, not the celebration.
+        { label: "Mamma’s Curry", x: 62.9, y: 53.7, cls: "pin-outreach", dy: -24, href: "impact.html#kids", title: "Mamma’s Curry Christmas celebration — 100+ games donated" },
         { label: "Broward Health", x: 64.6, y: 55.8, cls: "pin-outreach", href: "impact.html#kids", title: "Broward Health Medical Center — pediatric patient visit" },
-        { label: "Palace at Weston", x: 46.7, y: 61.5, cls: "pin-outreach", side: "left", dx: 12, dy: 12, href: "impact.html#seniors", title: "The Palace at Weston — digital-safety workshops" },
+        { label: "Palace at Weston", x: 46.7, y: 61.5, cls: "pin-outreach", side: "left", dx: 12, dy: -3, href: "impact.html#seniors", title: "The Palace at Weston — digital-safety workshops" },
         { label: "Hollywood", x: 62.8, y: 62.6, cls: "pin-outreach", dy: 4, href: "impact.html#donations", title: "Hollywood — Five Star Premier Residences senior tech support and Joe DiMaggio Children’s Hospital game donations" },
-        { label: "His House", x: 58.0, y: 69.0, cls: "pin-outreach", side: "left", dy: 8, href: "impact.html#donations", title: "His House Children’s Home — 70+ games, 15+ iPads" },
+        { label: "His House", x: 55.5, y: 69.7, cls: "pin-outreach", side: "left", dy: 14, href: "impact.html#donations", title: "His House Children’s Home — 70+ games, 15+ iPads" },
         { label: "Lotus House", x: 64.5, y: 82.5, cls: "pin-outreach", dy: -14, href: "past-events.html", title: "Lotus House Shelter — digital-safety & financial-literacy event" },
         { label: "Nicklaus", x: 57.3, y: 87.6, cls: "pin-outreach", side: "left", dy: 6, href: "impact.html#donations", title: "Nicklaus Children’s Hospital — board games donated" }
     ];
@@ -1138,7 +1166,7 @@
     // into the crop viewBox — the same city then lands in the same place on both maps. Each SVG fills
     // the box, so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
     function chapterLocatorConfig(id) {
-        const FL = { gainesville: [63.2, 23.4], "coral-springs": [92.2, 67.6], ahs: [92.9, 69.6], cypress: [91.1, 70.3], miami: [94.2, 74.7], doral: [92.2, 74.2] };
+        const FL = { gainesville: [63.2, 23.4], "coral-springs": [92.2, 67.6], ahs: [92.1, 69.9], cypress: [91.2, 70.8], miami: [94.1, 74.5], doral: [92.2, 74.2] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         const R = {
             "los-angeles": { map: "images/maps/california.svg", x: 59.0, y: 80.8, aspect: "0.859" },
@@ -2185,6 +2213,13 @@
             }
             if (img.dataset.fallbackReady) return;
             img.dataset.fallbackReady = "true";
+
+            // OPT-OUT (data-no-fallback): content photos that must degrade to their own
+            // container instead of a placeholder — the home program tiles, whose .service-media
+            // frame already paints a soft mint box at the right 4:3 size. They have no initials
+            // to fall back to, and swapping in logo.avif (or the padded contain-fit below) would
+            // read as a broken tile rather than a photo that simply hasn't shipped yet.
+            if (img.dataset.noFallback) return;
 
             // (Story cards keep the uniform CSS 4:3 aspect — cards previously adopted each
             // photo's natural ratio, which made the Photo Stories row read ragged: a short

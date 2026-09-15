@@ -386,6 +386,18 @@ window.BFBL_DATA = {
             coordinates: { lat: 34.0522, lng: -118.2437 },
             description: "Launching chapter bringing senior tech help and digital-literacy outreach to Los Angeles.",
             photos: []
+        },
+        {
+            id: "doral",
+            subdomain: "doral",
+            pageHref: "chapter-doral.html",
+            name: "Doral Chapter",
+            location: "Doral, FL",
+            status: "Active",
+            leadPeople: [],
+            coordinates: { lat: 25.8195, lng: -80.3553 },
+            description: "Independent chapter serving Doral with senior tech help and digital-literacy outreach.",
+            photos: []
         }
     ],
 

@@ -1213,6 +1213,57 @@ body.page-impact #home-impact-stats {
 
 /* (Service tiles are informational, not links — no hover glow.) */
 
+/* PHOTO program tiles — the home "How We Bridge the Digital Divide" grid (2026-09-15): four
+   pillars, each a photo flush on top of the card with the numeral/heading/copy beneath. Every
+   rule here is scoped to the --photo modifiers, so the plain .service-grid/.service-card (the
+   design-system specimens, any future icon tile) keeps its old padded, auto-fit look. */
+.service-grid--photo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* The card is now just a frame: the photo runs edge to edge and .service-body carries the
+   padding. 8px corners + overflow:hidden come from .service-card and clip the photo. */
+.service-card--photo {
+    padding: 0;
+    min-height: 0;
+    gap: 0;
+    /* Row-stretched cards would otherwise split their spare height across BOTH auto tracks,
+       opening a paper gap under the 4:3 photo and dropping the body of the shorter tile. */
+    align-content: start;
+}
+
+/* 4:3 box reserved by aspect-ratio (and by width/height on the <img>), so a slow — or missing —
+   photo shifts nothing: the tile just shows this soft mint ground at the right size. */
+.service-media {
+    margin: 0;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: color-mix(in oklch, var(--green-soft) 40%, var(--paper));
+}
+
+.service-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.service-body {
+    display: grid;
+    /* Same stretch-distribution trap one level down: without this the numeral/heading/copy of the
+       shorter tile drift apart and stop aligning with its neighbour's. */
+    align-content: start;
+    gap: var(--space-sm);
+    padding: var(--space-lg) var(--space-xl) var(--space-xl);
+}
+
+/* One column before the pair of photos gets too narrow to read as photographs. */
+@media (max-width: 700px) {
+    .service-grid--photo {
+        grid-template-columns: 1fr;
+    }
+}
+
 .split-section {
     display: grid;
     grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
@@ -2649,6 +2700,16 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     .leader-card,
     .chapter-card,
     .impact-card  {
+        padding: var(--space-lg);
+    }
+
+    /* Photo tiles keep the photo flush at every width — the padding above would inset it. It
+       moves onto the copy block instead, matching the other cards' mobile padding. */
+    .service-card--photo {
+        padding: 0;
+    }
+
+    .service-body {
         padding: var(--space-lg);
     }
 
