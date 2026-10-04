@@ -244,8 +244,7 @@ generated from the `chapter-admin.html` template (which also works as `?c=<id>` 
   page's file; bump it when the page changes; now includes gallery/donate/past-events).
 - **Page `<body>` classes** — two static classes doing different jobs:
   - `page-<name>` (`page-home`, `page-about`, `page-team`, …) is the per-page hook. Since the accent
-    retirement **only `page-home` still drives any CSS** (its photo hero, `.home-intro`, and the
-    stat-band pairing); the others style nothing and are kept only as handles. `page-chapter` is added
+    retirement **only `page-home` still drives any CSS** (its photo hero and arrow link); the others style nothing and are kept only as handles. `page-chapter` is added
     at RUNTIME by `renderChapterProfilePage()` and is likewise inert now.
   - **`nav-overlay` is the functional one** — carried by every public page that OPENS with a hero
     (`index.html` + the 10 interior pages + all 12 `chapter-*.html` stubs) and by nothing else: admin
@@ -307,8 +306,8 @@ The navbar overlays all of them — see `nav-overlay` below.
   quiet `.hero-arrow-link` ("Our mission and vision →" → about.html, underline on hover); the hero
   button row was removed (Donate lives in the navbar). All of this lives in the block at the END of
   `styles.css` — which now holds TWO scopes: the `body.nav-overlay` navbar rules (site-wide, below)
-  and what is still genuinely home-only under `body.page-home` (this hero, `.home-intro`, and the
-  stat-band pairing). Its square-corner pass was deleted when those radii became the site-wide base
+  and what is still genuinely home-only under `body.page-home` (this hero and its arrow link; the
+  stat band under it has no home override any more). Its square-corner pass was deleted when those radii became the site-wide base
   (see Components). (Banner is real BFBL signage.)
   - **Hero copy.** Current (user-dictated 2026-08-29): eyebrow "Largest youth-led digital equity
     nonprofit in Florida" — the superlative was reinstated 2026-08-16 over the earlier facts-only
@@ -316,9 +315,10 @@ The navbar overlays all of them — see `nav-overlay` below.
     here; the user had it REMOVED — that status belongs in the footer ledger (`renderFooter`, every
     page) and on donate.html, not in the hero. h1 "Technology Should Be for Everyone", subtitle "…bridges the
     digital divide through technology access, digital literacy, and community service." The eyebrow
-    carries no chapter count, so it's off the add-a-chapter count-bump checklist. The `.home-intro`
-    title under the hero reads "Four years of impact, thanks to your support" (user TODO 2026-10-04,
-    "Active for 4 years") — no founding year is stated anywhere on the site; don't invent one.
+    carries no chapter count, so it's off the add-a-chapter count-bump checklist. Home no longer has
+    a title under the hero (the "Four years of impact…" `.home-intro` band was removed 2026-10-04);
+    the "4 years" figure lives on about.html and `llms.txt` ("Active for 4 years") — no founding
+    year is stated anywhere on the site; don't invent one.
 - **`nav-overlay` — the navbar overlays the hero on EVERY hero page** (was home-only until 2026-08):
   - **`body.nav-overlay` is a STATIC class in the page's `<body>` tag**, carried by every public page
     that opens with a hero — `index.html` (which also keeps `page-home`), the 10 `.hero-editorial`
@@ -469,9 +469,15 @@ The navbar overlays all of them — see `nav-overlay` below.
   2026-10-04 from the user's reference — replaced the 5-up editorial numeral row; `.stat-card`/
   `.stat-number`/`.stat-label`/`.stat-note`/`.stats-grid` are DELETED). Home+Impact, from the `stats`
   array in `renderHomeStats()` (data-free, in `renderStaticBody()`; each entry `{raw,prefix,suffix,
-  label,icon,decimals}`, icons = the `IMPACT_ICONS` const of 24-unit 1.6-stroke line SVGs, no `note`).
-  **3×3 at EVERY width** (`repeat(3,minmax(0,1fr))` — nine can't ladder to 2 without an orphan; never
-  1-col), full container width so it aligns with `.home-intro-title`. Flat tiles: no border/shadow/
+  key,label,icon,decimals}`, icons = the `IMPACT_ICONS` const of 24-unit 1.6-stroke line SVGs, no `note`).
+  **Tile selection**: the container's optional `data-stats="k1,k2,…"` selects AND orders tiles by
+  `key` (`funds,people,items,hours,volunteers,events,chapters,countries,media`; unknown keys
+  ignored). Home = `data-stats="funds,people,volunteers,chapters"` → four tiles, and a 4-tile render
+  adds `.impact-tiles--four` = ONE row of four ≥701px (odd/even already alternates) / 2×2 ≤700px,
+  where `.impact-tiles--four .impact-tile:nth-child(3)` (dark) / `:nth-child(4)` (mint) restore a
+  true checkerboard (1+4 mint, 2+3 dark). impact.html has no attribute → all nine.
+  **Nine = 3×3 at EVERY width** (`repeat(3,minmax(0,1fr))` — nine can't ladder to 2 without an orphan; never
+  1-col), full container width. Flat tiles: no border/shadow/
   transition/hover (not clickable), 8px corners, no text-shadow. **Checkerboard**: base tile = `--green`
   + `--ink`, `.impact-tile:nth-child(even)` = `--green-dark` + FULL `--paper` (no translucent mix —
   the small label must hold 4.5:1). Stack = `.impact-tile-icon` (34px, 26px ≤700) → `.impact-tile-value`
@@ -481,14 +487,14 @@ The navbar overlays all of them — see `nav-overlay` below.
   `.impact-tile-label` (Mulish 600, `16ch`, balance). ≤700px: tighter gap/padding, 132px tile
   min-height. Band = light NEUTRAL ground (`color-mix(in oklch, var(--surface-strong) 55%,
   var(--paper))`). (Chapter profile "Impact stats" are a DIFFERENT component — `.chapter-stats-row`/
-  `.chapter-stat` bordered cards, not `.impact-band`.) **Home-scoped only** is its PAIRING with the
-  impact-intro band above it (`0` top padding, no negative margin) so the two read as one; other
-  pages keep the standalone `--space-2xl` padding.
-  **`#home-impact-stats` carries a `min-height` reservation** — home **590px / ≤700 450px**, impact
+  `.chapter-stat` bordered cards, not `.impact-band`.) Every page, home included, keeps the base
+  `--space-2xl` band padding (no home override since 2026-10-04).
+  **`#home-impact-stats` carries a `min-height` reservation** — home **263px / ≤700 359px**, impact
   (`body.page-impact`, taller top padding) **635 / 495** — so the empty container doesn't collapse
-  at first paint and shove the page ~600px when `renderHomeStats()` fills it. Values = the MINIMUM
-  settled height measured anywhere in each step, −~10px, rounded DOWN (measured floors home/impact:
-  701–1440px 601/649, 700–360px a flat 461/509 — the 132px tile min-height governs every phone
+  at first paint and shove the page when `renderHomeStats()` fills it. Values = the MINIMUM
+  settled height measured anywhere in each step, −~10px, rounded DOWN (measured floors, home four
+  tiles 2026-10-04: 701–1440px 273 (1440 313, 1200 277, ≤1000 273), 700–360px a flat 369; impact
+  nine: 701–1440px 649, 700–360px a flat 509 — the 132px tile min-height governs every phone
   width, so no ≤440 step). Must only ever undershoot, so steady state stays pixel-identical;
   re-measure (fresh browser, min-height 0) if tile padding/min-height/gap or band padding change.
   This does NOT break "never render an empty section": hardcoded array, nothing from Firestore,
@@ -514,12 +520,10 @@ The navbar overlays all of them — see `nav-overlay` below.
   (~0.377, source the closing `.band--ink`): its three optional sections ship `style="display:none"`,
   so any CSS reservation inside them is a no-op and reserving outside them would pin empty sections
   open. Fixing that needs a markup/JS change, not CSS.
-- **Impact-intro band** (`.home-intro`, home only, STATIC markup in `index.html` directly under the
-  hero and directly above `#home-impact-stats`): light neutral band holding ONLY the
-  `.home-intro-title` in `--green-deep` ("Our impact, thanks to your support") — the 2-col grid,
-  "Our work in numbers" CTA and right-column sentence/lede were removed 2026-08 at user request
-  (markup + their CSS deleted); the title alone hands off to the numbers.
-- **Home section order** (`index.html`): hero → impact-intro band → stat band (`#home-impact-stats`)
+- **Impact-intro band** (`.home-intro`) — REMOVED 2026-10-04 at user request ("no title on top"):
+  markup + CSS deleted, and the `body.page-home .impact-band` pairing override with it — the band
+  keeps the base padding on home too. Do not restore.
+- **Home section order** (`index.html`): hero → stat band (`#home-impact-stats`, four tiles)
   → the problem/programs section (TWO stacked `.section-header`s in ONE `<section>`: "The Gap We’re
   Working to Close" then "How We Bridge the Digital Divide" over `#what-we-do-grid`; the second one
   carries `.section-header--stacked` for its top margin) → Our Reach map (`#global-reach`, moved down from first) → Board of Directors →
@@ -776,7 +780,10 @@ The navbar overlays all of them — see `nav-overlay` below.
   `contact.html`); `.social-link` = 42px quiet icon button inheriting currentColor. The old full-colour
   raster logos in `images/contact us logo/` are unused (kept only by stale test files). Footer quick
   links include **FAQ** (`faq.html`) and an **Admin** link (`admin.html`) alongside the nav pages (`renderFooter` `quickLinks`).
-- Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Gabarito. Responsive hamburger
+- Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Gabarito, **`white-space:nowrap`
+  above 680px** — it fits its 150px `max-width` in Gabarito (~146px) but not in the fallback
+  (~159px), so on reload it painted two rows and snapped to one when the font swapped in. ≤680px it
+  wraps (`normal`) after "Better" in both fonts, so no reflow there. Responsive hamburger
   (`initMobileNavigation`, sets `aria-label`/`aria-expanded`). `--muted` darkened (~40% L) for AA;
   interior `.hero h1` + `.section-title`/`h2` get a mobile clamp + `overflow-wrap`.
 - **A11y baseline** (keep when adding pages/components): `:focus-visible` ring = `--accent` outline +
@@ -870,8 +877,8 @@ and run NO JavaScript — to them a chapter page was 0 words, home ~210. Googleb
   once (it's identical everywhere).
 - **Facts AI must get right** (user-confirmed 2026-10-04): BFBL became a **student club in 2023**, a
   **nonprofit in 2025** (user's wording — the Sunbiz record N26000005240 suggests the FL corporation was filed in 2026, so never say "incorporated in 2025"), **IRS 501(c)(3) in 2026** (ProPublica: Weston FL, exemption
-  July 2026). State them that way, never as a bare "N years" count (home "Four years of impact" and
-  About's "4 years" are the user's own framing; leave them). The chapter count in `llms.txt` must equal
+  July 2026). State them that way, never as a bare "N years" count (About's "4 years" is the user's own
+  framing; leave it). The chapter count in `llms.txt` must equal
   the chapters it lists.
 - **IndexNow** — key file **`5f4fd16d128d1617bf98ce8a802f205f.txt`** at the root (body = key; must
   stay deployed — `.vercelignore` doesn't touch it) + **`tools/indexnow.mjs`**, which POSTs every
