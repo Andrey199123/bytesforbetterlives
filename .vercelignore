@@ -1,0 +1,22 @@
+# Repo-only files — never deploy them. Vercel ships every file it isn't told to skip, so before this
+# CLAUDE.md (internal notes incl. admin emails), the Firebase rules (the admin allowlist), tools/
+# and the workflow were all publicly readable on the live site. Keep middleware.js, llms.txt,
+# robots.txt, sitemap.xml, the google*.html and IndexNow *.txt verification files deployed.
+CLAUDE.md
+tools/
+.github/
+.claude/
+.vscode/
+.backup/
+.dupscan/
+.firebase/
+originals/
+firebase.json
+.firebaserc
+firestore.rules
+storage.rules
+download_images.py
+download_images.sh
+deploy-trigger.txt
+test-*.html
+test-*.js

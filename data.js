@@ -398,6 +398,18 @@ window.BFBL_DATA = {
             coordinates: { lat: 25.8195, lng: -80.3553 },
             description: "Independent chapter serving Doral with senior tech help and digital-literacy outreach.",
             photos: []
+        },
+        {
+            id: "parkland",
+            subdomain: "parkland",
+            pageHref: "chapter-parkland.html",
+            name: "Parkland Chapter",
+            location: "Parkland, FL",
+            status: "Launching",
+            leadPeople: [],
+            coordinates: { lat: 26.3100, lng: -80.2370 },
+            description: "Launching chapter bringing senior tech help and digital-literacy outreach to Parkland.",
+            photos: []
         }
     ],
 

@@ -6,7 +6,7 @@
 
 - Tagline: "Technology Should Be for Everyone."
 - Legal name: Bytes for Better Lives Corporation, a 501(c)(3) nonprofit, EIN 42-2241292.
-- Active for 4 years.
+- History: started as a student club in 2023, became a nonprofit in 2025, and received IRS 501(c)(3) status in 2026.
 - Mission: Bridge the digital divide with patient tech help, practical education, and donations that reach real community needs.
 - Vision: We want seniors to feel confident using technology and children to have access to tools that support learning, creativity, and connection.
 - Values: Patience, Safety, Accountability, Student Leadership.
@@ -38,12 +38,13 @@
 - [Gainesville Chapter](https://gainesville.bytesforbetterlives.net/) — Gainesville, Florida
 - [Coral Springs Chapter](https://coral-springs.bytesforbetterlives.net/) — Coral Springs, Florida
 - [Miami Chapter](https://miami.bytesforbetterlives.net/) — Miami, Florida
-- [Doral Chapter](https://doral.bytesforbetterlives.net/) — Doral, Florida
+- [Doral Chapter](https://www.bytesforbetterlives.net/chapter-doral.html) — Doral, Florida
 - [New York Chapter](https://new-york.bytesforbetterlives.net/) — New York, New York
 - [Virginia Chapter](https://virginia.bytesforbetterlives.net/) — Virginia Beach, Virginia
 - [Russia Chapter](https://russia.bytesforbetterlives.net/) — Moscow, Russia
 - [Turkey Chapter](https://turkey.bytesforbetterlives.net/) — Istanbul, Turkey
-- [Los Angeles Chapter](https://los-angeles.bytesforbetterlives.net/) — Los Angeles, California
+- [Los Angeles Chapter](https://www.bytesforbetterlives.net/chapter-los-angeles.html) — Los Angeles, California
+- [Parkland Chapter](https://www.bytesforbetterlives.net/chapter-parkland.html) — Parkland, Florida
 
 ## Get involved
 
@@ -66,3 +67,4 @@
 - [Gallery](https://www.bytesforbetterlives.net/gallery.html): photos from service days, events, donations, and chapter activities.
 - [Donate](https://www.bytesforbetterlives.net/donate.html): every way to give.
 - [Contact](https://www.bytesforbetterlives.net/contact.html): email, Instagram, LinkedIn, and a message form.
+- [FAQ](https://www.bytesforbetterlives.net/faq.html): short answers about BFBL, getting help, donating, volunteering, and starting a chapter.

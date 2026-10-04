@@ -13,8 +13,13 @@ education, donations, a growing chapter network).
   source files live at the **repo root** (no `src/`/`pages/`).
 - Run locally: `python3 -m http.server 8000` → http://localhost:8000/.
 - **Hosting = Vercel.** Deployed by a **GitHub Action** (`.github/workflows/vercel-deploy.yml`) on
-  every push to `main` (+ manual `workflow_dispatch`): `vercel pull`/`build --prod`/`deploy --prebuilt
-  --prod` using secrets `VERCEL_TOKEN`/`VERCEL_ORG_ID`/`VERCEL_PROJECT_ID`. So **file/code edits go
+  every push to `main` (+ manual `workflow_dispatch` + a **daily 09:17 UTC scheduled run** that only
+  refreshes the crawler snapshots): render `_snapshots/` (`tools/prerender.mjs`) → `vercel pull`/`build
+  --prod`/`deploy --prebuilt --prod` → IndexNow ping (pushes only) — see **AI crawlers & search**. Secrets
+  `VERCEL_TOKEN`/`VERCEL_ORG_ID`/`VERCEL_PROJECT_ID`. Root **`middleware.js`** is Vercel Routing
+  Middleware (edge, no deps) — `vercel build` picks it up with no framework. **`.vercelignore`** keeps
+  repo-only files (`CLAUDE.md`, `tools/`, the Firebase rules/config, `test-*`, `.github/`) out of the
+  deploy — before 2026-10-04 they were all publicly readable. So **file/code edits go
   live by committing + pushing to `main`** — no manual deploy command. Vercel's own git integration is
   intentionally OFF in `vercel.json` (`git.deploymentEnabled:false`, `github.enabled:false`) so deploys
   happen ONLY via the Action. **Content** edits (Firestore via admin) go live on the next uncached
@@ -170,7 +175,7 @@ Single stylesheet. Colors are **OKLCH custom properties** in `:root`. **Fonts lo
 `<link rel="preconnect">`+`<link rel="stylesheet">` in every page `<head>`** (public + admin), NOT via
 CSS `@import` (that serialized HTML→styles.css→fonts-CSS→woff2 and blocked first paint) — a new page
 shell must copy the three font `<link>`s **verbatim** (2 preconnects + the stylesheet with
-`family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900`). All 42 pages carry the
+`family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900`). All 45 pages carry the
 identical link; Nunito is retired and must not come back.
 **Same rule, same reason, for FIVE more head/body blocks a new public shell must copy VERBATIM**:
 1. the static `<meta name="theme-color" content="#FCFAF5">` right after the viewport meta (A11y baseline);
@@ -211,10 +216,12 @@ are the script's inputs). Don't hand-edit the tiles; re-run the script.
 
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
-`chapters.html`, `chapter-{ahs,coral-springs,cypress,doral,gainesville,los-angeles,miami,new-york,virginia,russia,turkey}.html`,
+`chapters.html`, `chapter-{ahs,coral-springs,cypress,doral,gainesville,los-angeles,miami,new-york,parkland,virginia,russia,turkey}.html`,
 `contact.html`, `past-events.html`, `gallery.html` (standalone photo gallery → lightbox),
 `donate.html` (donate hub — `donateHubUrl` in `script.js` drives every Donate CTA; `renderDonatePage()`),
-`design-system.html` (noindex, not in navbar — living style guide rendering real components from `styles.css`).
+`design-system.html` (noindex, not in navbar — living style guide rendering real components from `styles.css`),
+`faq.html` (footer-linked, not in navbar — STATIC Q&A written to be quoted by AI assistants; its
+`FAQPage` JSON-LD must match the visible Q&A text exactly — edit both together; see **AI crawlers & search**).
 Admin (noindex, not in navbar): `admin.html` (chapter-picker login landing), `members-admin.html`,
 `gallery-admin.html`, `chapters-admin.html`, `chapter-pages-admin.html`, `initiatives-admin.html`,
 `fundraisers-admin.html`, `structure-admin.html`; per-chapter scoped `chapter-<id>-admin.html`
@@ -241,7 +248,7 @@ generated from the `chapter-admin.html` template (which also works as `?c=<id>` 
     stat-band pairing); the others style nothing and are kept only as handles. `page-chapter` is added
     at RUNTIME by `renderChapterProfilePage()` and is likewise inert now.
   - **`nav-overlay` is the functional one** — carried by every public page that OPENS with a hero
-    (`index.html` + the 9 interior pages + all 11 `chapter-*.html` stubs) and by nothing else: admin
+    (`index.html` + the 10 interior pages + all 12 `chapter-*.html` stubs) and by nothing else: admin
     pages, `design-system.html` and the stale `test-*.html` have no top hero and must NOT get it (see
     Heroes → `nav-overlay`). A new public page with a hero needs it in the `<body>` tag.
 
@@ -314,8 +321,8 @@ The navbar overlays all of them — see `nav-overlay` below.
     "Active for 4 years") — no founding year is stated anywhere on the site; don't invent one.
 - **`nav-overlay` — the navbar overlays the hero on EVERY hero page** (was home-only until 2026-08):
   - **`body.nav-overlay` is a STATIC class in the page's `<body>` tag**, carried by every public page
-    that opens with a hero — `index.html` (which also keeps `page-home`), the 9 `.hero-editorial`
-    interior pages, and all 11 `chapter-*.html` public stubs (their hero is injected at runtime but
+    that opens with a hero — `index.html` (which also keeps `page-home`), the 10 `.hero-editorial`
+    interior pages, and all 12 `chapter-*.html` public stubs (their hero is injected at runtime but
     always present). Pages with no top hero — every `*-admin.html`, `design-system.html`, the stale
     `test-*.html` — do NOT get it and keep the normal sticky navbar.
   - **CSS**: the whole overlay rule set is keyed to `body.nav-overlay` (fixed bar; the transparent
@@ -379,7 +386,7 @@ The navbar overlays all of them — see `nav-overlay` below.
     `padding-block: calc(var(--nav-height) + clamp(2rem,5vw,3.5rem)) …`, scoped to
     `body.nav-overlay` for `.hero-editorial`/`.chapter-hero` (`.home-hero` sets its own identical
     value). A new hero component needs the same padding or the bar eats its first line.
-- **All 9 interior pages** (about, impact, team, ongoing-initiatives, contact, past-events, gallery,
+- **All 10 interior pages** (about, impact, team, ongoing-initiatives, contact, past-events, gallery, faq,
   donate, chapters DIRECTORY) use **`.hero-editorial`** — a photo-less field that is now **home's own
   hero colour**, not a per-page accent: `color-mix(in oklch, var(--ink) 86%, var(--green-deep))` at
   home's `92deg` **72→66→62%** falloff over a `green-deep`/`ink` ground (there is no photo beneath),
@@ -768,7 +775,7 @@ The navbar overlays all of them — see `nav-overlay` below.
 - **Social icons = monochrome inline SVG** (`SOCIAL_ICONS` const in `script.js`, duplicated inline in
   `contact.html`); `.social-link` = 42px quiet icon button inheriting currentColor. The old full-colour
   raster logos in `images/contact us logo/` are unused (kept only by stale test files). Footer quick
-  links include an **Admin** link (`admin.html`) alongside the nav pages (`renderFooter` `quickLinks`).
+  links include **FAQ** (`faq.html`) and an **Admin** link (`admin.html`) alongside the nav pages (`renderFooter` `quickLinks`).
 - Logo: `.logo img` 58px; `.logo::after` wordmark `--green-dark` Gabarito. Responsive hamburger
   (`initMobileNavigation`, sets `aria-label`/`aria-expanded`). `--muted` darkened (~40% L) for AA;
   interior `.hero h1` + `.section-title`/`h2` get a mobile clamp + `overflow-wrap`.
@@ -779,8 +786,8 @@ The navbar overlays all of them — see `nav-overlay` below.
   the viewport meta — it used to be injected too, but arriving ~250ms late made mobile browser
   chrome visibly recolour on every navigation, so a new page shell must copy it verbatim (it is
   `--paper` as sRGB hex and must match the page/navbar background; a dark value paints a dark band
-  over a near-white page). All 42 head-bearing shells carry it — public, chapter stubs,
-  `design-system.html`, every admin page incl. the `chapter-admin.html` template and its 11
+  over a near-white page). All 45 head-bearing shells carry it — public, chapter stubs,
+  `design-system.html`, every admin page incl. the `chapter-admin.html` template and its 12
   generated `chapter-<id>-admin.html`; only the stale `test-*.html` harnesses and the Google
   verification file are excluded. `:root` has `color-scheme: light`, and `scrollbar-gutter: stable`
   is set on **both `html` AND `body`** so the post-hydration scrollbar can't sidestep the layout
@@ -799,11 +806,12 @@ The navbar overlays all of them — see `nav-overlay` below.
 - Stats (`stats` array in `script.js`, user's 2026-10-04 sheet): **$32,000+** funds & donations,
   **5,700+** people served, **3,900+** items donated, **4,000+** service hours, **216** student
   volunteers, **124** events, **12** chapters, **5** countries, **7** digital media centers. The
-  Chapters TILE says 12 per that sheet; the registry below still lists 11. Chapters (registry order): AHS, Cypress Bay,
-  Gainesville, Coral Springs, Miami, Doral, New York, Virginia, Russia, Turkey, Los Angeles.
+  Chapters tile (12) matches the registry since Parkland was added 2026-10-04. Chapters (registry order): AHS, Cypress Bay,
+  Gainesville, Coral Springs, Miami, Doral, New York, Virginia, Russia, Turkey, Los Angeles, Parkland.
 - Chapter cities (for map dots): AHS→Plantation FL, Cypress Bay→Weston/Cypress Bay FL,
   Gainesville→Gainesville FL, Coral Springs→Coral Springs FL, Miami→Miami FL, Doral→Doral FL,
-  New York→NYC, Virginia→Virginia Beach VA, Russia→Moscow, Turkey→Istanbul, Los Angeles→Los Angeles CA.
+  New York→NYC, Virginia→Virginia Beach VA, Russia→Moscow, Turkey→Istanbul, Los Angeles→Los Angeles CA,
+  Parkland→Parkland FL (city centroid 26.310,−80.237 — no school/venue named yet).
   **FL pins re-projected 2026-09-15 from venue addresses** (AHS = the SCHOOL at 12200 W Broward Blvd,
   not the Plantation city centroid 7.5 km east; Mamma's Curry = the charity's REGISTERED address,
   event venue unconfirmed; "Plantation visits" stays a city marker — no named venue) — AHS/cypress/miami
@@ -820,6 +828,65 @@ The navbar overlays all of them — see `nav-overlay` below.
   New York / Virginia pills its 86px label would otherwise reach; the lift auto-draws a leader line),
   locator outline `images/maps/california.svg`.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
+
+## AI crawlers & search (2026-10-04)
+Goal: AI assistants (ChatGPT, Claude, Perplexity, Gemini, Copilot) describe and cite BFBL accurately,
+then search. The core problem: every page is filled in by `script.js`, and AI crawlers fetch raw HTML
+and run NO JavaScript — to them a chapter page was 0 words, home ~210. Googlebot renders JS itself.
+- **Crawler snapshots** — **`tools/prerender.mjs`** renders every `PUBLIC_PAGES` page in headless
+  Chrome against a local static server (the exact commit, LIVE Firestore), freezes it, and writes
+  `_snapshots/<page>` (gitignored; generated in the deploy Action, NOT committed). Freeze = strip every
+  `<script>` except JSON-LD + the script preloads, settle `.reveal-ready` → `.reveal-in`, write final
+  `.animated-counter` values (same `Intl` format as `initCounters`), and DELETE inline-hidden elements
+  (`display:none`/`[hidden]` — empty sections, a chapter's "Chapter not found" card) so a tag-stripping
+  crawler doesn't read them. Never fails the deploy: Chrome missing / a page timing out → that page gets
+  its raw shell copy (`::warning::` in the Action log, which also prints a raw-vs-snapshot word table
+  and whether the read was live). Local run: `npm i --prefix /tmp/pw playwright-core` then
+  `PLAYWRIGHT_CORE_DIR=/tmp/pw node tools/prerender.mjs --out /tmp/snaps [--only a.html,b.html]`
+  (playwright-core is deliberately NOT in `package.json` — Vercel's build runs `npm install`; it uses
+  the installed Google Chrome, `channel:"chrome"`). The daily scheduled run exists to refresh these
+  after admin edits; humans always get live content.
+- **`middleware.js`** (Vercel Routing Middleware, matcher `/` + `*.html`, runs BEFORE the filesystem —
+  `vercel.json` `rewrites` can't: "precedence is given to the filesystem prior to rewrites"):
+  (1) `<id>.bytesforbetterlives.net/` → rewrite to `chapter-<id>.html` (200; replaced the 307
+  redirects, which left every chapter canonical pointing at a redirect); (2) any `.org` host → 308 to
+  the `.net` twin (it served a full indexed duplicate); (3) user-agent in `SNAPSHOT_BOTS` (GPTBot,
+  OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-User/SearchBot, PerplexityBot, bingbot, Applebot,
+  Amazonbot, meta-externalagent, CCBot…; NOT Googlebot) → rewrite to `/_snapshots/<page>`, response
+  header **`x-bfbl-render: snapshot`**. Verify live:
+  `curl -sI -A GPTBot https://www.bytesforbetterlives.net/ | grep x-bfbl` and
+  `curl -s -o /dev/null -w '%{http_code}' https://ahs.bytesforbetterlives.net/` (→ 200).
+  `CHAPTERS`/`PUBLIC_PAGES` are exported and `tools/prerender.mjs` imports them, so a snapshot exists
+  for exactly what gets rewritten. **A NEW public page** → add it to `PUBLIC_PAGES` (else bots just get
+  the JS shell), `sitemap.xml` and `llms.txt` Key pages. Failure is graceful (unknown page → live page;
+  unknown chapter → homepage at its root; any throw → pass-through). Unit-test by importing it in Node
+  and calling it with a `new Request(url, {headers:{"user-agent": …}})`.
+- **Discovery files**: `llms.txt` (plain-text org summary for LLMs — keep facts in lockstep with the
+  site), `robots.txt` (allow-all + explicit AI-bot allows; NO Disallow — admin pages rely on their
+  noindex meta, which a crawler must fetch to see), `sitemap.xml` (`<lastmod>` per URL), and the
+  shared **NGO JSON-LD block** in every public page (`foundingDate` "2023", `taxID`, `sameAs` =
+  Instagram + LinkedIn only — add a profile there only once it's verified/claimed as BFBL's) + a
+  per-page block (`WebPage`/`AboutPage`/`ContactPage`/`FAQPage`). Edit the NGO block in ALL pages at
+  once (it's identical everywhere).
+- **Facts AI must get right** (user-confirmed 2026-10-04): BFBL became a **student club in 2023**, a
+  **nonprofit in 2025** (user's wording — the Sunbiz record N26000005240 suggests the FL corporation was filed in 2026, so never say "incorporated in 2025"), **IRS 501(c)(3) in 2026** (ProPublica: Weston FL, exemption
+  July 2026). State them that way, never as a bare "N years" count (home "Four years of impact" and
+  About's "4 years" are the user's own framing; leave them). The chapter count in `llms.txt` must equal
+  the chapters it lists.
+- **IndexNow** — key file **`5f4fd16d128d1617bf98ce8a802f205f.txt`** at the root (body = key; must
+  stay deployed — `.vercelignore` doesn't touch it) + **`tools/indexnow.mjs`**, which POSTs every
+  `sitemap.xml` URL to `api.indexnow.org`, grouped per host (IndexNow requires one host per
+  submission; each chapter subdomain proves itself with the same file). Runs after each push deploy,
+  `continue-on-error`. `--dry-run` prints the payloads. Bing's index feeds ChatGPT search.
+- **Measuring AI traffic** — `trackAiReferral()` (script.js, right after `initPlausible()`): a landing
+  from chatgpt.com/perplexity.ai/claude.ai/gemini/copilot/meta.ai/grok/deepseek/mistral/you/phind/poe
+  (referrer host OR `utm_source`, which ChatGPT appends) fires ONE Plausible custom event **`AI
+  Referral`** `{assistant}`, once per tab (`sessionStorage` `bfbl:ai-referral`). The goal must exist
+  in the Plausible dashboard (Site settings → Goals → custom event `AI Referral`) to be reported.
+- **Off-site** (can't be done in code): Bing Webmaster Tools (import from Search Console), claim the
+  auto-created Candid/GuideStar + Charity Navigator profiles (EIN 42-2241292), Wikidata, Idealist,
+  partner backlinks, press. The ready-to-paste kit (ranked work list, boilerplate, Wikidata statements,
+  partner/press emails) is the claude.ai artifact https://claude.ai/artifact/KJdYmFzaoTGRWAHUfSXGBC (2026-10-04).
 
 ## Git / workflow
 - Remote `github.com/Andrey199123/bytesforbetterlives`, default branch `main`. Feature work on
@@ -941,7 +1008,8 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
   Authentication → Settings → **Authorized domains**; any other host fails with `auth/unauthorized-domain`
   (bit `bytesforbetterlives.org` on 2026-10-04 — the list had only `localhost`, the two Firebase hosts,
   `bytesforbetterlives.vercel.app` and the `.net` apex + `www`, no chapter subdomains). Any NEW host or
-  subdomain an admin page is opened on must be added there.
+  subdomain an admin page is opened on must be added there. Since 2026-10-04 `middleware.js` 308s every
+  `.org` host to `.net` (same path), so admins opening a `.org` link land on the authorized `.net` host.
 
 ### Admin = one page per tab
 `admin.js` SDK + shared `admin.css` (loads AFTER `styles.css`, so `.btn`/`.impact-card` radii come from
@@ -1016,8 +1084,16 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
     chapters-preview description, `team.html` (the home hero eyebrow no longer carries a count);
     (7) `sitemap.xml` `<loc>` + `<lastmod>` for the subdomain, an `llms.txt` Chapters bullet
     (name — city — subdomain URL), and the stub's JSON-LD (shared NGO block + `WebPage` whose
-    `mainEntity.location` names the city); (8) `vercel.json` subdomain redirect PAIR (.net + .org)
-    — without it the canonical/sitemap subdomain URL just redirects to the homepage; (9) add the chapter
+    `mainEntity.location` names the city); (8) add the id to `CHAPTERS` in **`middleware.js`** (serves the stub at the subdomain
+    root with a 200 AND gives it a crawler snapshot; the old `vercel.json` subdomain redirects are GONE —
+    they'd run before the middleware, and `.org` now 308s to `.net` wholesale) — without it the subdomain
+    root serves the homepage — AND the subdomain itself must exist: an A record `76.76.21.21` at the DNS
+    host (NS1/`nsone.net`, not Vercel DNS) + the domain added to the Vercel project. ⚠️ As of 2026-10-04
+    `doral`, `los-angeles` and `parkland` have NO DNS record, so they sit in `CHAPTERS_WITHOUT_SUBDOMAIN`
+    (`script.js` — `chapterPublicHref()` links them to their www page, not the dead subdomain) and their
+    canonical/og:url/JSON-LD `url`, `sitemap.xml` `<loc>` and `llms.txt` link use
+    `https://www.bytesforbetterlives.net/chapter-<id>.html`; once DNS lands, drop the id from that list
+    and move those URLs back to the subdomain root; (9) add the chapter
     lead to the chapter doc's members + `page.leadPeople`; (10) optional: mirror into the `data.js` seed
     fallback. Grant a chapter admin via `site/content.chapterAdmins` (key = the **lowercased** Google
     email, to match `firestore.rules`); add that email to `storage.rules` too ONLY if they must upload

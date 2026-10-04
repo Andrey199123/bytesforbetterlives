@@ -405,6 +405,7 @@
     function initRender() {
         initVercelAnalytics();
         initPlausible();
+        trackAiReferral();
         renderHomePage();
 
         renderGalleryImages();
@@ -505,6 +506,36 @@
         document.head.appendChild(script);
     }
 
+    // AI-assistant referrals → one Plausible custom event, "AI Referral" {assistant}, so AI traffic
+    // is a single number instead of a dozen referrer rows. Matches the referrer host, or the
+    // utm_source ChatGPT appends to its links (utm_source=chatgpt.com). Counts only the landing
+    // page (later pages have our own site as referrer) and once per tab, so a reload isn't a second
+    // visit. Needs the "AI Referral" goal to exist in the Plausible dashboard to show up there.
+    function trackAiReferral() {
+        if (typeof window.plausible !== "function") return; // admin path, or Plausible not set up
+        var assistants = [
+            ["chatgpt.com", "ChatGPT"], ["chat.openai.com", "ChatGPT"],
+            ["perplexity.ai", "Perplexity"], ["claude.ai", "Claude"], ["gemini.google.com", "Gemini"],
+            ["copilot.microsoft.com", "Copilot"], ["meta.ai", "Meta AI"], ["grok.com", "Grok"],
+            ["chat.deepseek.com", "DeepSeek"], ["chat.mistral.ai", "Mistral"], ["you.com", "You.com"],
+            ["phind.com", "Phind"], ["poe.com", "Poe"]
+        ];
+        var host = "";
+        var source = "";
+        try { host = new URL(document.referrer).hostname.toLowerCase(); } catch (error) { /* no referrer */ }
+        try { source = (new URLSearchParams(window.location.search).get("utm_source") || "").toLowerCase(); } catch (error) { /* ignore */ }
+        var match = assistants.find(function (entry) {
+            var domain = entry[0];
+            return host === domain || host.endsWith("." + domain) || source === domain || source.endsWith("." + domain);
+        });
+        if (!match) return;
+        try {
+            if (sessionStorage.getItem("bfbl:ai-referral")) return;
+            sessionStorage.setItem("bfbl:ai-referral", match[1]);
+        } catch (error) { /* storage blocked — still count it */ }
+        window.plausible("AI Referral", { props: { assistant: match[1] } });
+    }
+
     // "smooth" normally, but "auto" (instant) when the user prefers reduced motion.
     function scrollBehavior() {
         return (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) ? "auto" : "smooth";
@@ -549,18 +580,30 @@
             || host.endsWith(".bytesforbetterlives.net");
     }
 
+    // Chapters whose <id>.bytesforbetterlives.net has NO DNS record yet: linking there is a dead
+    // link, so they stay on their www page (which is also their canonical/sitemap URL). Once the A
+    // record (76.76.21.21, at the NS1 DNS host) exists AND the domain is added to the Vercel
+    // project, drop the id here and move its canonical/og:url/JSON-LD, sitemap.xml and llms.txt
+    // URL back to the subdomain root.
+    var CHAPTERS_WITHOUT_SUBDOMAIN = ["doral", "los-angeles", "parkland"];
+
     // Public-facing URL for a chapter. Falls back to the chapter page file when subdomains
     // are not available (local dev / previews) or when subdomain is missing.
     function chapterPublicHref(chapter) {
         var pageHref = (chapter && chapter.pageHref) || (chapter && chapter.id ? ("chapter-" + chapter.id + ".html") : "chapters.html");
         var sub = chapter && (chapter.subdomain || chapter.id);
         if (!sub || !shouldUseChapterSubdomains()) return pageHref;
+        if (CHAPTERS_WITHOUT_SUBDOMAIN.indexOf(String(sub).toLowerCase()) !== -1) return pageHref;
         // Use an explicit file path under the subdomain so it works even without server-side rewrites.
         return "https://" + String(sub).toLowerCase() + "." + chapterBaseDomain() + "/" + pageHref;
     }
 
     function currentPageName() {
-        return window.location.pathname.split("/").pop() || "index.html";
+        var name = window.location.pathname.split("/").pop();
+        if (name) return name;
+        // A chapter subdomain serves its page at "/" (middleware.js), so the URL names no file.
+        var chapterId = document.body && document.body.getAttribute("data-chapter-id");
+        return chapterId ? "chapter-" + chapterId + ".html" : "index.html";
     }
 
     function setText(selector, value) {
@@ -897,6 +940,7 @@
             ["Initiatives", "ongoing-initiatives.html"],
             ["Team", "team.html"],
             ["Chapters", "chapters.html"],
+            ["FAQ", "faq.html"],
             ["Admin", "admin.html"]
         ];
 
@@ -984,21 +1028,31 @@
 
         // Ordered so the 3×3 reads row by row. Figures = the user's 2026-10-04 sheet.
         const stats = [
-            { raw: 32000, prefix: "$", suffix: "+", label: "Funds & Donations", icon: IMPACT_ICONS.funds, decimals: 0 },
-            { raw: 5700, prefix: "", suffix: "+", label: "People Served", icon: IMPACT_ICONS.people, decimals: 0 },
-            { raw: 3900, prefix: "", suffix: "+", label: "Items Donated", icon: IMPACT_ICONS.box, decimals: 0 },
-            { raw: 4000, prefix: "", suffix: "+", label: "Service Hours", icon: IMPACT_ICONS.clock, decimals: 0 },
-            { raw: 216, prefix: "", suffix: "", label: "Student Volunteers", icon: IMPACT_ICONS.cap, decimals: 0 },
-            { raw: 124, prefix: "", suffix: "", label: "Events", icon: IMPACT_ICONS.calendar, decimals: 0 },
-            { raw: 12, prefix: "", suffix: "", label: "Chapters", icon: IMPACT_ICONS.pin, decimals: 0 },
-            { raw: 5, prefix: "", suffix: "", label: "Countries", icon: IMPACT_ICONS.globe, decimals: 0 },
-            { raw: 7, prefix: "", suffix: "", label: "Digital Media Centers", icon: IMPACT_ICONS.monitor, decimals: 0 }
+            { key: "funds", raw: 32000, prefix: "$", suffix: "+", label: "Funds & Donations", icon: IMPACT_ICONS.funds, decimals: 0 },
+            { key: "people", raw: 5700, prefix: "", suffix: "+", label: "People Served", icon: IMPACT_ICONS.people, decimals: 0 },
+            { key: "items", raw: 3900, prefix: "", suffix: "+", label: "Items Donated", icon: IMPACT_ICONS.box, decimals: 0 },
+            { key: "hours", raw: 4000, prefix: "", suffix: "+", label: "Service Hours", icon: IMPACT_ICONS.clock, decimals: 0 },
+            { key: "volunteers", raw: 216, prefix: "", suffix: "", label: "Student Volunteers", icon: IMPACT_ICONS.cap, decimals: 0 },
+            { key: "events", raw: 124, prefix: "", suffix: "", label: "Events", icon: IMPACT_ICONS.calendar, decimals: 0 },
+            { key: "chapters", raw: 12, prefix: "", suffix: "", label: "Chapters", icon: IMPACT_ICONS.pin, decimals: 0 },
+            { key: "countries", raw: 5, prefix: "", suffix: "", label: "Countries", icon: IMPACT_ICONS.globe, decimals: 0 },
+            { key: "media", raw: 7, prefix: "", suffix: "", label: "Digital Media Centers", icon: IMPACT_ICONS.monitor, decimals: 0 }
         ];
+
+        // Optional data-stats="k1,k2,…" on the container selects + orders tiles by key (home shows
+        // four); no attribute → all nine (impact.html). Unknown keys are ignored.
+        let shown = stats;
+        if (root.dataset.stats) {
+            shown = root.dataset.stats.split(",").map(function (k) {
+                const key = k.trim();
+                return stats.find(function (s) { return s.key === key; });
+            }).filter(Boolean);
+        }
 
         root.innerHTML = `
             <div class="container">
-                <ul class="impact-tiles" role="list">
-                    ${stats.map(function (stat) {
+                <ul class="impact-tiles${shown.length === 4 ? " impact-tiles--four" : ""}" role="list">
+                    ${shown.map(function (stat) {
                         return `
                             <li class="impact-tile">
                                 <span class="impact-tile-icon" aria-hidden="true">${stat.icon}</span>
@@ -1181,6 +1235,7 @@
     // column that ends WEST of the dot cluster, so no pill ever sits on a neighbour's dot.
     const FLORIDA_MAP_PINS = [
         { id: "gainesville", x: 63.2, y: 23.4 },
+        { id: "parkland", x: 92.5, y: 67.0, side: "left", dy: -46, dx: 4 },
         { id: "coral-springs", x: 92.2, y: 67.6, side: "left", dy: -26, dx: 4 },
         { id: "ahs", x: 92.1, y: 69.9, side: "left", dy: -14, dx: 8 },
         { id: "cypress", x: 91.2, y: 70.8, side: "left", dy: 4 },
@@ -1223,6 +1278,7 @@
     const FLORIDA_SE_CROP = { x: 780, y: 526.5, w: 24, h: 26 };
     const FLORIDA_VIEWBOX = { x: 630, y: 435, w: 176, h: 152 };
     const FLORIDA_SE_CHAPTER_PINS = [
+        { id: "parkland", x: 53.5, y: 39.8, side: "left", dy: -6 },
         { id: "coral-springs", x: 51.4, y: 43.4, dy: -4 },
         { id: "ahs", x: 50.6, y: 56.5, side: "left", dx: 12, dy: -9 },
         { id: "cypress", x: 44.0, y: 62.1, side: "left", dy: 20 },
@@ -1282,7 +1338,7 @@
     // into the crop viewBox — the same city then lands in the same place on both maps. Each SVG fills
     // the box, so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
     function chapterLocatorConfig(id) {
-        const FL = { gainesville: [63.2, 23.4], "coral-springs": [92.2, 67.6], ahs: [92.1, 69.9], cypress: [91.2, 70.8], miami: [94.1, 74.5], doral: [92.2, 74.2] };
+        const FL = { gainesville: [63.2, 23.4], parkland: [92.5, 67.0], "coral-springs": [92.2, 67.6], ahs: [92.1, 69.9], cypress: [91.2, 70.8], miami: [94.1, 74.5], doral: [92.2, 74.2] };
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         const R = {
             "los-angeles": { map: "images/maps/california.svg", x: 59.0, y: 80.8, aspect: "0.859" },

@@ -5,6 +5,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+  # Daily redeploy of main so the crawler snapshots (tools/prerender.mjs) pick up content edited in
+  # Firestore since the last push; humans always get live content, bots get the latest snapshot.
+  schedule:
+    - cron: "17 9 * * *"
+
+# A push and the daily refresh must never deploy over each other.
+concurrency:
+  group: vercel-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -29,6 +38,15 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
+      # Static snapshots of every public page for AI crawlers that don't run JavaScript (served by
+      # middleware.js). Uses the runner's preinstalled Google Chrome; playwright-core goes to a temp
+      # dir so it never enters package.json (Vercel's build runs `npm install`). The script falls
+      # back to raw page shells instead of failing, so this step only fails on a genuine crash.
+      - name: Render crawler snapshots
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund --silent playwright-core@1
+          PLAYWRIGHT_CORE_DIR="$RUNNER_TEMP/pw" node tools/prerender.mjs
+
       - name: Pull Vercel environment
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -46,3 +64,10 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: vercel deploy --prebuilt --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Tell Bing & the other IndexNow engines to recrawl. Pushes only — the daily refresh changes
+      # nothing a search engine needs to hear about. A failed ping never fails the deploy.
+      - name: Ping IndexNow
+        if: github.event_name == 'push'
+        continue-on-error: true
+        run: node tools/indexnow.mjs

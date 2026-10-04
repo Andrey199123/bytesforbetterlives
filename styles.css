@@ -1046,7 +1046,8 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
 }
 
 /* Impact tile grid: nine flat tiles, 3×3 at EVERY width (nine can't ladder to 2-up without an
-   orphan, and 1-up is never allowed). Full container width so it lines up with .home-intro-title. */
+   orphan, and 1-up is never allowed). Full container width. Home passes data-stats to render only
+   four (.impact-tiles--four: one row of four, 2×2 at <=700px). */
 .impact-tiles {
     list-style: none;
     margin: 0;
@@ -1077,6 +1078,11 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
 .impact-tile:nth-child(even) {
     background: var(--green-dark);
     color: var(--paper);
+}
+
+/* Home's four-tile variant: one row of four, so odd/even still alternates mint/dark/mint/dark. */
+.impact-tiles--four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .impact-tile-icon {
@@ -1131,6 +1137,22 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
         width: 26px;
         height: 26px;
     }
+
+    /* 2×2: odd/even would stack the same colour down each column, so swap 3 and 4 to keep a true
+       checkerboard (1+4 mint, 2+3 green-dark). Specificity beats the base :nth-child(even). */
+    .impact-tiles--four {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .impact-tiles--four .impact-tile:nth-child(3) {
+        background: var(--green-dark);
+        color: var(--paper);
+    }
+
+    .impact-tiles--four .impact-tile:nth-child(4) {
+        background: var(--green);
+        color: var(--ink);
+    }
 }
 
 /* --- Stat-band height reservation ---------------------------------------------------------------
@@ -1144,14 +1166,14 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
    specimen is untouched.
 
    Values are the MINIMUM settled height measured anywhere in each step, minus ~10px, rounded DOWN,
-   so the reservation can only ever undershoot and steady state stays pixel-identical. Home is
-   shorter than impact because body.page-home drops the band's top padding to butt it against
-   .home-intro. Measured (home / impact): 1440 745/769, 1200 642/666, 1000 613/649, 900 607/649,
-   800 601/649, 701 601/649 -> floor 601/649; <=700 (700…360) a flat 461/509, since the 132px tile
-   min-height governs every phone width. Re-measure with the band filled if the tile padding,
-   min-height, gap or the band padding change. */
+   so the reservation can only ever undershoot and steady state stays pixel-identical. Home renders
+   only FOUR tiles (data-stats; 1×4 >=701px, 2×2 <=700px) with the base band padding. Measured
+   home (2026-10-04): 1440 313, 1200 277, 1000 273, 900 273, 800 273, 701 273 -> floor 273;
+   <=700 (700…360) a flat 369 (two rows of the 132px tile min-height). Impact (nine tiles, 3×3,
+   values unchanged): 1440 769, 1200 666, 1000…701 649 -> floor 649; <=700 a flat 509.
+   Re-measure with the band filled if the tile padding, min-height, gap or the band padding change. */
 #home-impact-stats {
-    min-height: 590px;
+    min-height: 263px;
 }
 
 body.page-impact #home-impact-stats {
@@ -1160,7 +1182,7 @@ body.page-impact #home-impact-stats {
 
 @media (max-width: 700px) {
     #home-impact-stats {
-        min-height: 450px;
+        min-height: 359px;
     }
 
     body.page-impact #home-impact-stats {
@@ -3098,6 +3120,75 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     .help-row .btn { grid-column: 1 / -1; justify-self: start; }
 }
 
+/* ===== FAQ PAGE (faq.html) ===== */
+/* Static Q&A written to be quoted by search engines and AI assistants, so every answer is plain
+   visible text in the HTML (no accordion, nothing rendered by script.js). Each topic reads as an
+   editorial ledger: group title + the site's 48px accent underline on the left, hairline-divided
+   questions on the right; one column at ≤860px. Only the inline answer links are clickable, so
+   only they carry hover. */
+.faq-groups {
+    display: grid;
+    gap: var(--space-3xl);
+}
+.faq-group {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr);
+    gap: var(--space-xl) var(--space-2xl);
+    align-items: start;
+}
+.faq-group-title {
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 600;
+    line-height: 1.1;
+    text-wrap: balance;
+}
+.faq-group-title::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 3px;
+    margin-top: 0.65rem;
+    border-radius: 999px;
+    background: var(--accent);
+}
+.faq-list {
+    display: grid;
+}
+.faq-item {
+    display: grid;
+    gap: var(--space-xs);
+    padding-block: var(--space-lg);
+    border-bottom: 1px solid var(--line);
+}
+.faq-item:first-child {
+    padding-top: 0;
+}
+.faq-q {
+    font-size: clamp(1.15rem, 1.6vw, 1.35rem);
+    font-weight: 600;
+    line-height: 1.25;
+    text-wrap: balance;
+}
+.faq-a {
+    max-width: 68ch;
+    color: var(--ink-soft);
+    text-wrap: pretty;
+}
+.faq-a a {
+    color: var(--green-dark);
+    font-weight: 700;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+}
+.faq-a a:hover {
+    text-decoration-thickness: 2px;
+}
+@media (max-width: 860px) {
+    .faq-groups { gap: var(--space-2xl); }
+    .faq-group { grid-template-columns: minmax(0, 1fr); gap: var(--space-lg); }
+}
+
 /* ===== CONTACT PAGE ===== */
 /* Editorial split: intro + direct channels on the left, the message form on the right. */
 .contact-layout {
@@ -3803,14 +3894,13 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
 
 /* ===== HERO-PAGE NAV OVERLAY + HOME REDESIGN ===================================================
    News-Literacy-Project structure on BFBL's mint palette: a full-bleed hero running under a
-   transparent navbar, and a light neutral "impact intro" band that hands straight off to the
-   data-driven stat row. This block sits last in the file so it wins on source order over the
+   transparent navbar, followed directly by the data-driven stat row. This block sits last in the file so it wins on source order over the
    shared nav/hero/band rules above.
    TWO scopes live here, and they are not the same thing:
      - body.nav-overlay — EVERY public page that opens with a hero (home, the interior editorial
        heroes, every chapter profile). Static class in each page's <body>.
-     - body.page-home  — home-only structure (its photo hero, the .home-intro band it alone has,
-       and that band's pairing with the stat row).
+     - body.page-home  — home-only structure (its photo hero and its arrow link). The stat band
+       under it is the plain base .impact-band (four tiles via data-stats) with no home override.
    The square-cornered card/button attitude that started here is now the SITE-WIDE BASE (4px
    buttons/controls, 8px cards/surfaces, 6px icon chips — set in each component's own rule above),
    so the home-scoped square-corner pass that used to live here is gone; home renders identically
@@ -3969,29 +4059,6 @@ body.page-home .hero-arrow-link {
 body.page-home .hero-arrow-link:hover {
     text-decoration: underline;
     text-underline-offset: 5px;
-}
-
-/* --- Impact intro band ------------------------------------------------------------------------
-   Light NEUTRAL ground (deliberately not the green surface wash) so the mint stays on the type and
-   the numerals. The stat row below shares the same ground — the two read as one band. */
-body.page-home .home-intro {
-    background: color-mix(in oklch, var(--surface-strong) 55%, var(--paper));
-    padding-block: clamp(3.25rem, 6vw, 5rem) clamp(2rem, 4vw, 3rem);
-}
-
-body.page-home .home-intro-title {
-    color: var(--green-deep);
-    font-size: clamp(2.1rem, 4.4vw, 3.5rem);
-    text-wrap: balance;
-}
-
-/* --- Impact tiles (second half of the same band) -----------------------------------------------
-   The neutral ground and the tile grid are the BASE .impact-band (see the IMPACT section above);
-   only the PAIRING with .home-intro is home-scoped: no top padding and no negative margin, so the
-   title hands straight off to the grid and the two sections read as one band. */
-body.page-home .impact-band {
-    margin-top: 0;
-    padding-block: 0 clamp(3rem, 6vw, 4.5rem);
 }
 
 @media (max-width: 680px) {

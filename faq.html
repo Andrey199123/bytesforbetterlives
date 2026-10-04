@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FCFAF5">
+    <meta name="description" content="Answers to common questions about Bytes for Better Lives: what the student-led nonprofit does, senior tech help and online safety, and how to donate, volunteer, or start a chapter.">
+    <title>FAQ | Bytes for Better Lives</title>
+    <link rel="icon" type="image/avif" href="images/logo.avif">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://firestore.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900&display=swap">
+    <link rel="stylesheet" href="styles.css">
+    <!-- The three end-of-<body> scripts build the navbar, the footer and the page's content, so the
+         browser must have them BEFORE it first paints or the bar paints logo-only and the grids
+         paint empty. Without these hints the preload scanner only reaches them at the end of the
+         body, at low priority. MUST-COPY-VERBATIM into every new public shell, like the three font
+         <link>s, the theme-color meta and the nav-overlay body class. -->
+    <link rel="preload" as="script" href="data.js">
+    <link rel="preload" as="script" href="firebase-data.js">
+    <link rel="preload" as="script" href="script.js">
+    <link rel="canonical" href="https://www.bytesforbetterlives.net/faq.html">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "NGO",
+      "@id": "https://www.bytesforbetterlives.net/#org",
+      "name": "Bytes for Better Lives",
+      "alternateName": "BFBL",
+      "legalName": "Bytes for Better Lives Corporation",
+      "url": "https://www.bytesforbetterlives.net/",
+      "logo": "https://www.bytesforbetterlives.net/images/logo.avif",
+      "description": "Bytes for Better Lives bridges the digital divide through technology access, digital literacy, and community service.",
+      "email": "bytesforbetterlives@gmail.com",
+      "sameAs": [
+        "https://www.instagram.com/bytesforbetterlives/",
+        "https://www.linkedin.com/company/bytes-for-better-lives/"
+      ],
+      "nonprofitStatus": "Nonprofit501c3",
+      "taxID": "42-2241292",
+      "foundingDate": "2023",
+      "areaServed": ["Florida", "New York", "Virginia", "California", "Russia", "Turkey"]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": "https://www.bytesforbetterlives.net/faq.html#webpage",
+      "url": "https://www.bytesforbetterlives.net/faq.html",
+      "name": "FAQ | Bytes for Better Lives",
+      "description": "Answers to common questions about Bytes for Better Lives: what the student-led nonprofit does, senior tech help and online safety, and how to donate, volunteer, or start a chapter.",
+      "isPartOf": {
+        "@id": "https://www.bytesforbetterlives.net/#website"
+      },
+      "about": {
+        "@id": "https://www.bytesforbetterlives.net/#org"
+      },
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Bytes for Better Lives?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Bytes for Better Lives (BFBL) is a student-led nonprofit based in South Florida. It bridges the digital divide through technology access, digital literacy, and community service, helping seniors and children with tech help, online-safety education, and donations."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Bytes for Better Lives a registered 501(c)(3) nonprofit?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Bytes for Better Lives Corporation is a 501(c)(3) nonprofit, EIN 42-2241292. For questions about a gift, contact us."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "When was Bytes for Better Lives founded?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "BFBL started as a student club in 2023, became a nonprofit in 2025, and received IRS 501(c)(3) status in 2026."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Who runs Bytes for Better Lives?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "BFBL is student-led and 100% volunteer-run. A Board of Directors coordinates programs, partnerships, fundraising, and chapter standards, and each chapter has its own student leadership team. It was co-founded by Aaron Pinto and Pranav Rai."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where does Bytes for Better Lives operate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "BFBL is based in South Florida, with chapters active or launching in Plantation, Weston, Coral Springs, Parkland, Miami, Doral, and Gainesville, Florida, plus New York City, Virginia Beach, Los Angeles, Moscow, and Istanbul. It has also donated games to children in rural Haiti."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What programs does Bytes for Better Lives run?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "BFBL runs four programs: Provide Access (donating devices to underserved communities), Teach Digital Literacy (teaching people of all ages to use technology safely), Support Education (school supplies and resources for underserved students), and Mobilize Community (starting student-led chapters). See the results on our Impact page."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can seniors get tech help from Bytes for Better Lives?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Student volunteers give patient, one-on-one help with phones, iPads, and laptops: email, video calls, photos, and accessibility settings. They serve South Florida senior communities, including monthly visits to 5 Star Premier Residences and sessions at Palomino Gardens. To ask about help for your community, contact us."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Bytes for Better Lives teach online safety and scam awareness?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. BFBL has held digital safety workshops for seniors at the Palace at Weston and 5 Star Premier Residences, teaching them to recognize scams, avoid phishing, and protect personal information online. It also gave a digital safety and financial literacy presentation for women at Lotus House."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does Bytes for Better Lives do for children?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "BFBL donates devices and school supplies to underserved students, gives board games to children’s hospitals and homes, and runs hands-on workshops such as game development. It donated 15+ iPads to His House Children’s Home and taught the children how to use them."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I donate to Bytes for Better Lives?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Give online through GoFundMe (card, Apple Pay, or Google Pay), or scan the Zelle or PayPal QR code on our Donate page. BFBL is 100% volunteer-run, so gifts fund devices and digital-literacy programs for seniors and students."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I donate devices or board games?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. You can give board games and electronics for seniors and kids. Contact us to arrange a donation, and check the Initiatives page for any active collection drives."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can students volunteer with Bytes for Better Lives?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Join a service day or workshop, or join your local chapter. Email bytesforbetterlives@gmail.com or use our contact form with your name, location, and how you want to help."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I start a Bytes for Better Lives chapter at my school?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Reach out to us with your name, school or organization, city, country, proposed leadership team, and the service projects you want to start first. Applicants should be ready to identify local needs, recruit volunteers, and communicate clearly with BFBL leadership."
+          }
+        }
+      ]
+    }
+    </script>
+
+
+    <!-- Social share preview (Open Graph + Twitter) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bytes for Better Lives">
+    <meta property="og:title" content="FAQ | Bytes for Better Lives">
+    <meta property="og:description" content="Answers to common questions about Bytes for Better Lives: what the student-led nonprofit does, senior tech help and online safety, and how to donate, volunteer, or start a chapter.">
+    <meta property="og:url" content="https://www.bytesforbetterlives.net/faq.html">
+    <meta property="og:image" content="https://www.bytesforbetterlives.net/images/hero-banner.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="google-site-verification" content="zX6BUNOBV4yH4PZD7fEVflyBRPSL3XbNYfznUh8AgJU" />
+</head>
+<body class="page-faq nav-overlay">
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.avif" alt="Bytes for Better Lives logo" width="460" height="462">
+            </a>
+            <button class="hamburger" type="button" aria-label="Open navigation menu" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-menu"></ul>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero hero-editorial">
+            <div class="hero-content">
+                <p class="eyebrow">FAQ</p>
+                <h1>Questions, answered.</h1>
+                <p class="hero-subtitle">Short answers about who we are, how we help, and how to donate, volunteer, or start a chapter.</p>
+            </div>
+        </section>
+
+        <!-- STATIC on purpose: this page exists to be quoted by search engines and AI assistants, so
+             every question and answer is plain HTML (nothing rendered by script.js). The FAQPage
+             JSON-LD in <head> mirrors this text EXACTLY (links dropped) — edit both together.
+             No founding year and no chapter COUNT here: both are pending owner confirmation. -->
+        <section class="section">
+            <div class="container">
+                <div class="faq-groups">
+                    <section class="faq-group" id="about" aria-labelledby="faq-about-title">
+                        <h2 class="faq-group-title" id="faq-about-title">About BFBL</h2>
+                        <div class="faq-list">
+                            <div class="faq-item">
+                                <h3 class="faq-q">What is Bytes for Better Lives?</h3>
+                                <p class="faq-a">Bytes for Better Lives (BFBL) is a <a href="about.html">student-led nonprofit</a> based in South Florida. It bridges the digital divide through technology access, digital literacy, and community service, helping seniors and children with tech help, online-safety education, and donations.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">Is Bytes for Better Lives a registered 501(c)(3) nonprofit?</h3>
+                                <p class="faq-a">Yes. Bytes for Better Lives Corporation is a 501(c)(3) nonprofit, EIN 42-2241292. For questions about a gift, <a href="contact.html">contact us</a>.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">When was Bytes for Better Lives founded?</h3>
+                                <p class="faq-a">BFBL started as a student club in 2023, became a nonprofit in 2025, and received IRS 501(c)(3) status in 2026.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">Who runs Bytes for Better Lives?</h3>
+                                <p class="faq-a">BFBL is student-led and 100% volunteer-run. A <a href="team.html">Board of Directors</a> coordinates programs, partnerships, fundraising, and chapter standards, and each chapter has its own student leadership team. It was co-founded by Aaron Pinto and Pranav Rai.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">Where does Bytes for Better Lives operate?</h3>
+                                <p class="faq-a">BFBL is based in South Florida, with <a href="chapters.html">chapters</a> active or launching in Plantation, Weston, Coral Springs, Parkland, Miami, Doral, and Gainesville, Florida, plus New York City, Virginia Beach, Los Angeles, Moscow, and Istanbul. It has also donated games to children in rural Haiti.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="faq-group" id="programs" aria-labelledby="faq-programs-title">
+                        <h2 class="faq-group-title" id="faq-programs-title">Programs &amp; help</h2>
+                        <div class="faq-list">
+                            <div class="faq-item">
+                                <h3 class="faq-q">What programs does Bytes for Better Lives run?</h3>
+                                <p class="faq-a">BFBL runs four programs: Provide Access (donating devices to underserved communities), Teach Digital Literacy (teaching people of all ages to use technology safely), Support Education (school supplies and resources for underserved students), and Mobilize Community (starting student-led chapters). See the results on our <a href="impact.html">Impact page</a>.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">How can seniors get tech help from Bytes for Better Lives?</h3>
+                                <p class="faq-a">Student volunteers give patient, one-on-one help with phones, iPads, and laptops: email, video calls, photos, and accessibility settings. They serve South Florida senior communities, including monthly visits to 5 Star Premier Residences and sessions at Palomino Gardens. To ask about help for your community, <a href="contact.html">contact us</a>.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">Does Bytes for Better Lives teach online safety and scam awareness?</h3>
+                                <p class="faq-a">Yes. BFBL has held <a href="impact.html#seniors">digital safety workshops</a> for seniors at the Palace at Weston and 5 Star Premier Residences, teaching them to recognize scams, avoid phishing, and protect personal information online. It also gave a digital safety and financial literacy presentation for women at Lotus House.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">What does Bytes for Better Lives do for children?</h3>
+                                <p class="faq-a">BFBL donates devices and school supplies to underserved students, gives board games to children’s hospitals and homes, and runs <a href="impact.html#kids">hands-on workshops</a> such as game development. It donated 15+ iPads to His House Children’s Home and taught the children how to use them.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="faq-group" id="donating" aria-labelledby="faq-donating-title">
+                        <h2 class="faq-group-title" id="faq-donating-title">Donating</h2>
+                        <div class="faq-list">
+                            <div class="faq-item">
+                                <h3 class="faq-q">How do I donate to Bytes for Better Lives?</h3>
+                                <p class="faq-a">Give online through GoFundMe (card, Apple Pay, or Google Pay), or scan the Zelle or PayPal QR code on our <a href="donate.html">Donate page</a>. BFBL is 100% volunteer-run, so gifts fund devices and digital-literacy programs for seniors and students.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">Can I donate devices or board games?</h3>
+                                <p class="faq-a">Yes. You can give board games and electronics for seniors and kids. <a href="contact.html">Contact us</a> to arrange a donation, and check the <a href="ongoing-initiatives.html">Initiatives page</a> for any active collection drives.</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="faq-group" id="get-involved" aria-labelledby="faq-involved-title">
+                        <h2 class="faq-group-title" id="faq-involved-title">Volunteering &amp; chapters</h2>
+                        <div class="faq-list">
+                            <div class="faq-item">
+                                <h3 class="faq-q">How can students volunteer with Bytes for Better Lives?</h3>
+                                <p class="faq-a">Join a service day or workshop, or join your local <a href="chapters.html">chapter</a>. Email <a href="mailto:bytesforbetterlives@gmail.com">bytesforbetterlives@gmail.com</a> or use our <a href="contact.html">contact form</a> with your name, location, and how you want to help.</p>
+                            </div>
+                            <div class="faq-item">
+                                <h3 class="faq-q">How do I start a Bytes for Better Lives chapter at my school?</h3>
+                                <p class="faq-a"><a href="chapters.html#start-chapter">Reach out to us</a> with your name, school or organization, city, country, proposed leadership team, and the service projects you want to start first. Applicants should be ready to identify local needs, recruit volunteers, and communicate clearly with BFBL leadership.</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </section>
+
+        <section class="section band--ink">
+            <div class="container">
+                <div class="section-header centered">
+                    <p class="section-kicker">Still curious?</p>
+                    <h2 class="section-title">Ask us directly.</h2>
+                    <p class="section-description">Email bytesforbetterlives@gmail.com or send a message, and a member of our leadership team will get back to you.</p>
+                </div>
+                <div class="text-center">
+                    <a href="contact.html" class="btn btn-primary">Contact Us</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container"></div>
+    </footer>
+
+    <!-- First-paint state for the overlay navbar. MUST-COPY-VERBATIM into any new public page that
+         opens with a hero. ADD-ONLY: solid stays the CSS default, so JS off, a throw, or a CSP that
+         drops this all still leave the readable bar. It runs before the three scripts below, so the
+         bar is transparent over the hero from the first paint even if they are slow. The `load`
+         handler closes the one failure this introduces — class added and never removed because
+         script.js never reached initNavOverlay(). Its geometry test is PAIRED with the one in
+         initNavOverlay() (script.js): change one, change both. On a chapter stub there is no hero
+         yet (script.js injects it), so it bails by design and the bar stays solid. -->
+    <script>(function(){try{
+      var b=document.body,n=document.querySelector(".navbar");
+      if(!n||!b||!b.classList.contains("nav-overlay"))return;
+      var h=document.querySelector(".home-hero,.hero-editorial,.chapter-hero");
+      if(!h)return;
+      var navH=n.offsetHeight||76;
+      if(h.getBoundingClientRect().bottom>navH)n.classList.add("is-over-hero");
+      addEventListener("load",function(){
+        if(!window.__bfblNavOverlayReady)n.classList.remove("is-over-hero");
+      });
+    }catch(e){}})();</script>
+    <script src="data.js"></script>
+    <script src="firebase-data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
