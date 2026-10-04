@@ -13,6 +13,56 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900&display=swap">
     <link rel="stylesheet" href="styles.css">
     <link rel="canonical" href="https://www.bytesforbetterlives.net/">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "NGO",
+      "@id": "https://www.bytesforbetterlives.net/#org",
+      "name": "Bytes for Better Lives",
+      "alternateName": "BFBL",
+      "legalName": "Bytes for Better Lives Corporation",
+      "url": "https://www.bytesforbetterlives.net/",
+      "logo": "https://www.bytesforbetterlives.net/images/logo.avif",
+      "description": "Bytes for Better Lives bridges the digital divide through technology access, digital literacy, and community service.",
+      "email": "bytesforbetterlives@gmail.com",
+      "sameAs": [
+        "https://www.instagram.com/bytesforbetterlives/",
+        "https://www.linkedin.com/company/bytes-for-better-lives/"
+      ],
+      "nonprofitStatus": "Nonprofit501c3",
+      "taxID": "42-2241292",
+      "areaServed": ["Florida", "New York", "Virginia", "California", "Russia", "Turkey"]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://www.bytesforbetterlives.net/#website",
+          "url": "https://www.bytesforbetterlives.net/",
+          "name": "Bytes for Better Lives",
+          "publisher": {
+            "@id": "https://www.bytesforbetterlives.net/#org"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://www.bytesforbetterlives.net/#webpage",
+          "url": "https://www.bytesforbetterlives.net/",
+          "name": "Bytes for Better Lives | Bridging the Digital Divide",
+          "description": "Bytes for Better Lives is a South Florida student-led nonprofit bridging the digital divide for seniors and children through tech help, digital literacy education, online safety, and donations.",
+          "isPartOf": {
+            "@id": "https://www.bytesforbetterlives.net/#website"
+          },
+          "about": {
+            "@id": "https://www.bytesforbetterlives.net/#org"
+          }
+        }
+      ]
+    }
+    </script>
     <!-- The hero banner is the LCP element but lives in CSS background-image, which the
          preload scanner can't see — without this it only starts after styles.css parses. -->
     <link rel="preload" as="image" href="images/hero-banner.jpg" fetchpriority="high">
@@ -67,7 +117,7 @@
              band below it. Static copy; the numbers stay in script.js. -->
         <section class="home-intro" aria-label="Our impact">
             <div class="container">
-                <h2 class="home-intro-title">Our impact, thanks to your support</h2>
+                <h2 class="home-intro-title">Four years of impact, thanks to your support</h2>
             </div>
         </section>
 

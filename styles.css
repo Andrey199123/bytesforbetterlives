@@ -384,6 +384,9 @@ main {
     border-radius: 999px;
     background: var(--accent);
 }
+.section-header.centered .section-title::after {
+    margin-inline: auto;
+}
 
 .section-description,
 .lead-text {
@@ -928,7 +931,6 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
 
 /* ===== CARDS AND GRIDS ===== */
 .cards-grid,
-.stats-grid,
 .team-grid,
 .service-grid,
 .chapter-grid,
@@ -946,7 +948,6 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
 }
 
 .card,
-.stat-card,
 .team-member,
 .feature-box,
 .service-card,
@@ -1035,8 +1036,7 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
 }
 
 /* ===== IMPACT ===== */
-/* Light NEUTRAL ground (home's treatment, now the only one): the mint stays on the type and the
-   numerals rather than washing the whole band, so the stat row reads the same everywhere. */
+/* Light NEUTRAL ground: the band itself stays quiet so the mint/green-dark tiles carry the colour. */
 .impact-band {
     position: relative;
     margin-top: -1px;
@@ -1045,118 +1045,127 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
     border-bottom: 1px solid var(--line);
 }
 
-/* Editorial stat row: drop the card chrome, let big numerals carry it. */
-.impact-band .stat-card {
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    min-height: 0;
-    padding: var(--space-xs) var(--space-lg);
-}
-
-.impact-band .stats-grid {
-    grid-template-columns: repeat(5, minmax(150px, 1fr));
+/* Impact tile grid: nine flat tiles, 3×3 at EVERY width (nine can't ladder to 2-up without an
+   orphan, and 1-up is never allowed). Full container width so it lines up with .home-intro-title. */
+.impact-tiles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-sm);
 }
 
-/* Neutral hairline dividers, only in the horizontal 5-up row; on stacked/2-col layouts the green
-   numeral carries the accent (a left spine on a stacked card reads as a decorative bar). */
-@media (min-width: 901px) {
-    .impact-band .stat-card:not(:first-child) {
-        border-left: 1px solid color-mix(in oklch, var(--line) 88%, var(--ink));
+/* Not clickable → flat: no border, shadow, transition or hover (clickability HARD rule). */
+.impact-tile {
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+    gap: var(--space-xs);
+    padding: clamp(1.25rem, 2.6vw, 2rem) clamp(0.75rem, 2vw, 1.5rem);
+    min-height: clamp(176px, 15vw, 224px);
+    min-width: 0;
+    border-radius: 8px;
+    container-type: inline-size;
+    background: var(--green);
+    color: var(--ink);
+}
+
+/* Checkerboard: on a 3-col grid odd/even alternates both ways (corners + centre stay mint).
+   FULL paper on green-dark — no translucent mix — so the small label holds >= 4.5:1. */
+.impact-tile:nth-child(even) {
+    background: var(--green-dark);
+    color: var(--paper);
+}
+
+.impact-tile-icon {
+    display: inline-flex;
+    width: 34px;
+    height: 34px;
+}
+
+.impact-tile-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.impact-tile-value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.9rem, 3.2vw, 2.75rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    /* Lock digit advance width so the count-up animation doesn't jitter. */
+    font-variant-numeric: tabular-nums;
+}
+
+/* Scale with the TILE, not just the viewport, so "$32,000+" never overflows a ~110px phone tile. */
+@supports (font-size: 1cqi) {
+    .impact-tile-value {
+        font-size: clamp(1.35rem, min(3.2vw, 17cqi), 2.75rem);
+    }
+}
+
+.impact-tile-label {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: clamp(0.78rem, 1.1vw, 0.95rem);
+    line-height: 1.3;
+    max-width: 16ch;
+    text-wrap: balance;
+}
+
+@media (max-width: 700px) {
+    .impact-tiles {
+        gap: var(--space-xs);
+    }
+
+    .impact-tile {
+        padding: 0.9rem 0.5rem;
+        min-height: 132px;
+        gap: 6px;
+    }
+
+    .impact-tile-icon {
+        width: 26px;
+        height: 26px;
     }
 }
 
 /* --- Stat-band height reservation ---------------------------------------------------------------
    #home-impact-stats ships EMPTY in the markup (home + impact) and renderHomeStats() fills it, so
-   first paint used to show a ~73px sliver that then grew to ~221px and shoved the rest of the page
-   down — the biggest layout jump in the first viewport. Reserve the height up front.
+   without a reservation first paint shows a sliver that then grows ~600px and shoves the rest of the
+   page down. Reserve the height up front.
 
    This does NOT violate "never render an empty section": renderHomeStats() builds from a HARDCODED
-   5-entry array in script.js, reads nothing from data/Firestore, and hideSectionWhenEmpty() is
-   never pointed at this id. The band has no data-driven empty state to pin open — the only way it
-   stays blank is total JS failure, where the whole page is unrendered anyway. Scoped by id + page
-   class so design-system.html's static .impact-band specimen is untouched.
+   9-entry array in script.js, reads nothing from data/Firestore, and hideSectionWhenEmpty() is
+   never pointed at this id. Scoped by id + page class so design-system.html's static .impact-band
+   specimen is untouched.
 
-   Values are the MEASURED settled height at the shortest width in each column step, rounded DOWN
-   with ~10px of slack, so the reservation can only ever undershoot: at no width does it add space
-   the filled band doesn't already occupy, and steady state stays pixel-identical. Home is shorter
-   than impact because body.page-home drops the band's top padding to butt it against .home-intro.
-   Measured floors (home / impact): >=901px 218/239, <=900 339/393, <=680 409/459, <=440 482/556.
-   Re-measure with the band filled if the stat copy, the column ladder or the band padding change. */
+   Values are the MINIMUM settled height measured anywhere in each step, minus ~10px, rounded DOWN,
+   so the reservation can only ever undershoot and steady state stays pixel-identical. Home is
+   shorter than impact because body.page-home drops the band's top padding to butt it against
+   .home-intro. Measured (home / impact): 1440 745/769, 1200 642/666, 1000 613/649, 900 607/649,
+   800 601/649, 701 601/649 -> floor 601/649; <=700 (700…360) a flat 461/509, since the 132px tile
+   min-height governs every phone width. Re-measure with the band filled if the tile padding,
+   min-height, gap or the band padding change. */
 #home-impact-stats {
-    min-height: 210px;
+    min-height: 590px;
 }
 
 body.page-impact #home-impact-stats {
-    min-height: 230px;
+    min-height: 635px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 700px) {
     #home-impact-stats {
-        min-height: 330px;
-    }
-
-    body.page-impact #home-impact-stats {
-        min-height: 385px;
-    }
-}
-
-@media (max-width: 680px) {
-    #home-impact-stats {
-        min-height: 400px;
-    }
-
-    body.page-impact #home-impact-stats {
         min-height: 450px;
     }
-}
-
-@media (max-width: 440px) {
-    #home-impact-stats {
-        min-height: 470px;
-    }
 
     body.page-impact #home-impact-stats {
-        min-height: 545px;
+        min-height: 495px;
     }
-}
-
-.stat-card {
-    display: grid;
-    gap: var(--space-xs);
-    padding: clamp(1.25rem, 3vw, 2rem);
-    min-height: 150px;
-    min-width: 0;
-    container-type: inline-size;
-}
-
-.stat-number {
-    color: var(--accent-dark);
-    font-family: var(--font-display);
-    font-size: clamp(2.6rem, 5vw, 4rem);
-    line-height: 0.9;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    /* Lock digit advance width so the count-up animation doesn't jitter and stacked figures align. */
-    font-variant-numeric: tabular-nums;
-}
-
-@supports (font-size: 1cqi) {
-    .stat-card .stat-number {
-        font-size: clamp(2.1rem, min(5vw, 22cqi), 4rem);
-    }
-}
-
-.stat-label {
-    color: var(--ink);
-    font-weight: 800;
-}
-
-.stat-note {
-    color: var(--muted);
-    font-size: 0.95rem;
 }
 
 /* ===== HOMEPAGE MODULES ===== */
@@ -1878,6 +1887,15 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     transition: transform 320ms ease;
 }
 .photo-gallery-grid .g-tile:hover img { transform: scale(1.04); }
+/* Video tiles fill the tile like photos — a bare <video> sits at its 300×150 default (or its
+   natural size, cropped). They open no lightbox, so no pointer and no hover zoom. */
+.photo-gallery-grid video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    background: var(--surface);
+}
 
 .photo-gallery-grid figcaption {
     position: absolute;
@@ -2608,11 +2626,6 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     .footer-content   {
         grid-template-columns: 1fr;
     }
-
-    /* Stat band steps 5 → 3 on tablet (not straight to 1-up, which left huge numerals stacked). */
-    .impact-band .stats-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
 }
 
 @media (max-width: 680px) {
@@ -2682,14 +2695,6 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
         width: 100%;
     }
 
-    .impact-band .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .stat-card {
-        min-height: 132px;
-    }
-
     .card-media,
     .team-photo {
         height: 240px;
@@ -2724,14 +2729,6 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     .lightbox-nav {
         width: 44px;
         height: 44px;
-    }
-}
-
-@media (max-width: 440px) {
-    /* Keep a 2-up editorial row on the smallest phones (the container-query numeral scaling stops
-       overflow) instead of one tall single column. */
-    .impact-band .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -3181,38 +3178,239 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     .contact-layout { grid-template-columns: 1fr; }
 }
 
-/* Partner logos as a quiet full-colour ribbon with name captions — logos alone were too small
-   to recognize (script wordmarks were illegible), and the caption names the partner even when
-   its mark doesn't. Not links, so no hover change. */
-.partner-strip {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: var(--space-xl) var(--space-md);
-    align-items: start;
-    margin-top: var(--space-xl);
+/* Partner orbit (impact.html #partners) — two counter-rotating rings of logo discs around the BFBL
+   mark, after the user's reference (2026-10-04). Everything is sized in cqw off the
+   `.partner-orbit` container, so the geometry scales as ONE drawing from 760px to 940px wide:
+     discs --d 13.5cqw (127px at 940) · inner ring r 21.5cqw · outer ring r 41.5cqw · centre 16cqw.
+   The two radii are 20cqw apart = half a disc + gap + a 2-line label + half a disc, so a node's
+   caption clears the other ring's disc when both pass the bottom (or top) at the same moment;
+   the centre stops short of an inner node's caption; the outer ring stops 1.5cqw inside the edge.
+   Re-derive all of it together if --d, a radius or the label font changes.
+   Motion is compositor-only: each ring is a 0x0 anchor at the centre that rotates, and every
+   `.orbit-item` counter-rotates at the same rate about its own centre, so logos and captions stay
+   upright (same duration, opposite direction, started in the same style pass — keep them paired).
+   A disc with no `a.partner-link` is not a link, so it gets no hover change (HARD rule); linked ones
+   get the quiet hover below. 50% is the sanctioned round, like avatars.
+   Below 760px the rings would shrink the logos past legibility, so the container query lays the
+   same nodes out as a plain grid (rings `display: contents`, centre + toggle hidden). */
+.partner-orbit {
+    container: partner-orbit / inline-size;
+    position: relative;
+    max-width: 940px;
+    margin-inline: auto;
 }
-.partner-strip .partner {
+.orbit-stage {
+    --d: 13.5cqw;
+    --cy: 49cqw;
+    position: relative;
+    height: 104cqw;
+}
+/* Soft mint glow behind the centre — the only colour the orbit adds; logos carry the rest.
+   ⚠️ Every mix with `transparent` in this block is `in srgb`, NOT oklch: Chrome gives
+   `transparent` a hue of 0 there, so a light mint mixed in oklch came out visibly PINK. */
+.orbit-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% var(--cy),
+        color-mix(in srgb, var(--green-soft) 85%, transparent) 0,
+        color-mix(in srgb, var(--green-soft) 40%, transparent) 14cqw,
+        transparent 34cqw);
+    pointer-events: none;
+}
+.orbit-center {
+    position: absolute;
+    left: 50%;
+    top: var(--cy);
+    width: 16cqw;
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--paper);
+    box-shadow:
+        0 0 0 1.2cqw color-mix(in srgb, var(--green-soft) 70%, transparent),
+        0 14px 34px color-mix(in srgb, var(--green-deep) 16%, transparent);
+}
+.orbit-center img {
+    width: 66%;
+    height: auto;
+}
+.orbit-ring {
+    position: absolute;
+    left: 50%;
+    top: var(--cy);
+    width: 0;
+    height: 0;
+    animation: orbit-spin var(--dur) linear infinite var(--dir);
+}
+.orbit-ring--inner { --r: 21.5cqw; --offset: 0deg; --dur: 96s; --dir: reverse; --counter: normal; }
+.orbit-ring--outer { --r: 41.5cqw; --offset: 22.5deg; --dur: 132s; --dir: normal; --counter: reverse; }
+/* The track itself — a circle, so rotating it with the ring is invisible. */
+.orbit-ring::before {
+    content: "";
+    position: absolute;
+    left: calc(var(--r) * -1);
+    top: calc(var(--r) * -1);
+    width: calc(var(--r) * 2);
+    height: calc(var(--r) * 2);
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--ink) 11%, transparent);
+    pointer-events: none;
+}
+.orbit-ring--inner::before { border-style: dashed; }
+.orbit-node {
+    --a: calc(360deg / var(--n) * var(--i) + var(--offset));
+    position: absolute;
+    left: calc(var(--d) / -2);
+    top: calc(var(--d) / -2);
+    width: var(--d);
+    height: var(--d);
+    transform: rotate(var(--a)) translateX(var(--r)) rotate(calc(var(--a) * -1));
+}
+.orbit-item {
+    position: relative;
+    width: 100%;
+    height: 100%;
     margin: 0;
-    display: grid;
-    justify-items: center;
-    align-content: start;
-    gap: var(--space-sm);
-    text-align: center;
+    animation: orbit-spin var(--dur) linear infinite var(--counter);
 }
-.partner-strip .partner img {
-    height: 84px;
-    width: auto;
-    max-width: 100%;
-    object-fit: contain;
+.orbit-disc {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #fff;
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--ink) 9%, transparent),
+        0 10px 26px color-mix(in srgb, var(--ink) 12%, transparent);
 }
-.partner-strip .partner figcaption {
+.orbit-disc img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+.orbit-label {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    left: 50%;
+    translate: -50% 0;
+    width: max-content;
+    max-width: max(16cqw, 9rem);
     font-family: var(--font-label);
-    font-size: 0.76rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
+    line-height: 1.25;
+    color: var(--ink-soft);
+    text-align: center;
     text-wrap: balance;
+}
+/* A partner with a verified official site wraps its WHOLE `.orbit-item` figure in `a.partner-link`
+   (the <a> outside the <figure>, so <figcaption> stays a direct child of its figure — valid HTML).
+   The <a> is unpositioned, so the absolute caption still hangs off `.orbit-item` and the layout is
+   identical to an unlinked node; the caption sits inside the <a>, so it is both the link's
+   accessible name and part of its hit area. Quiet hover only — caption underline + logo opacity,
+   NO lift/shadow/scale. Hovering or focusing a link also pauses the orbit, so the target holds
+   still under the pointer / focus ring. The global :focus-visible ring is left alone. */
+.partner-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 50%;
+}
+.partner-link .orbit-disc img { transition: opacity 150ms ease; }
+.partner-link:hover .orbit-disc img { opacity: 0.85; }
+.partner-link:hover .orbit-label,
+.partner-link:focus-visible .orbit-label {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+.partner-orbit:has(.partner-link:hover, .partner-link:focus-visible) .orbit-ring,
+.partner-orbit:has(.partner-link:hover, .partner-link:focus-visible) .orbit-item { animation-play-state: paused; }
+.orbit-toggle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--paper);
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease;
+}
+.orbit-toggle:hover {
+    border-color: var(--accent);
+    color: var(--accent-dark);
+}
+.orbit-toggle[hidden],
+.orbit-toggle .orbit-toggle-play,
+.orbit-toggle[aria-pressed="true"] .orbit-toggle-pause { display: none; }
+.orbit-toggle[aria-pressed="true"] .orbit-toggle-play { display: block; }
+.partner-orbit.is-paused .orbit-ring,
+.partner-orbit.is-paused .orbit-item { animation-play-state: paused; }
+
+@keyframes orbit-spin {
+    to { transform: rotate(360deg); }
+}
+
+@container partner-orbit (max-width: 759px) {
+    .orbit-stage {
+        height: auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+        gap: var(--space-xl) var(--space-md);
+    }
+    .orbit-stage::before,
+    .orbit-ring::before,
+    .orbit-center { display: none; }
+    .orbit-ring {
+        display: contents;
+        animation: none;
+    }
+    .orbit-node {
+        position: static;
+        width: auto;
+        height: auto;
+        transform: none;
+    }
+    .orbit-item {
+        display: grid;
+        justify-items: center;
+        gap: var(--space-sm);
+        animation: none;
+    }
+    .orbit-disc {
+        width: 112px;
+        height: 112px;
+    }
+    .orbit-label {
+        position: static;
+        translate: none;
+        width: auto;
+        max-width: 18ch;
+    }
+    .partner-link {
+        height: auto;
+        border-radius: 8px;
+    }
+    /* The grid has no motion to stop. */
+    .orbit-toggle { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    /* `animation: none`, not a short duration: the global reduced-motion rule clamps every
+       animation to 1ms, and a 1ms INFINITE rotation would strobe instead of stopping. */
+    .orbit-ring,
+    .orbit-item { animation: none; }
+    .orbit-toggle { display: none; }
 }
 
 /* Gallery empty state (no photos in Firestore / fetch failed) — never a blank page body. */
@@ -3787,19 +3985,13 @@ body.page-home .home-intro-title {
     text-wrap: balance;
 }
 
-/* --- Stat row (second half of the same band) ---------------------------------------------------
-   The neutral ground, the chrome-less cards and the neutral hairline dividers are now the BASE
-   .impact-band (see the IMPACT section above) — every page gets home's treatment, so only the
-   PAIRING with .home-intro is still home-scoped: no top padding and no negative margin, so the two
-   sections butt together and read as one band. */
+/* --- Impact tiles (second half of the same band) -----------------------------------------------
+   The neutral ground and the tile grid are the BASE .impact-band (see the IMPACT section above);
+   only the PAIRING with .home-intro is home-scoped: no top padding and no negative margin, so the
+   title hands straight off to the grid and the two sections read as one band. */
 body.page-home .impact-band {
     margin-top: 0;
     padding-block: 0 clamp(3rem, 6vw, 4.5rem);
-}
-
-/* Flush the first numeral with the heading above it. */
-body.page-home .impact-band .stat-card:first-child {
-    padding-left: 0;
 }
 
 @media (max-width: 680px) {
@@ -3813,10 +4005,5 @@ body.page-home .impact-band .stat-card:first-child {
     body.nav-overlay .hero-editorial,
     body.nav-overlay .chapter-hero {
         padding-block: calc(var(--nav-height) + clamp(2.5rem, 9vw, 4rem)) clamp(2.5rem, 9vw, 4rem);
-    }
-
-    body.page-home .impact-band .stat-card,
-    body.page-home .impact-band .stat-card:first-child {
-        padding-inline: 0;
     }
 }

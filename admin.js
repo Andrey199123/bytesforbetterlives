@@ -940,6 +940,16 @@ if (!firebaseReady) {
     });
 
     // ---- Gallery photos ----
+    // Grid cells are ~150px but the originals are ~1 MB photos / up to ~33 MB videos, so the grid
+    // shows Cloudinary-resized thumbnails (a video's is its .jpg poster frame); zoom still opens
+    // the original. Non-Cloudinary (legacy repo) paths are left as they are.
+    function galleryThumbUrl(src, isVideo) {
+        const m = /^(https:\/\/res\.cloudinary\.com\/[^/]+\/(?:image|video)\/upload\/)(.+)$/.exec(src);
+        if (!m) return isVideo ? "" : src;
+        return m[1] + (isVideo
+            ? "c_fill,w_320,h_320,q_auto/" + m[2].replace(/\.[a-z0-9]+$/i, "") + ".jpg"
+            : "c_fill,w_320,h_320,q_auto,f_auto/" + m[2]);
+    }
     function renderGallery() {
         const editor = $("gallery-editor");
         if (!editor) return;
@@ -951,12 +961,15 @@ if (!firebaseReady) {
             const cell = document.createElement("div");
             cell.style.cssText = "position:relative; border:1px solid var(--line); border-radius:8px; overflow:hidden;";
             const isVideo = /\.(mp4|webm|mov)$/i.test(src) || src.includes('/video/upload/');
-            const mediaTag = isVideo 
-                ? `<video src="${escapeAttr(src)}" data-zoom="${escapeAttr(src)}" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" autoplay loop muted playsinline></video>`
-                : `<img src="${escapeAttr(src)}" data-zoom="${escapeAttr(src)}" alt="" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" onerror="this.src='images/logo.avif'">`;
-            
+            const thumb = galleryThumbUrl(src, isVideo);
+            // A poster-only <video> (preload=none, no autoplay) — 30 full-size autoplaying clips
+            // used to download all at once; the badge marks it as a video.
+            const mediaTag = isVideo
+                ? `<video src="${escapeAttr(src)}"${thumb ? ` poster="${escapeAttr(thumb)}"` : ""} data-zoom="${escapeAttr(src)}" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" preload="none" muted playsinline></video>`
+                : `<img src="${escapeAttr(thumb)}" data-zoom="${escapeAttr(src)}" alt="" loading="lazy" decoding="async" style="width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:var(--surface); cursor:zoom-in;" onerror="if(!this.dataset.retried){this.dataset.retried=1;this.src=this.dataset.zoom}else{this.onerror=null;this.src='images/logo.avif'}">`;
+
             cell.innerHTML = `
-                ${mediaTag}
+                ${mediaTag}${isVideo ? `<span aria-hidden="true" style="position:absolute; left:4px; bottom:4px; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; color:var(--paper); background:color-mix(in oklch, var(--ink) 70%, transparent); pointer-events:none;">▶ Video</span>` : ""}
                 <button class="btn btn-secondary" type="button" data-gremove="${index}" style="position:absolute; top:4px; right:4px; padding:0.1rem 0.5rem; font-size:0.85rem;">✕</button>
             `;
             editor.appendChild(cell);
@@ -1550,15 +1563,26 @@ function openAdminLightbox(src) {
     if (!adminLightbox) {
         adminLightbox = document.createElement("div");
         adminLightbox.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:9999; cursor:zoom-out;";
-        adminLightbox.innerHTML = '<img alt="" style="max-width:92vw; max-height:92vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5);">';
-        adminLightbox.addEventListener("click", function () { adminLightbox.style.display = "none"; });
+        adminLightbox.addEventListener("click", function (e) {
+            if (e.target.tagName === "VIDEO") return; // let its controls work
+            closeAdminLightbox();
+        });
         document.addEventListener("keydown", function (e) {
-            if (e.key === "Escape" && adminLightbox) adminLightbox.style.display = "none";
+            if (e.key === "Escape" && adminLightbox) closeAdminLightbox();
         });
         document.body.appendChild(adminLightbox);
     }
-    adminLightbox.querySelector("img").src = src;
+    // Gallery videos open here too (the grid shows only their poster frame).
+    const isVideo = /\.(mp4|webm|mov)$/i.test(src) || src.includes("/video/upload/");
+    adminLightbox.innerHTML = isVideo
+        ? '<video controls autoplay playsinline style="max-width:92vw; max-height:92vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5); cursor:auto;"></video>'
+        : '<img alt="" style="max-width:92vw; max-height:92vh; border-radius:8px; box-shadow:0 10px 40px rgba(0,0,0,.5);">';
+    adminLightbox.firstChild.src = src;
     adminLightbox.style.display = "flex";
+}
+function closeAdminLightbox() {
+    adminLightbox.style.display = "none";
+    adminLightbox.innerHTML = ""; // stops a playing video
 }
 
 function escapeHtml(s) {

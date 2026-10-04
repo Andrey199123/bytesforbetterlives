@@ -150,6 +150,90 @@
         return isNaN(d) ? "" : d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
     }
 
+    // Gallery media are phone ORIGINALS — ~1 MB photos, videos up to ~33 MB — on Cloudinary
+    // (admin uploads) or in images/ (legacy). Shipping those to a 290px tile is what made the page
+    // crawl on Mac/iOS, so every gallery URL goes through Cloudinary's on-the-fly transformations
+    // instead; repo files ride its `fetch` delivery, which pulls them from the live site (so local
+    // dev shows production's copy). A tile paints a small low-quality copy first, then
+    // upgradeGalleryTile() swaps in one sized to the tile; the lightbox opens on whatever the tile
+    // shows and swaps to the full-quality copy once that has loaded. The original URL rides along as
+    // data-original-src — initImageFallbacks() retries it if a derived URL ever fails.
+    var CLOUDINARY_ROOT = "https://res.cloudinary.com/rwga4efb/";
+    var GALLERY_SITE_ORIGIN = "https://www.bytesforbetterlives.net";
+    var GALLERY_LQ = "c_limit,w_320,q_auto:low,f_auto";
+    var GALLERY_FULL = "c_limit,w_2560,h_2560,q_auto:good,f_auto";
+    var GALLERY_WIDTHS = [480, 800, 1200, 1600, 2000];
+    var GALLERY_VIDEO_TILE = "c_limit,w_720,h_720,q_auto";
+    var GALLERY_VIDEO_FULL = "c_limit,w_1920,h_1920,q_auto";
+
+    function isGalleryVideo(src) {
+        return /\.(mp4|webm|mov)$/i.test(src || "") || String(src || "").indexOf("/video/upload/") !== -1;
+    }
+
+    // `transform` is spliced in after /upload/; `ext` swaps the extension, which is how Cloudinary
+    // converts formats (.mov → .mp4 that plays everywhere, a video → its .jpg poster frame).
+    function cloudinaryUrl(src, transform, ext) {
+        var m = /^(https:\/\/res\.cloudinary\.com\/[^/]+\/(?:image|video)\/upload\/)(.+)$/.exec(src || "");
+        if (m) return m[1] + transform + "/" + (ext ? m[2].replace(/\.[a-z0-9]+$/i, "") + "." + ext : m[2]);
+        // Anything that isn't a repo photo (another host, data:, a repo video) is served untouched.
+        if (!src || /^[a-z][a-z0-9+.-]*:/i.test(src) || isGalleryVideo(src)) return src;
+        return CLOUDINARY_ROOT + "image/fetch/" + transform + "/" +
+            encodeURI(GALLERY_SITE_ORIGIN + "/" + src.replace(/^\.?\//, ""));
+    }
+
+    // Runs once the low-quality copy has loaded: fetch one sized to the tile and swap it in only
+    // once it is decoded, so the tile never blanks between the two.
+    function upgradeGalleryTile(img) {
+        var original = img.dataset.originalSrc;
+        if (!original || img.dataset.upgraded || img.getAttribute("src") === original) return;
+        img.dataset.upgraded = "true";
+        var box = img.getBoundingClientRect();
+        // object-fit:cover scales the photo to COVER the tile, so whichever side binds sets the width.
+        var cssWidth = Math.max(box.width, box.height * img.naturalWidth / (img.naturalHeight || 1));
+        // DPR capped at 2: a 3x phone screen gains nothing visible on a tile for ~2x the bytes.
+        var need = cssWidth * Math.min(window.devicePixelRatio || 1, 2);
+        var width = GALLERY_WIDTHS[GALLERY_WIDTHS.length - 1];
+        for (var i = 0; i < GALLERY_WIDTHS.length; i++) {
+            if (GALLERY_WIDTHS[i] >= need) { width = GALLERY_WIDTHS[i]; break; }
+        }
+        var sharp = cloudinaryUrl(original, "c_limit,w_" + width + ",q_auto,f_auto");
+        var loader = new Image();
+        loader.src = sharp;
+        loader.decode().then(function () { img.src = sharp; }, function () {});
+    }
+
+    function initGalleryMedia(root) {
+        root.querySelectorAll("img[data-original-src]").forEach(function (img) {
+            if (img.complete && img.naturalWidth) upgradeGalleryTile(img);
+            else img.addEventListener("load", function () { upgradeGalleryTile(img); }, { once: true });
+        });
+
+        // Videos used to autoplay all at once at full size (~240 MB across the page). Now each one
+        // only takes its poster frame and small MP4 — and plays — while near the viewport.
+        var videos = Array.prototype.slice.call(root.querySelectorAll("video[data-src]"));
+        function play(video) {
+            if (video.dataset.poster && !video.getAttribute("poster")) video.poster = video.dataset.poster;
+            if (!video.getAttribute("src")) video.src = video.dataset.src;
+            video.muted = true;
+            var p = video.play();
+            if (p && p.catch) p.catch(function () {});
+        }
+        videos.forEach(function (video) {
+            video.addEventListener("error", function () {
+                var original = video.dataset.originalSrc;
+                if (original && video.getAttribute("src") !== original) { video.src = original; play(video); }
+            }, { once: true });
+        });
+        if (!("IntersectionObserver" in window)) { videos.forEach(play); return; }
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) play(entry.target);
+                else entry.target.pause();
+            });
+        }, { rootMargin: "200px 0px" });
+        videos.forEach(function (video) { observer.observe(video); });
+    }
+
     function galleryTileMarkup(im, i) {
         var src = im.src || "";
         var alt = im.alt || "";
@@ -166,11 +250,20 @@
         var titleAttr = dateStr ? ' title="' + escapeHTML(dateStr) + '"' : "";
         var dataAttrs = (dateStr ? ' data-taken="' + escapeHTML(dateStr) + '"' : "") +
             (loc ? ' data-location="' + escapeHTML(loc) + '"' : "");
-        var isVideo = /\.(mp4|webm|mov)$/i.test(src) || src.includes('/video/upload/');
-        var mediaTag = isVideo 
-            ? '<video class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '"' + titleAttr + dataAttrs + ' autoplay loop muted playsinline data-fallback="images/logo.avif"></video>'
-            : '<img class="clickable-image" src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '"' + titleAttr + dataAttrs + ' loading="lazy" decoding="async" data-fallback="images/logo.avif">';
-            
+        var mediaAttrs = ' data-original-src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '"' + titleAttr + dataAttrs;
+        var mediaTag;
+        if (isGalleryVideo(src)) {
+            var poster = src.indexOf("res.cloudinary.com") !== -1 ? cloudinaryUrl(src, "c_limit,w_480,h_480,q_auto", "jpg") : "";
+            var tileVideo = cloudinaryUrl(src, GALLERY_VIDEO_TILE, "mp4");
+            mediaTag = '<video class="clickable-image"' + (poster ? ' data-poster="' + escapeHTML(poster) + '"' : "") +
+                ' data-src="' + escapeHTML(tileVideo) + '" data-full-src="' + escapeHTML(cloudinaryUrl(src, GALLERY_VIDEO_FULL, "mp4")) + '"' +
+                mediaAttrs + ' loop muted playsinline preload="none" data-fallback="images/logo.avif"></video>';
+        } else {
+            mediaTag = '<img class="clickable-image" src="' + escapeHTML(cloudinaryUrl(src, GALLERY_LQ)) + '"' +
+                ' data-full-src="' + escapeHTML(cloudinaryUrl(src, GALLERY_FULL)) + '"' +
+                mediaAttrs + ' loading="lazy" decoding="async" data-fallback="images/logo.avif">';
+        }
+
         return '<figure class="' + cls + '">' +
             mediaTag +
             (caption ? '<figcaption>' + escapeHTML(caption) + '</figcaption>' : '') +
@@ -201,7 +294,7 @@
             return;
         }
 
-        var videos = imgs.filter(function(im) { return /\.(mp4|webm|mov)$/i.test(im.src) || (im.src && im.src.indexOf('/video/upload/') !== -1); }).length;
+        var videos = imgs.filter(function (im) { return isGalleryVideo(im.src); }).length;
         var photos = imgs.length - videos;
         var subtitle = document.querySelector(".page-gallery .hero-subtitle");
         if (subtitle && imgs.length > 0) {
@@ -253,6 +346,7 @@
                 '</div>' +
                 '</section>';
         }).join("");
+        initGalleryMedia(root);
     }
 
     // Static pages carry a seed donate-hub href on their Donate CTAs; re-point them at the hub so
@@ -293,7 +387,8 @@
     }
 
     // Renderers that read NOTHING from Firestore or data.js — the impact stat band (`stats`), the
-    // program tiles (`services`) and the donate methods are all hardcoded arrays. They can paint at
+    // program tiles (`services`) and the donate methods are all hardcoded arrays (the partner orbit
+    // is static markup; it only needs its pause toggle bound). They can paint at
     // parse time on EVERY load, warm or cold, so they are out of initRender and into boot() below.
     function renderStaticBody() {
         renderHomeStats();
@@ -304,6 +399,7 @@
         initCounters();
         renderWhatWeDo();
         renderDonatePage();
+        initPartnerOrbit();
     }
 
     function initRender() {
@@ -867,31 +963,51 @@
         hideSectionWhenEmpty("#gallery-preview-grid");
     }
 
+    // Monochrome line glyphs for the impact tiles — same drawing language as SOCIAL_ICONS (24-unit
+    // grid, round caps/joins, currentColor), so they take the tile's own ink/paper colour.
+    const IMPACT_ICON_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
+    const IMPACT_ICONS = {
+        funds: '<svg ' + IMPACT_ICON_ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M14.8 9.3c-.4-1-1.5-1.7-2.8-1.7-1.6 0-2.8.9-2.8 2.1 0 2.8 5.6 1.6 5.6 4.6 0 1.2-1.2 2.1-2.8 2.1-1.4 0-2.5-.7-2.9-1.8"/><path d="M12 6v1.6M12 16.4V18"/></svg>',
+        people: '<svg ' + IMPACT_ICON_ATTRS + '><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.2 2.5-5.5 5.5-5.5s5.5 2.3 5.5 5.5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M16.5 14.1c2.5 0 4.5 2.1 4.5 5"/></svg>',
+        box: '<svg ' + IMPACT_ICON_ATTRS + '><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4"/><path d="M12 11.5v9"/></svg>',
+        clock: '<svg ' + IMPACT_ICON_ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>',
+        cap: '<svg ' + IMPACT_ICON_ATTRS + '><path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6.5 11.6v4c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4"/><path d="M21.5 9.5v5"/></svg>',
+        calendar: '<svg ' + IMPACT_ICON_ATTRS + '><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg>',
+        pin: '<svg ' + IMPACT_ICON_ATTRS + '><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>',
+        globe: '<svg ' + IMPACT_ICON_ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.4 2.5 3.7 5.5 3.7 9s-1.3 6.5-3.7 9c-2.4-2.5-3.7-5.5-3.7-9S9.6 5.5 12 3z"/></svg>',
+        monitor: '<svg ' + IMPACT_ICON_ATTRS + '><rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M9 20.5h6M12 16.5v4"/></svg>'
+    };
+
     function renderHomeStats() {
         const root = document.querySelector("#home-impact-stats");
         if (!root) return;
 
+        // Ordered so the 3×3 reads row by row. Figures = the user's 2026-10-04 sheet.
         const stats = [
-            { raw: 8450, prefix: "$", suffix: "", label: "Fundraised", note: "for technology access and outreach", decimals: 0 },
-            { raw: 2350, prefix: "", suffix: "+", label: "Donations Amassed", note: "games, devices, and supplies", decimals: 0 },
-            { raw: 1500, prefix: "", suffix: "+", label: "Students Reached", note: "through education and drives", decimals: 0 },
-            { raw: 3500, prefix: "", suffix: "+", label: "Seniors Helped", note: "with tech help and safety lessons", decimals: 0 },
-            { raw: 11, prefix: "", suffix: "", label: "Chapters", note: "active and launching chapter network", decimals: 0 }
+            { raw: 32000, prefix: "$", suffix: "+", label: "Funds & Donations", icon: IMPACT_ICONS.funds, decimals: 0 },
+            { raw: 5700, prefix: "", suffix: "+", label: "People Served", icon: IMPACT_ICONS.people, decimals: 0 },
+            { raw: 3900, prefix: "", suffix: "+", label: "Items Donated", icon: IMPACT_ICONS.box, decimals: 0 },
+            { raw: 4000, prefix: "", suffix: "+", label: "Service Hours", icon: IMPACT_ICONS.clock, decimals: 0 },
+            { raw: 216, prefix: "", suffix: "", label: "Student Volunteers", icon: IMPACT_ICONS.cap, decimals: 0 },
+            { raw: 124, prefix: "", suffix: "", label: "Events", icon: IMPACT_ICONS.calendar, decimals: 0 },
+            { raw: 12, prefix: "", suffix: "", label: "Chapters", icon: IMPACT_ICONS.pin, decimals: 0 },
+            { raw: 5, prefix: "", suffix: "", label: "Countries", icon: IMPACT_ICONS.globe, decimals: 0 },
+            { raw: 7, prefix: "", suffix: "", label: "Digital Media Centers", icon: IMPACT_ICONS.monitor, decimals: 0 }
         ];
 
         root.innerHTML = `
             <div class="container">
-                <div class="stats-grid">
+                <ul class="impact-tiles" role="list">
                     ${stats.map(function (stat) {
                         return `
-                            <article class="stat-card">
-                                <div class="stat-number animated-counter" data-target="${stat.raw}" data-prefix="${stat.prefix}" data-suffix="${stat.suffix}" data-decimals="${stat.decimals}">0</div>
-                                <div class="stat-label">${escapeHTML(stat.label)}</div>
-                                <p class="stat-note">${escapeHTML(stat.note)}</p>
-                            </article>
+                            <li class="impact-tile">
+                                <span class="impact-tile-icon" aria-hidden="true">${stat.icon}</span>
+                                <div class="impact-tile-value animated-counter" data-target="${stat.raw}" data-prefix="${stat.prefix}" data-suffix="${stat.suffix}" data-decimals="${stat.decimals}">0</div>
+                                <div class="impact-tile-label">${escapeHTML(stat.label)}</div>
+                            </li>
                         `;
                     }).join("")}
-                </div>
+                </ul>
             </div>
         `;
     }
@@ -2227,6 +2343,13 @@
 
             function handleError() {
                 const current = img.getAttribute("src") || "";
+                // A gallery tile shows a Cloudinary-derived copy: if that fails, try the untouched
+                // original before any placeholder.
+                const original = img.dataset.originalSrc;
+                if (original && current !== original) {
+                    img.src = original;
+                    return;
+                }
                 const normalized = normalizeLegacyImagePath(current);
                 if (!img.dataset.normalizedTried && normalized && normalized !== current) {
                     img.dataset.normalizedTried = "true";
@@ -2404,7 +2527,13 @@
             if (item.tagName === "VIDEO") {
                 const video = document.createElement("video");
                 const source = item.querySelector("source");
-                video.src = item.currentSrc || (source && source.src) || item.src;
+                // Gallery tiles carry a full-size MP4 (and may not have fetched their own src yet).
+                video.src = item.dataset.fullSrc || item.currentSrc || (source && source.src) || item.src;
+                if (item.dataset.poster || item.poster) video.poster = item.dataset.poster || item.poster;
+                const original = item.dataset.originalSrc;
+                if (original) video.addEventListener("error", function () {
+                    if (video.getAttribute("src") !== original) video.src = original;
+                }, { once: true });
                 video.controls = true;
                 video.autoplay = true;
                 lightboxContent.insertBefore(video, nextButton);
@@ -2415,6 +2544,14 @@
                 image.dataset.fallback = item.dataset.fallback || "images/logo.avif";
                 lightboxContent.insertBefore(image, nextButton);
                 initImageFallbacks(lightboxContent);
+                // Gallery tiles: open on the tile's own copy (already loaded, so instant), then swap
+                // in the full-quality one once decoded — unless the viewer has moved on by then.
+                const full = item.dataset.fullSrc;
+                if (full && full !== image.src) {
+                    const loader = new Image();
+                    loader.src = full;
+                    loader.decode().then(function () { if (image.isConnected) image.src = full; }, function () {});
+                }
             }
 
             counter.textContent = `${currentIndex + 1} / ${galleryItems.length}`;
@@ -2471,6 +2608,21 @@
                 if (event.shiftKey && document.activeElement === firstF) { lastF.focus(); event.preventDefault(); }
                 else if (!event.shiftKey && document.activeElement === lastF) { firstF.focus(); event.preventDefault(); }
             }
+        });
+    }
+
+    // Partner orbit (impact.html #partners): the markup is static and CSS does all the motion — this
+    // only wires the pause toggle, since motion that runs past 5s needs a way to stop it (WCAG
+    // 2.2.2). The button ships `hidden` so a no-JS visitor never gets a dead control. Its label stays
+    // fixed and `aria-pressed` carries the state (ARIA toggle-button pattern).
+    function initPartnerOrbit() {
+        var orbit = document.querySelector("[data-partner-orbit]");
+        var toggle = orbit && orbit.querySelector(".orbit-toggle");
+        if (!toggle) return;
+        toggle.hidden = false;
+        toggle.addEventListener("click", function () {
+            var paused = orbit.classList.toggle("is-paused");
+            toggle.setAttribute("aria-pressed", String(paused));
         });
     }
 

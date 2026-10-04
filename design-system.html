@@ -115,7 +115,7 @@
             <a href="#buttons">Buttons</a>
             <a href="#headers">Section motif</a>
             <a href="#cards">Cards</a>
-            <a href="#stats">Stat band</a>
+            <a href="#stats">Impact tiles</a>
             <a href="#badges">Badges &amp; chips</a>
             <a href="#bands">Editorial bands</a>
             <a href="#rules">Principles</a>
@@ -401,23 +401,26 @@
             </div>
         </section>
 
-        <!-- STAT BAND -->
+        <!-- IMPACT TILES -->
         <section class="ds-section" id="stats">
-            <p class="ds-eyebrow">Components · Stat band</p>
-            <h2 class="ds-display-lg">Editorial impact band</h2>
-            <p class="ds-lede">Big Gabarito numerals in <code>--accent-dark</code> with <code>tabular-nums</code> (so the
-                count-up doesn't jitter) and neutral hairline dividers on a light neutral ground — the mint stays on the
-                type, not the band. Ladders 5 → 3 → 2 columns; never 1-col.</p>
+            <p class="ds-eyebrow">Components · Impact tiles</p>
+            <h2 class="ds-display-lg">Impact tile grid</h2>
+            <p class="ds-lede">A mint / <code>--green-dark</code> checkerboard of nine flat tiles, 3&times;3 at every width — thin line
+                icon, Gabarito numeral in <code>tabular-nums</code>, short label; no border, shadow or hover, 8px corners.</p>
             <div class="ds-specimen" style="padding:0;overflow:hidden;">
                 <div class="impact-band" style="margin:0;">
                     <div class="container">
-                        <div class="stats-grid">
-                            <article class="stat-card"><div class="stat-number">$8,450</div><div class="stat-label">Fundraised</div><p class="stat-note">for technology access and outreach</p></article>
-                            <article class="stat-card"><div class="stat-number">2,350+</div><div class="stat-label">Donations Amassed</div><p class="stat-note">games, devices, and supplies</p></article>
-                            <article class="stat-card"><div class="stat-number">1,500+</div><div class="stat-label">Students Reached</div><p class="stat-note">through education and drives</p></article>
-                            <article class="stat-card"><div class="stat-number">3,500+</div><div class="stat-label">Seniors Helped</div><p class="stat-note">with tech help and safety lessons</p></article>
-                            <article class="stat-card"><div class="stat-number">10</div><div class="stat-label">Chapters</div><p class="stat-note">active and launching chapter network</p></article>
-                        </div>
+                        <ul class="impact-tiles" role="list">
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.3c-.4-1-1.5-1.7-2.8-1.7-1.6 0-2.8.9-2.8 2.1 0 2.8 5.6 1.6 5.6 4.6 0 1.2-1.2 2.1-2.8 2.1-1.4 0-2.5-.7-2.9-1.8"/><path d="M12 6v1.6M12 16.4V18"/></svg></span><div class="impact-tile-value">$32,000+</div><div class="impact-tile-label">Funds &amp; Donations</div></li>
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.2 2.5-5.5 5.5-5.5s5.5 2.3 5.5 5.5"/><circle cx="16.5" cy="9" r="2.6"/><path d="M16.5 14.1c2.5 0 4.5 2.1 4.5 5"/></svg></span><div class="impact-tile-value">5,700+</div><div class="impact-tile-label">People Served</div></li>
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3.5 7.5 12 3.5l8.5 4v9L12 20.5l-8.5-4z"/><path d="M3.5 7.5 12 11.5l8.5-4"/><path d="M12 11.5v9"/></svg></span><div class="impact-tile-value">3,900+</div><div class="impact-tile-label">Items Donated</div></li>
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg></span><div class="impact-tile-value">4,000+</div><div class="impact-tile-label">Service Hours</div></li>
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2.5 9.5 12 5l9.5 4.5L12 14z"/><path d="M6.5 11.6v4c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4"/><path d="M21.5 9.5v5"/></svg></span><div class="impact-tile-value">216</div><div class="impact-tile-label">Student Volunteers</div></li>
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg></span><div class="impact-tile-value">124</div><div class="impact-tile-label">Events</div></li>
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></span><div class="impact-tile-value">12</div><div class="impact-tile-label">Chapters</div></li>
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.4 2.5 3.7 5.5 3.7 9s-1.3 6.5-3.7 9c-2.4-2.5-3.7-5.5-3.7-9S9.6 5.5 12 3z"/></svg></span><div class="impact-tile-value">5</div><div class="impact-tile-label">Countries</div></li>
+                            <li class="impact-tile"><span class="impact-tile-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M9 20.5h6M12 16.5v4"/></svg></span><div class="impact-tile-value">7</div><div class="impact-tile-label">Digital Media Centers</div></li>
+                        </ul>
                     </div>
                 </div>
             </div>

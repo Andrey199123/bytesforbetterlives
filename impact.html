@@ -21,6 +21,43 @@
     <link rel="preload" as="script" href="firebase-data.js">
     <link rel="preload" as="script" href="script.js">
     <link rel="canonical" href="https://www.bytesforbetterlives.net/impact.html">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "NGO",
+      "@id": "https://www.bytesforbetterlives.net/#org",
+      "name": "Bytes for Better Lives",
+      "alternateName": "BFBL",
+      "legalName": "Bytes for Better Lives Corporation",
+      "url": "https://www.bytesforbetterlives.net/",
+      "logo": "https://www.bytesforbetterlives.net/images/logo.avif",
+      "description": "Bytes for Better Lives bridges the digital divide through technology access, digital literacy, and community service.",
+      "email": "bytesforbetterlives@gmail.com",
+      "sameAs": [
+        "https://www.instagram.com/bytesforbetterlives/",
+        "https://www.linkedin.com/company/bytes-for-better-lives/"
+      ],
+      "nonprofitStatus": "Nonprofit501c3",
+      "taxID": "42-2241292",
+      "areaServed": ["Florida", "New York", "Virginia", "California", "Russia", "Turkey"]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "@id": "https://www.bytesforbetterlives.net/impact.html#webpage",
+      "url": "https://www.bytesforbetterlives.net/impact.html",
+      "name": "Impact | Bytes for Better Lives",
+      "description": "Explore Bytes for Better Lives impact across senior tech help, digital literacy education, donations, and student-led chapters.",
+      "isPartOf": {
+        "@id": "https://www.bytesforbetterlives.net/#website"
+      },
+      "about": {
+        "@id": "https://www.bytesforbetterlives.net/#org"
+      }
+    }
+    </script>
 
 
     <!-- Social share preview (Open Graph + Twitter) -->
@@ -471,53 +508,140 @@
 
         <section class="section" id="partners">
             <div class="container">
-                <div class="section-header">
+                <div class="section-header centered">
                     <p class="section-kicker">Partners</p>
                     <h2 class="section-title">Trusted by community partners.</h2>
                     <p class="section-description">We collaborate with schools, senior communities, and nonprofits to align service with real needs.</p>
                 </div>
 
-                <div class="partner-strip" aria-label="Partner logos">
-                    <figure class="partner">
-                        <img src="images/our impact/american heritage.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>American Heritage School</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/broward health.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>Broward Health</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/nicklaus children.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>Nicklaus Children&rsquo;s Hospital</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/joe dimaggio.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>Joe DiMaggio Children&rsquo;s Hospital</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/his house.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>His House Children&rsquo;s Home</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/lotus house.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>Lotus House</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/palomino gardens.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>Palomino Gardens</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/house of new vision.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>House of New Vision and Hope</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/five star.avif" alt="" loading="lazy" decoding="async">
-                        <figcaption>5 Star Premier Residences</figcaption>
-                    </figure>
-                    <figure class="partner">
-                        <img src="images/our impact/mamma curry.jpeg" alt="" loading="lazy" decoding="async">
-                        <figcaption>Mamma&rsquo;s Curry Closet</figcaption>
-                    </figure>
+                <!-- Partner orbit: two counter-rotating rings of logo discs around the BFBL mark. Pure
+                     CSS motion (styles.css "Partner orbit"); script.js only wires the pause toggle.
+                     Discs are built by tools/partner-logos.py. A new partner = a node here (next
+                     --i, bump the ring's --n) + a tile from that script. -->
+                <div class="partner-orbit" data-partner-orbit>
+                    <div class="orbit-stage" role="list" aria-label="Community partners">
+                        <div class="orbit-center" aria-hidden="true">
+                            <img src="images/logo.avif" alt="" width="460" height="462" loading="lazy" decoding="async">
+                        </div>
+                        <div class="orbit-ring orbit-ring--inner" role="none" style="--n: 6">
+                            <div class="orbit-node" role="listitem" style="--i: 0">
+                                <a class="partner-link" href="https://www.browardhealth.org/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/broward-health.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Broward Health</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 1">
+                                <a class="partner-link" href="https://www.nicklauschildrens.org/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/nicklaus-childrens.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Nicklaus Children&rsquo;s Hospital</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 2">
+                                <a class="partner-link" href="https://www.jdch.com/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/joe-dimaggio.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Joe DiMaggio Children&rsquo;s Hospital</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 3">
+                                <a class="partner-link" href="https://hishouse.org/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/his-house.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">His House Children&rsquo;s Home</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 4">
+                                <a class="partner-link" href="https://www.lotushouse.org/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/lotus-house.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Lotus House</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 5">
+                                <a class="partner-link" href="https://bgcbc.org/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/boys-and-girls-club.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Boys &amp; Girls Club</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="orbit-ring orbit-ring--outer" role="none" style="--n: 8">
+                            <div class="orbit-node" role="listitem" style="--i: 0">
+                                <a class="partner-link" href="https://rlcommunities.com/communities/florida/palomino-gardens-retirement/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/palomino-gardens.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Palomino Gardens</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 1">
+                                <figure class="orbit-item">
+                                    <span class="orbit-disc"><img src="images/partners/five-star.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                    <figcaption class="orbit-label">Five Star Premier Residences</figcaption>
+                                </figure>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 2">
+                                <a class="partner-link" href="https://thepalace.org/communities/the-palace-at-weston" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/palace-at-weston.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">The Palace at Weston</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 3">
+                                <a class="partner-link" href="https://www.wynmoor.com/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/wynmoor.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Wynmoor Village</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 4">
+                                <a class="partner-link" href="https://houseofnewvisionandhope.org/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/house-of-new-vision.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">House of New Vision and Hope</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 5">
+                                <a class="partner-link" href="https://www.mammacurryscloset.com/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/mammas-curry.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Mamma Curry&rsquo;s Closet</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 6">
+                                <a class="partner-link" href="https://karmaforcara.org/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/karma-for-cara.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Karma for Cara</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                            <div class="orbit-node" role="listitem" style="--i: 7">
+                                <a class="partner-link" href="https://h4hinternational.org/" target="_blank" rel="noopener noreferrer">
+                                    <figure class="orbit-item">
+                                        <span class="orbit-disc"><img src="images/partners/hearts-for-the-homeless.avif" alt="" width="320" height="320" loading="lazy" decoding="async" data-no-fallback="1"></span>
+                                        <figcaption class="orbit-label">Hearts for the Homeless</figcaption>
+                                    </figure>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="orbit-toggle" type="button" aria-pressed="false" aria-label="Pause partner animation" hidden>
+                        <svg class="orbit-toggle-pause" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5v14M16 5v14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                        <svg class="orbit-toggle-play" aria-hidden="true" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
+                    </button>
                 </div>
             </div>
         </section>

@@ -172,7 +172,7 @@ CSS `@import` (that serialized HTML→styles.css→fonts-CSS→woff2 and blocked
 shell must copy the three font `<link>`s **verbatim** (2 preconnects + the stylesheet with
 `family=Mulish:wght@400;500;600;700;800&family=Gabarito:wght@400..900`). All 42 pages carry the
 identical link; Nunito is retired and must not come back.
-**Same rule, same reason, for FOUR more head/body blocks a new public shell must copy VERBATIM**:
+**Same rule, same reason, for FIVE more head/body blocks a new public shell must copy VERBATIM**:
 1. the static `<meta name="theme-color" content="#FCFAF5">` right after the viewport meta (A11y baseline);
 2. `class="nav-overlay"` on `<body>` if the page opens with a hero (Heroes → `nav-overlay`);
 3. the three **`<link rel="preload" as="script">`** for `data.js`/`firebase-data.js`/`script.js` after the
@@ -181,9 +181,17 @@ identical link; Nunito is retired and must not come back.
    `hero-banner.jpg` image preload, which must claim the connection first.)
 4. the inline **first-paint navbar `<script>`** immediately before `<script src="data.js">` (Heroes →
    `nav-overlay`).
-Drift checks — both must print nothing:
-`grep -L 'rel="preload" as="script" href="script.js"' $(grep -l 'nav-overlay' *.html)` and
-`grep -L '__bfblNavOverlayReady' $(grep -l 'nav-overlay' *.html)`.
+5. two **`<script type="application/ld+json">`** blocks right after `<link rel="canonical">` (all 21 public
+   pages, added 2026-10-04 for AI/LLM search): (a) the shared `NGO` block (`@id …/#org`; legal name, EIN,
+   email, `sameAs`, `areaServed`) — byte-identical on every page, so copy it verbatim and change it
+   everywhere at once; (b) a per-page `WebPage` block (`AboutPage` on about, `ContactPage` on contact,
+   an `@graph` with the `WebSite` `#website` node on index) whose `@id`/`url`/`name`/`description` mirror
+   that page's canonical, `<title>` and meta description, and on chapter stubs a `mainEntity`
+   Organization carrying the chapter's city.
+Drift checks — all must print nothing:
+`grep -L 'rel="preload" as="script" href="script.js"' $(grep -l 'nav-overlay' *.html)`,
+`grep -L '__bfblNavOverlayReady' $(grep -l 'nav-overlay' *.html)` and
+`grep -L 'application/ld+json' $(grep -l 'rel="canonical"' *.html | grep -v -- '-admin\|design-system\|test-')`.
 
 **Cross-document View Transitions** (top of `styles.css`, user-approved 2026-08-29): a top-level
 `@view-transition { navigation: auto; }` cross-fades the navigation itself, so the browser's gap between
@@ -197,6 +205,9 @@ cross-fading into a half-empty page would make pop-in MORE visible.
 Subfolders (e.g. `images/work with seniors/`, `images/donations/`, `images/team/`); some names
 contain spaces. **`images/programs/`** (no spaces) holds the home program-tile photos under the
 fixed `<slug>-{580,1160}.{avif,jpg}` naming — see Program tiles under Components.
+**`images/partners/<slug>.avif`** are GENERATED round-logo tiles for the impact partner orbit —
+built by `tools/partner-logos.py` from the source logos in `images/our impact/` (keep those: they
+are the script's inputs). Don't hand-edit the tiles; re-run the script.
 
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
@@ -219,6 +230,11 @@ generated from the `chapter-admin.html` template (which also works as `?c=<id>` 
   `our-impact.html` — intentionally merged into `impact.html`.
 - `test-image-loading.html`, `test-preservation.html`, `test-preservation.js`, `test-image-paths.js`
   are stale leftover test harnesses (not live).
+- **Crawler files (repo root, static):** `llms.txt` (LLM-facing plain summary — update its Impact
+  figures/chapter list whenever the `stats` array or the chapters change), `robots.txt` (explicit
+  allow groups for AI search/answer crawlers, NO Disallow — admin pages rely on their `noindex` meta,
+  which a crawler must fetch to see), `sitemap.xml` (`<lastmod>` per entry = last commit date of that
+  page's file; bump it when the page changes; now includes gallery/donate/past-events).
 - **Page `<body>` classes** — two static classes doing different jobs:
   - `page-<name>` (`page-home`, `page-about`, `page-team`, …) is the per-page hook. Since the accent
     retirement **only `page-home` still drives any CSS** (its photo hero, `.home-intro`, and the
@@ -293,7 +309,9 @@ The navbar overlays all of them — see `nav-overlay` below.
     here; the user had it REMOVED — that status belongs in the footer ledger (`renderFooter`, every
     page) and on donate.html, not in the hero. h1 "Technology Should Be for Everyone", subtitle "…bridges the
     digital divide through technology access, digital literacy, and community service." The eyebrow
-    carries no chapter count, so it's off the add-a-chapter count-bump checklist.
+    carries no chapter count, so it's off the add-a-chapter count-bump checklist. The `.home-intro`
+    title under the hero reads "Four years of impact, thanks to your support" (user TODO 2026-10-04,
+    "Active for 4 years") — no founding year is stated anywhere on the site; don't invent one.
 - **`nav-overlay` — the navbar overlays the hero on EVERY hero page** (was home-only until 2026-08):
   - **`body.nav-overlay` is a STATIC class in the page's `<body>` tag**, carried by every public page
     that opens with a hero — `index.html` (which also keeps `page-home`), the 9 `.hero-editorial`
@@ -420,7 +438,8 @@ The navbar overlays all of them — see `nav-overlay` below.
 - **Hover feedback signals CLICKABILITY — and ONLY that** (HARD user rule: a non-clickable element must
   never glow/lift/change on hover). Hover lift (`translateY`+shadow) is reserved for whole-card LINKS:
   `.chapter-card`, `.chapter-leadership-card`. Flat (no hover): `.service-card`, `.card`,
-  `.partner-strip` logos, all member cards (`.officer-card`/`.leader-card`/`.team-member`/`.person-card`).
+  UNLINKED partner-orbit discs (`.orbit-disc`; an `a.partner-link` disc gets a quiet caption-underline +
+  logo-opacity hover because it IS a link), all member cards (`.officer-card`/`.leader-card`/`.team-member`/`.person-card`).
   Clickable children inside a flat card keep their own hover.
 - **SQUARE corners SITE-WIDE** (HARD rule, 2026-08 — promoted from home; there is NO `body.page-home`
   radius override any more, the values are the BASE in each component's own rule, in `styles.css`,
@@ -433,32 +452,40 @@ The navbar overlays all of them — see `nav-overlay` below.
   `.drive-status`, `.initiative-tag`, `.donate-method-badge`, `.lightbox-info`, `.geo-pin-label`,
   accent underline bars); the three `--radius-md` survivors (`.skip-link`, `.social-link`, story chips
   `.story-category`/`.story-overlay-label`); 50% rounds — avatars (`.avatar-initials`/`.avatar-fit`,
-  `.member-chip img`, admin `.photo-fit-crop`) and the circular lightbox/carousel close+prev+next.
+  `.member-chip img`, admin `.photo-fit-crop`), the partner-orbit logo discs + centre
+  (`.orbit-disc`/`.orbit-center`), and the circular lightbox/carousel close+prev+next.
   Rule of thumb: pills carry status/metadata (keep); things you act on are square.
   `design-system.html` documents the scale and its own `.ds-*` chrome follows it.
 - **No decorative top/left "lines" on blocks** (HARD rule): removed `.service-card::before` top strip
   and `.chapter-card.card-edge-*` left spines; accent carried by coloured numeral / data-driven pill.
-- **Editorial stat band** (`.impact-band`): big Gabarito numerals (`--accent-dark`, 700, `tabular-nums`
-  so the count-up doesn't jitter) + neutral hairline dividers on a **light NEUTRAL ground**
-  (`color-mix(in oklch, var(--surface-strong) 55%, var(--paper))` — home's treatment, promoted to the
-  base 2026-08 and now the only one; the old soft-accent wash is gone, so the mint stays on the type
-  and the numerals). Home+Impact use the `stats` array. (Chapter profile "Impact stats" are a
-  DIFFERENT component — `.chapter-stats-row`/`.chapter-stat` bordered cards, not `.impact-band`.)
-  Dividers (`border-left`) are scoped to the desktop 5-up row (`@media min-width:901px`) — on
-  stacked/2-col layouts the numeral carries the accent (a left spine there would break the no-lines
-  HARD rule). Grid laddering: 5 (≥901px) → 3 (≤900) → 2 (≤680 and ≤440); never 1-col.
-  **Home-scoped only** is its PAIRING with the impact-intro band above it: `0` top padding and the
-  first numeral flushed to the container edge, so the two sections read as one. Other pages keep the
-  band's standalone `--space-2xl` padding.
-  **`#home-impact-stats` carries a `min-height` reservation** (4 steps on the same 901/680/440
-  ladder, separate values for `body.page-impact` because its extra top padding makes the band
-  taller) so the empty container doesn't collapse at first paint and shove the first viewport ~148px
-  when `renderHomeStats()` fills it. Values are the MEASURED settled height at the shortest width in
-  each step, rounded DOWN — the reservation must only ever undershoot, so steady state stays
-  pixel-identical; re-measure with the band filled if the stat copy, the column ladder or the band
-  padding change. This does NOT break "never render an empty section": `renderHomeStats()` builds
-  from a hardcoded array, reads nothing from Firestore, and `hideSectionWhenEmpty()` is never
-  pointed at this id — there is no data-driven empty state to pin open.
+- **Impact tile grid** (`.impact-band` → `.impact-tiles` `<ul>` of nine `.impact-tile` `<li>`s, rebuilt
+  2026-10-04 from the user's reference — replaced the 5-up editorial numeral row; `.stat-card`/
+  `.stat-number`/`.stat-label`/`.stat-note`/`.stats-grid` are DELETED). Home+Impact, from the `stats`
+  array in `renderHomeStats()` (data-free, in `renderStaticBody()`; each entry `{raw,prefix,suffix,
+  label,icon,decimals}`, icons = the `IMPACT_ICONS` const of 24-unit 1.6-stroke line SVGs, no `note`).
+  **3×3 at EVERY width** (`repeat(3,minmax(0,1fr))` — nine can't ladder to 2 without an orphan; never
+  1-col), full container width so it aligns with `.home-intro-title`. Flat tiles: no border/shadow/
+  transition/hover (not clickable), 8px corners, no text-shadow. **Checkerboard**: base tile = `--green`
+  + `--ink`, `.impact-tile:nth-child(even)` = `--green-dark` + FULL `--paper` (no translucent mix —
+  the small label must hold 4.5:1). Stack = `.impact-tile-icon` (34px, 26px ≤700) → `.impact-tile-value`
+  (Gabarito 700, `tabular-nums`, keeps `animated-counter` + `data-target/prefix/suffix/decimals` so
+  `initCounters()` drives it; `container-type:inline-size` on the tile + `@supports(1cqi)`
+  `clamp(1.35rem,min(3.2vw,17cqi),2.75rem)` so "$32,000+" fits a ~110px phone tile) →
+  `.impact-tile-label` (Mulish 600, `16ch`, balance). ≤700px: tighter gap/padding, 132px tile
+  min-height. Band = light NEUTRAL ground (`color-mix(in oklch, var(--surface-strong) 55%,
+  var(--paper))`). (Chapter profile "Impact stats" are a DIFFERENT component — `.chapter-stats-row`/
+  `.chapter-stat` bordered cards, not `.impact-band`.) **Home-scoped only** is its PAIRING with the
+  impact-intro band above it (`0` top padding, no negative margin) so the two read as one; other
+  pages keep the standalone `--space-2xl` padding.
+  **`#home-impact-stats` carries a `min-height` reservation** — home **590px / ≤700 450px**, impact
+  (`body.page-impact`, taller top padding) **635 / 495** — so the empty container doesn't collapse
+  at first paint and shove the page ~600px when `renderHomeStats()` fills it. Values = the MINIMUM
+  settled height measured anywhere in each step, −~10px, rounded DOWN (measured floors home/impact:
+  701–1440px 601/649, 700–360px a flat 461/509 — the 132px tile min-height governs every phone
+  width, so no ≤440 step). Must only ever undershoot, so steady state stays pixel-identical;
+  re-measure (fresh browser, min-height 0) if tile padding/min-height/gap or band padding change.
+  This does NOT break "never render an empty section": hardcoded array, nothing from Firestore,
+  `hideSectionWhenEmpty()` never pointed at this id.
   Two more containers hydrate late and carry the same kind of reservation, on the same
   only-ever-undershoot doctrine: **`body.page-gallery .gallery-locations { min-height: 100vh }`**
   (the grid IS the page, so an empty one is a failure state, not a legitimate empty section — but
@@ -547,11 +574,29 @@ The navbar overlays all of them — see `nav-overlay` below.
   flex-column). Used on Home chapters preview, Impact Seniors/Kids/Donations, Initiatives
   `#fundraiser-grid`, Past-events.
 - **Editorial dark beats** — `.band--ink` sections with `.editorial-quote` (big quote glyph ::before)
-  and/or `.band-figure` (oversized accent numeral): "3,500+" on About, "40+" on
+  and/or `.band-figure` (oversized accent numeral): TWO stacked figures on About ("5,700+" and
+  "4 years", each its own inline-grid pair; 2026-10-04), "216" on
   Team, dark closing CTAs on Impact/Initiatives/Chapters/Past-events. Bands: `.surface-band`
   (accent-soft 62%), `.band--tint`, `.band--ink`.
 - **Gallery** = dense mosaic (`.photo-gallery-grid` + `.g-feature`/`.g-wide`/`.g-tall` cadence + hover
   `<figcaption>`), built in `renderGalleryImages`.
+  - **Never ships originals** (2026-10-04 — tiles were ~1 MB phone photos, videos up to 33 MB, so
+    the page crawled on Mac/iOS). `cloudinaryUrl(src, transform, ext)` routes EVERY gallery URL
+    through Cloudinary on-the-fly transforms (cloud `rwga4efb`): Cloudinary uploads get the transform
+    spliced after `/upload/`; repo files (`images/…`, ~148 legacy entries) go through Cloudinary
+    **`image/fetch`** from `GALLERY_SITE_ORIGIN` (www, so local dev shows PRODUCTION's copy — a file
+    not yet deployed won't resize locally); other hosts pass through untouched.
+  - **Low-quality first**: a tile paints `GALLERY_LQ` (320px `q_auto:low`, ~12 KB), then
+    `upgradeGalleryTile()` swaps in a copy sized to the tile (cover-aware, DPR capped at 2, bucketed
+    `GALLERY_WIDTHS` for CDN hits) once DECODED, so no blank frame. The lightbox opens on the tile's
+    own copy and swaps to `data-full-src` (`GALLERY_FULL`, 2560px `q_auto:good`) when that decodes.
+    `data-original-src` = the raw URL; `initImageFallbacks()` retries it before any placeholder.
+  - **Videos**: `preload="none"`, no `autoplay`; `initGalleryMedia()`'s IntersectionObserver sets the
+    `.jpg` poster + 720px MP4 (`GALLERY_VIDEO_TILE`, also transcodes iPhone `.mov`) and plays only
+    within 200px of the viewport. Lightbox plays the 1920px MP4. A NEW transform string = a NEW
+    derivative: big videos take ~10s to transcode on first hit, so pre-request new video variants.
+  - Admin grid (`admin.js` `galleryThumbUrl()`) shows 320px square thumbs + poster-only videos;
+    `openAdminLightbox()` now plays videos.
 - **Chapters directory** = uniform grid (founding chapter just tinted via `.chapter-card--feature`).
   Status pill on EVERY card (`.status-badge`: true `999px` pill, uppercase `--font-label`;
   `chapterStatusBadgeMarkup`: founding→"Founding Chapter", else `chapter.status`||"Active"); lead name
@@ -672,9 +717,52 @@ The navbar overlays all of them — see `nav-overlay` below.
     Decorative: `aria-hidden`, `pointer-events:none`, no hover.
 - **Member rosters**: leadership as cards, volunteers as `.roster-chip` pills (`personChipMarkup`) — on
   chapter profiles and Team volunteers grid.
-- **About** "Our Story" = numbered `.story-rail` timeline; **Impact** partners = `.partner-strip`
-  grid of `<figure class="partner">` (84px full-colour logo + uppercase `figcaption` name — captions
-  because several marks are illegible small; imgs use `alt=""`, the caption carries the name);
+- **About** "Our Story" = numbered `.story-rail` timeline; **Impact** partners (`#partners`, 2026-10-04,
+  after the user's "orbit" reference; replaced the old `.partner-strip` ribbon) = **`.partner-orbit`**:
+  two counter-rotating rings of round logo discs around the BFBL mark — inner ring 6, outer 8, the
+  user's list of 14 (American Heritage dropped: not on it). STATIC markup in `impact.html` (one
+  `role=list` stage; each ring a `role=none` `.orbit-ring` with inline `--n`, each node a
+  `role=listitem` `.orbit-node` with inline `--i`); the motion is pure CSS, `initPartnerOrbit()`
+  (in `renderStaticBody()`) only unhides + wires the `aria-pressed` pause toggle (WCAG 2.2.2).
+  - **"Not too small" is the brief** (user): discs are `--d: 13.5cqw` = **127px at the 940px max**,
+    105px at 780; every length is `cqw` off the container so it scales as one drawing. The radii
+    (21.5/41.5cqw), centre (16cqw) and 2-line caption budget are derived together in the CSS comment —
+    re-derive them as a set. Below a **760px container** the rings would shrink logos past legibility,
+    so `@container partner-orbit` lays the same nodes out as a 112px-disc grid (`.orbit-ring`
+    `display:contents`; centre, tracks and toggle hidden).
+  - Motion: each ring is a 0×0 anchor that rotates (inner 96s reverse, outer 132s); each
+    `.orbit-item` counter-rotates at the same rate so logos/captions stay upright — compositor-only.
+    Reduced motion → `animation: none` (NOT the global 1ms clamp: a 1ms infinite spin strobes).
+  - ⚠️ Mixes with `transparent` in that block are `in srgb`: Chrome treats `transparent`'s hue as 0
+    in oklch, so the mint glow came out pink.
+  - **Tiles**: `tools/partner-logos.py` (Pillow ≥11.2 w/ AVIF; no repo deps) paints each logo on a
+    320px square in its OWN ground colour (His House = blue) and scales the mark until its bbox
+    CORNERS touch a 0.45-radius circle — wide wordmarks span the disc, crests sit smaller. Per-logo
+    fixes live in its `PARTNERS` table (`inset`/`clean`/`keep`; Lotus House keeps only its pink
+    script). Imgs carry `alt=""` + `data-no-fallback` (the visible `figcaption` names the partner).
+  - New partner: source logo → `images/our impact/`, a `PARTNERS` row, re-run, then a node in
+    `impact.html` (next `--i`, bump that ring's `--n`). Unlinked → no hover (HARD rule).
+  - **Partner links** (verified 2026-10-04, each URL checked 200 + identity confirmed): a partner with a
+    verified official site has its WHOLE `.orbit-item` `<figure>` wrapped in
+    `<a class="partner-link" href target=_blank rel="noopener noreferrer">` — `<a>` OUTSIDE the figure
+    so `<figcaption>` stays its figure's direct child (valid HTML); the caption is the link's name.
+    The `<a>` is unpositioned, so the absolute caption still hangs off `.orbit-item` and layout is
+    identical (orbit height measured unchanged at 1440 and 390). Quiet hover = caption underline +
+    logo opacity .85 (150ms), NO lift/shadow/scale — it IS a link, so hover is legitimate; hovering
+    or focusing a link also pauses the orbit (`:has()`) so the target holds still. Linked: Broward
+    Health, Nicklaus, Joe DiMaggio (jdch.com), His House, Lotus House, Palomino Gardens
+    (rlcommunities.com page — its own domain redirects there), House of New Vision and Hope, Boys &
+    Girls Club (bgcbc.org apex — www 301s), The Palace at Weston (thepalace.org community page),
+    Wynmoor Village, Karma for Cara, Mamma Curry's Closet (mammacurryscloset.com), Hearts for the
+    Homeless (h4hinternational.org — identity confirmed with the user; several unrelated orgs share
+    the name) = 13, all 200 on 2026-10-04. ONLY unlinked: Five Star Premier Residences (likely
+    fivestarseniorliving.com/communities/fl/hollywood/five-star-premier-residences-of-hollywood —
+    host unreachable from the sandbox, so unverified).
+  - **Who's who** (user-confirmed 2026-10-04 — their list used informal names): "Wynnmore" = Wynmoor
+    Village (Coconut Creek 55+); "Karma 4 Care" = **Karma for Cara Foundation** (K4C); "Hearts 4
+    Homeless" = **Hearts for the Homeless International** (H4H, FIU/UF chapters); "Boys and Girls
+    Club" = Boys & Girls Clubs of Broward County; the official name is "Mamma **Curry's** Closet"
+    (other pages still say "Mamma's Curry"). New logos came from each org's own site/press kit.
   **Contact** = `.contact-layout` split (left: section-header + `.contact-channel`
   rows for email/IG/LinkedIn; right: `.contact-form-card` email form) + `.help-list` "Get Involved" band.
 - **Social icons = monochrome inline SVG** (`SOCIAL_ICONS` const in `script.js`, duplicated inline in
@@ -705,11 +793,13 @@ The navbar overlays all of them — see `nav-overlay` below.
   in `<span aria-hidden>`; status `<p>`s use `role=status aria-live=polite`; email inputs carry
   `autocomplete=email inputmode=email spellcheck=false name`. Form error/success colours: `--danger` /
   `--green-dark` (NOT `--green`/the non-existent `--red`). Headings/section titles use `text-wrap:balance`,
-  long prose `text-wrap:pretty`; numerals (`.stat-number`, gallery meta) use `tabular-nums`.
+  long prose `text-wrap:pretty`; numerals (`.impact-tile-value`, gallery meta) use `tabular-nums`.
 
 ## Current content snapshot
-- Stats: ~**$8,450** fundraised, **2,350+** donations, **1,500+** students, **3,500+** seniors,
-  **11** chapters (`stats` array in `script.js`). Chapters (registry order): AHS, Cypress Bay,
+- Stats (`stats` array in `script.js`, user's 2026-10-04 sheet): **$32,000+** funds & donations,
+  **5,700+** people served, **3,900+** items donated, **4,000+** service hours, **216** student
+  volunteers, **124** events, **12** chapters, **5** countries, **7** digital media centers. The
+  Chapters TILE says 12 per that sheet; the registry below still lists 11. Chapters (registry order): AHS, Cypress Bay,
   Gainesville, Coral Springs, Miami, Doral, New York, Virginia, Russia, Turkey, Los Angeles.
 - Chapter cities (for map dots): AHS→Plantation FL, Cypress Bay→Weston/Cypress Bay FL,
   Gainesville→Gainesville FL, Coral Springs→Coral Springs FL, Miami→Miami FL, Doral→Doral FL,
@@ -722,8 +812,9 @@ The navbar overlays all of them — see `nav-overlay` below.
   students, not an official school club; public page is Miami-only. Chapter admin:
   adina.t.brody09@gmail.com.) Doral = independent chapter (2026–2027 officer cohort), President
   Asvika Prakash; FL map pin at x:92.2,y:74.2. Doral IS mirrored in the `data.js` seed (checklist
-  step 10 stays optional, but without it a cold start with Firestore unreachable drops its pin). Los Angeles = independent chapter, no lead assigned yet
-  (`leadPeople` empty → directory "Led by" line hides via `chapterHasLead()`); world map pin at
+  step 10 stays optional, but without it a cold start with Firestore unreachable drops its pin). Los Angeles = independent chapter, 2026–2027 officer cohort —
+  President John Zheng (lead, `page.leadPeople`), VP Matthew Wang-Ea, Historian Parker Su; photos
+  pending (initials avatars until uploaded); world map pin at
   x:14.6,y:35.1 with `dy:-34` (NOT `side:left` — as the westernmost pin, a left-floating label clipped
   off the frame's left edge on the 2-col world map, so the label floats right and rises clear of the
   New York / Virginia pills its 86px label would otherwise reach; the lift auto-draws a leader line),
@@ -753,6 +844,11 @@ The navbar overlays all of them — see `nav-overlay` below.
 Project `project-686d62b7-14f5-43c7-acc`. Firestore + Auth + Storage as BACKEND (host = Vercel).
 Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `firebase.js` — NOT
 `.appspot.com`; the wrong value caused upload hangs).
+**Admin UPLOADS now go to CLOUDINARY, not Storage** (since 2026-09-07): `admin.js`
+`uploadToCloudinary()` → unsigned preset `BytesForBetterLives`, cloud `rwga4efb`, stores the returned
+`secure_url` (images AND videos — gallery, member photos, fundraiser images, initiative flyers). The
+"→ Storage `…/`" paths below and `storage.rules` describe the pre-Cloudinary flow; the 100 MB
+`MAX_UPLOAD_BYTES` guard is admin-side only.
 
 **Live source of truth = Firestore, split across two collections (merged on read):**
 - **`site/content`** — SHARED, full-admin write only: `categories`, `titles`, `galleryImages`,
@@ -841,6 +937,11 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
   `SCOPE_CID` gates writes) and full admins away. Sign-out (`#sign-out`) → `signOut()` +
   `location.replace("admin.html")`. **`storage.rules`** = explicit admin email list only (can't read
   chapterAdmins map), so a chapter admin can't upload FILES unless their email is added there.
+- **Authorized domains** — Google sign-in only works on hosts listed under Firebase console →
+  Authentication → Settings → **Authorized domains**; any other host fails with `auth/unauthorized-domain`
+  (bit `bytesforbetterlives.org` on 2026-10-04 — the list had only `localhost`, the two Firebase hosts,
+  `bytesforbetterlives.vercel.app` and the `.net` apex + `www`, no chapter subdomains). Any NEW host or
+  subdomain an admin page is opened on must be added there.
 
 ### Admin = one page per tab
 `admin.js` SDK + shared `admin.css` (loads AFTER `styles.css`, so `.btn`/`.impact-card` radii come from
@@ -913,7 +1014,9 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
     `FLORIDA_SE_CHAPTER_PINS` (inset %s); others → `WORLD_MAP_PINS` + a region SVG; (6) bump the `stats`
     "Chapters" `raw` count in `script.js` AND every hardcoded count prose — `index.html`
     chapters-preview description, `team.html` (the home hero eyebrow no longer carries a count);
-    (7) `sitemap.xml` `<loc>` for the subdomain; (8) `vercel.json` subdomain redirect PAIR (.net + .org)
+    (7) `sitemap.xml` `<loc>` + `<lastmod>` for the subdomain, an `llms.txt` Chapters bullet
+    (name — city — subdomain URL), and the stub's JSON-LD (shared NGO block + `WebPage` whose
+    `mainEntity.location` names the city); (8) `vercel.json` subdomain redirect PAIR (.net + .org)
     — without it the canonical/sitemap subdomain URL just redirects to the homepage; (9) add the chapter
     lead to the chapter doc's members + `page.leadPeople`; (10) optional: mirror into the `data.js` seed
     fallback. Grant a chapter admin via `site/content.chapterAdmins` (key = the **lowercased** Google
@@ -935,7 +1038,8 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
 - **HTTP security headers** (`firebase.json` `headers` on `**`): CSP, `X-Frame-Options:DENY`,
   `X-Content-Type-Options:nosniff`, `Referrer-Policy`, HSTS, `Permissions-Policy`. CSP allowlists
   `gstatic`/`apis.google.com`, `*.googleapis.com`/`*.firebasestorage.app`, `formsubmit.co`,
-  `plausible.io` (script+connect), Firebase-Auth/Google hosts — keep in sync when adding any
+  `plausible.io` (script+connect), `res.cloudinary.com` (img+media) / `api.cloudinary.com` (connect),
+  Firebase-Auth/Google hosts — keep in sync when adding any
   third-party script/endpoint. `frame-ancestors 'none'`.
   - ⚠️ **These SECURITY headers are currently DORMANT in production** (discovered 2026-07-19):
     they're Firebase-Hosting config, but the site is served by VERCEL. `vercel.json` now has a
