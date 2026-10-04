@@ -227,11 +227,13 @@ Admin (noindex, not in navbar): `admin.html` (chapter-picker login landing), `me
 `fundraisers-admin.html`, `structure-admin.html`; per-chapter scoped `chapter-<id>-admin.html`
 generated from the `chapter-admin.html` template (which also works as `?c=<id>` fallback).
 
-- Navbar order: About · Impact · Initiatives · Team · Chapters · Gallery (no "Home"). "Initiatives" tab
+- Navbar order: About · Impact · Initiatives · Team · Gallery · Chapters (no "Home"; Gallery moved ahead
+  of Chapters 2026-10-04, so the Chapters dropdown is last — it is right-aligned). "Initiatives" tab
   = `ongoing-initiatives.html` (label renamed, filename kept). AHS = "AHS Chapter" ("Founding Chapter"
   eyebrow on directory); `turkey` = "Turkey Chapter" (IG handle `bfbl_turkiye`).
 - **`impact.html` is consolidated**: former "work with seniors/kids", "donations", "partners" as
-  in-page sections (`#seniors`,`#kids`,`#donations`,`#partners`). Old `#gallery` section REMOVED
+  in-page sections. Order: hero → stats → `#partners` (moved up under the stats 2026-10-04) →
+  `#seniors`,`#kids`,`#donations` → closing `band--ink`. Old `#gallery` section REMOVED
   (its `renderGalleryPage()` was deleted in the dead-code sweep); Home "View Full Gallery" → `gallery.html`.
 - ⚠️ **Do NOT recreate** `donations.html`, `work-with-seniors.html`, `work-with-kids.html`,
   `our-impact.html` — intentionally merged into `impact.html`.
@@ -272,7 +274,10 @@ intentional/editorial, not AI-template.
 - **Brand color = "SY Glacier Mint" `#B4D3AD`** (`--green`; `--green-dark:#4F7A46`, `--green-deep`,
   `--green-soft`). Primary CTAs (`.btn-primary`,`.btn-donate`) fill `--green-dark`+paper text as solid
   **square-cornered (4px)** buttons (mint failed contrast, reserved for soft washes) — same 4px as every
-  other control, site-wide.
+  other control, site-wide. **Buttons carry NO `box-shadow`, base or hover** (HARD user rule,
+  2026-10-04): the green-tinted shadow on `.btn-primary`/`.btn-donate` read as a glow on the dark
+  heroes/`band--ink`. Hover = darker fill + lift only; never add a shadow (coloured or neutral) to a
+  `.btn*`.
 - **ONE accent, SITE-WIDE = brand green** (HARD rule, 2026-08): `--accent`=`--green-dark`,
   `--accent-soft`=`--green-soft`, `--accent-dark`=`--green-deep`, set once in `:root`. There are **NO
   `body.page-*` accent overrides** — the gold (initiatives/gallery/past-events), teal (about/contact)

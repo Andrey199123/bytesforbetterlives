@@ -105,6 +105,7 @@
         { label: "Impact", href: "impact.html" },
         { label: "Initiatives", href: "ongoing-initiatives.html" },
         { label: "Team", href: "team.html" },
+        { label: "Gallery", href: "gallery.html" },
         {
             label: "Chapters",
             href: "chapters.html",
@@ -117,8 +118,7 @@
                 "chapter-russia.html",
                 "chapter-turkey.html"
             ]
-        },
-        { label: "Gallery", href: "gallery.html" }
+        }
     ];
 
     // Renders the standalone gallery page, GROUPED INTO LOCATION SECTIONS, from

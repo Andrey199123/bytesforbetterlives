@@ -449,6 +449,9 @@ main {
     font-size: 0.96rem;
     line-height: 1.05;
     color: var(--green-dark);
+    /* One line in Gabarito (~146px) but the fallback font is ~159px, so without this the
+       wordmark painted on two rows until the webfont swapped in and snapped it to one. */
+    white-space: nowrap;
 }
 
 .nav-menu {
@@ -567,14 +570,12 @@ li:has(> .dropdown-link--all) {
     font-size: 1rem;
     letter-spacing: 0.02em;
     border: 2px solid transparent;
-    box-shadow: 0 6px 16px color-mix(in oklch, var(--green-dark) 30%, transparent);
-    transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease, background-color 250ms ease;
+    transition: transform 250ms ease, border-color 250ms ease, background-color 250ms ease;
 }
 
 .btn-donate:hover {
     transform: translateY(-2px) scale(1.02);
     background: color-mix(in oklch, var(--green-dark) 88%, black);
-    box-shadow: 0 10px 24px color-mix(in oklch, var(--green-dark) 42%, transparent);
 }
 
 .hamburger {
@@ -889,22 +890,22 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
     font-weight: 600;
     letter-spacing: 0.01em;
     line-height: 1;
-    transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
 .btn:hover {
     transform: translateY(-2px);
 }
 
+/* No box-shadow on ANY button (HARD user rule): a green-tinted shadow read as a glow on the dark
+   heroes/bands. Buttons are flat; hover = darker fill + lift only. */
 .btn-primary {
     background: var(--green-dark);
     color: var(--paper);
-    box-shadow: 0 10px 24px color-mix(in oklch, var(--green-dark) 34%, transparent);
 }
 
 .btn-primary:hover {
     background: color-mix(in oklch, var(--green-dark) 88%, black);
-    box-shadow: 0 14px 30px color-mix(in oklch, var(--green-dark) 42%, transparent);
 }
 
 .btn-secondary {
@@ -915,7 +916,6 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
 
 .btn-secondary:hover {
     border-color: var(--accent);
-    box-shadow: var(--shadow-sm);
 }
 
 .btn-quiet {
@@ -2668,6 +2668,8 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     .logo::after {
         max-width: 120px;
         font-size: 0.82rem;
+        /* Two rows here in BOTH fonts, broken after "Better", so the swap doesn't reflow it. */
+        white-space: normal;
     }
 
     /* On mobile, let heroes grow with their (more-wrapped) content instead of a fixed height. */
@@ -3981,7 +3983,6 @@ body.nav-overlay .navbar.is-over-hero .hamburger span {
     body.nav-overlay .navbar.is-over-hero .btn-donate {
         background: var(--paper);
         color: var(--ink);
-        box-shadow: none;
     }
 
     body.nav-overlay .navbar.is-over-hero .btn-donate:hover {
