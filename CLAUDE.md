@@ -839,6 +839,12 @@ The navbar overlays all of them — see `nav-overlay` below.
   off the frame's left edge on the 2-col world map, so the label floats right and rises clear of the
   New York / Virginia pills its 86px label would otherwise reach; the lift auto-draws a leader line),
   locator outline `images/maps/california.svg`.
+  Parkland roster (from the chapter's officer-board PDF, 2026-10-08): President Sai Hasini Sandoss Kumar
+  (lead, `page.leadPeople`) + VP Kyle Yau (`leadership`), 10 officers (`design`), 5 volunteers. Photos
+  are square headshot crops uploaded to Cloudinary; Sirena Chen (Event Coordinator) and three volunteers
+  are on initials — her submitted photo wasn't suitable for an officer card, so ask for a headshot.
+  `page.photos` = 4 senior tech-help session shots (Cloudinary); `photos[0]`, the wide group shot,
+  doubles as the hero (no `heroPos` needed — the default crop reads).
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## AI crawlers & search (2026-10-04)
