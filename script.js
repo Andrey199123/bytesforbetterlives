@@ -1646,6 +1646,11 @@
             actionsEl.innerHTML = actions.join("");
         }
 
+        // Optional "in progress" strip under the hero — page.inProgress, a checkbox in the Chapter
+        // Pages admin. Off → display:none, which also drops it from the crawler snapshots.
+        const progressEl = document.querySelector("#chapter-progress-banner");
+        if (progressEl) progressEl.style.display = chapter.inProgress === true ? "" : "none";
+
         // Current initiatives — this chapter's own, shown as the first section (hidden when none).
         const initiativesSection = document.querySelector("#chapter-initiatives-section");
         const initiativesGrid = document.querySelector("#chapter-initiatives-grid");
@@ -1769,6 +1774,12 @@
                     <div class="hero-actions" id="chapter-page-actions"></div>
                 </div>
             </section>
+
+            <div class="chapter-progress-banner" id="chapter-progress-banner" role="note" style="display: none;">
+                <div class="container">
+                    <p><span class="chapter-progress-label">In progress</span> This page is still being built. Check back soon.</p>
+                </div>
+            </div>
 
             <section class="section" id="chapter-initiatives-section" style="display: none;">
                 <div class="container">

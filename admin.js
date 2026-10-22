@@ -1270,6 +1270,7 @@ if (!firebaseReady) {
                 <label>Location <input data-cfield="location" data-i="${index}" value="${escapeAttr(c.location || "")}"></label>
                 <label>Status <input data-cfield="status" data-i="${index}" value="${escapeAttr(c.status || "")}"></label>
                 <label>Status tag <input data-cfield="statusTag" data-i="${index}" value="${escapeAttr(c.statusTag || "")}"></label>
+                <label class="init-rec"><input type="checkbox" data-cflag="inProgress" data-i="${index}" ${c.inProgress ? "checked" : ""}> Show an “In progress” banner on the chapter page</label>
                 <label>Instagram URL <input data-cfield="instagram" data-i="${index}" value="${escapeAttr(c.instagram || "")}"></label>
                 <label>Description <textarea data-cfield="description" data-i="${index}" rows="3">${escapeHtml(c.description || "")}</textarea></label>
                 <label>Chapter email <input data-cfield="contactEmail" data-i="${index}" value="${escapeAttr(c.contactEmail || "")}" placeholder="chapter@example.com"></label>
@@ -1294,6 +1295,16 @@ if (!firebaseReady) {
         // Structured list editors (rows + "+ Add"): stats, partners, initiatives. ci/si/pi/ii are
         // indices into the full chapters array and the per-chapter list.
         function saveChaptersLive() { if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters; autosave("chapters", chapters); }
+        // Boolean page flags (checkboxes). Store false rather than deleting the key: page saves are
+        // merge-writes, so a deleted key would survive in Firestore and the flag could never clear.
+        editor.querySelectorAll("[data-cflag]").forEach(function (input) {
+            input.addEventListener("change", function () {
+                const i = Number(input.dataset.i);
+                if (!chapters[i]) return;
+                chapters[i][input.dataset.cflag] = input.checked;
+                saveChaptersLive();
+            });
+        });
         // Impact stats
         editor.querySelectorAll("[data-stat]").forEach(function (input) {
             input.addEventListener("input", function () {

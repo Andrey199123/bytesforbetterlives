@@ -1639,6 +1639,32 @@ body.page-impact #home-impact-stats {
     font-size: 0.9rem;
 }
 
+/* Chapter page — optional "in progress" strip under the hero (page.inProgress). Status colour,
+   not a page accent: the same gold as the .status-launching pill. Not clickable → no hover;
+   full-bleed ground, no edge line. */
+.chapter-progress-banner {
+    background: var(--gold-soft);
+    color: var(--ink);
+}
+
+.chapter-progress-banner p {
+    margin: 0;
+    padding-block: 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-wrap: pretty;
+}
+
+.chapter-progress-label {
+    margin-right: 0.6rem;
+    font-family: var(--font-label);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: oklch(42% 0.1 78);
+}
+
 /* Chapter page — per-chapter impact stats (only shown when the chapter has any). */
 .chapter-stats-row {
     display: grid;
