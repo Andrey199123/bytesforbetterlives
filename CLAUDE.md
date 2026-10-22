@@ -878,7 +878,10 @@ The navbar overlays all of them — see `nav-overlay` below.
   Connections NYC" + one `page.initiatives` card ("Chord Connections Collab", Learn More →
   chordconnections.com; no date/flyer — none given). Same people: per chordconnections.com/our-team
   Brendan Tan is its founder, Yuxuan Che a co-founder and Troye Kim its executive director. The
-  card also aggregates onto `ongoing-initiatives.html`.
+  card also aggregates onto `ongoing-initiatives.html`. `page.photos` = 4 Chord Connections
+  senior-home concert shots taken from their site (user confirmed CC's OK, 2026-10-22): `photos[0]`
+  (hero) = the ballroom/grand-piano photo (their Wix original, 2794px); the other 3 are their
+  YouTube `maxresdefault` thumbnails (1280×720 → 960×720 4:3 tiles, soft on retina), one per venue.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## AI crawlers & search (2026-10-04)
