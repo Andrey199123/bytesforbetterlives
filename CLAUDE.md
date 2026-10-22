@@ -833,8 +833,10 @@ The navbar overlays all of them — see `nav-overlay` below.
   adina.t.brody09@gmail.com.) Doral = independent chapter (2026–2027 officer cohort), President
   Asvika Prakash; FL map pin at x:92.2,y:74.2. Doral IS mirrored in the `data.js` seed (checklist
   step 10 stays optional, but without it a cold start with Firestore unreachable drops its pin). Los Angeles = independent chapter, 2026–2027 officer cohort —
-  President John Zheng (lead, `page.leadPeople`), VP Matthew Wang-Ea, Historian Parker Su; photos
-  pending (initials avatars until uploaded); world map pin at
+  President John Zheng (lead, `page.leadPeople`), VP Matthew Wang-Ea, Historian Parker Su; all three
+  have square headshot crops on Cloudinary (2026-10-21, from the user's HEIC originals — Matthew's
+  selfie is cut off at its right edge, so his face sits right-of-centre; ask for a better one if it
+  bothers anyone); world map pin at
   x:14.6,y:35.1 with `dy:-34` (NOT `side:left` — as the westernmost pin, a left-floating label clipped
   off the frame's left edge on the 2-col world map, so the label floats right and rises clear of the
   New York / Virginia pills its 86px label would otherwise reach; the lift auto-draws a leader line),
@@ -934,6 +936,10 @@ Storage bucket **`project-686d62b7-14f5-43c7-acc.firebasestorage.app`** (in `fir
 `secure_url` (images AND videos — gallery, member photos, fundraiser images, initiative flyers). The
 "→ Storage `…/`" paths below and `storage.rules` describe the pre-Cloudinary flow; the 100 MB
 `MAX_UPLOAD_BYTES` guard is admin-side only.
+⚠️ **An iPhone `.heic` uploaded through the admin is stored as a raw `….heic` URL**, which only Safari
+renders — Chrome/Firefox can't decode it, so `initImageFallbacks` drops to initials (John Zheng's admin-uploaded photo, 2026-10). Until
+`uploadToCloudinary()` rewrites the extension, convert HEIC first (`sips -s format jpeg`, crop square,
+convert P3→sRGB, strip EXIF/GPS) and upload the JPEG.
 
 **Live source of truth = Firestore, split across two collections (merged on read):**
 - **`site/content`** — SHARED, full-admin write only: `categories`, `titles`, `galleryImages`,
