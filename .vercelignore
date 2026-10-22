@@ -11,6 +11,7 @@ tools/
 .dupscan/
 .firebase/
 originals/
+photo-archive/
 firebase.json
 .firebaserc
 firestore.rules

@@ -18,8 +18,8 @@ education, donations, a growing chapter network).
   --prod`/`deploy --prebuilt --prod` → IndexNow ping (pushes only) — see **AI crawlers & search**. Secrets
   `VERCEL_TOKEN`/`VERCEL_ORG_ID`/`VERCEL_PROJECT_ID`. Root **`middleware.js`** is Vercel Routing
   Middleware (edge, no deps) — `vercel build` picks it up with no framework. **`.vercelignore`** keeps
-  repo-only files (`CLAUDE.md`, `tools/`, the Firebase rules/config, `test-*`, `.github/`) out of the
-  deploy — before 2026-10-04 they were all publicly readable. So **file/code edits go
+  repo-only files (`CLAUDE.md`, `tools/`, the Firebase rules/config, `test-*`, `.github/`,
+  `photo-archive/`) out of the deploy — before 2026-10-04 they were all publicly readable. So **file/code edits go
   live by committing + pushing to `main`** — no manual deploy command. Vercel's own git integration is
   intentionally OFF in `vercel.json` (`git.deploymentEnabled:false`, `github.enabled:false`) so deploys
   happen ONLY via the Action. **Content** edits (Firestore via admin) go live on the next uncached
@@ -878,10 +878,13 @@ The navbar overlays all of them — see `nav-overlay` below.
   Connections NYC" + one `page.initiatives` card ("Chord Connections Collab", Learn More →
   chordconnections.com; no date/flyer — none given). Same people: per chordconnections.com/our-team
   Brendan Tan is its founder, Yuxuan Che a co-founder and Troye Kim its executive director. The
-  card also aggregates onto `ongoing-initiatives.html`. `page.photos` = 4 Chord Connections
-  senior-home concert shots taken from their site (user confirmed CC's OK, 2026-10-22): `photos[0]`
-  (hero) = the ballroom/grand-piano photo (their Wix original, 2794px); the other 3 are their
-  YouTube `maxresdefault` thumbnails (1280×720 → 960×720 4:3 tiles, soft on retina), one per venue.
+  card also aggregates onto `ongoing-initiatives.html`. Its 4 Chord Connections senior-home concert
+  shots (from their site, CC's OK confirmed) went up as `page.photos` and were then PULLED at the
+  user's request the same day — New York is photo-less again (editorial hero). The files live in
+  the repo, NOT on the site: **`photo-archive/new-york-chord-connections/`** (in `.vercelignore`,
+  so never deployed). 01 = their 2794px Wix original (exported 2400px, full frame — was the hero);
+  02–04 = their YouTube `maxresdefault` thumbnails, pre-cropped to 960×720 4:3 tiles (soft on
+  retina). All sRGB, metadata stripped. Re-adding = upload to Cloudinary + append to `page.photos`.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## AI crawlers & search (2026-10-04)
