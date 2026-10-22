@@ -874,6 +874,11 @@ The navbar overlays all of them — see `nav-overlay` below.
   Replace them when the chapter sends real helping shots.
   Existing tiles that MISS the bar (posed, left untouched): Cypress 1/2/4/5/6, Coral Springs 1,
   Parkland 1 (the hero), all of Miami.
+- **New York × Chord Connections NYC** (2026-10-22, user request): `page.partners` = "Chord
+  Connections NYC" + one `page.initiatives` card ("Chord Connections Collab", Learn More →
+  chordconnections.com; no date/flyer — none given). Same people: per chordconnections.com/our-team
+  Brendan Tan is its founder, Yuxuan Che a co-founder and Troye Kim its executive director. The
+  card also aggregates onto `ongoing-initiatives.html`.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## AI crawlers & search (2026-10-04)
