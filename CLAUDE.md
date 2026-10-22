@@ -170,7 +170,8 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
   (`chapter.partners=[string]`→`#chapter-partners-section`), **Current initiatives** (see admin
   Initiatives), and an **"In progress" strip** right under the hero (`chapter.inProgress===true` →
   `#chapter-progress-banner`, `--gold-soft` = the `.status-launching` pill's gold, fixed copy "This
-  page is still being built. Check back soon."; on for **Turkey** since 2026-10-22). It's a flag, not
+  chapter is still being formed." — user's wording, replaced "This page is still being built. Check
+  back soon." the same day; on for **Turkey** since 2026-10-22). It's a flag, not
   derived from `status`, because 9 of 12 chapters are "Launching". A closing **"Get involved" dark CTA band** (`#chapter-cta-section`, `band--ink`) is
   ALWAYS shown once the chapter resolves — so thin chapters (no initiatives/photos yet) still end with
   a beat; its buttons: Support (always), Email-the-chapter OR Contact-Us fallback, Join when `joinUrl`.

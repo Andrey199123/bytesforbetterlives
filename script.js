@@ -1779,7 +1779,7 @@
 
             <div class="chapter-progress-banner" id="chapter-progress-banner" role="note" style="display: none;">
                 <div class="container">
-                    <p><span class="chapter-progress-label">In progress</span> This page is still being built. Check back soon.</p>
+                    <p><span class="chapter-progress-label">In progress</span> This chapter is still being formed.</p>
                 </div>
             </div>
 
