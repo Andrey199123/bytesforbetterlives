@@ -831,7 +831,8 @@ The navbar overlays all of them — see `nav-overlay` below.
   (Miami = MAST @ FIU
   students, not an official school club; public page is Miami-only. Chapter admin:
   adina.t.brody09@gmail.com.) Doral = independent chapter (2026–2027 officer cohort), President
-  Asvika Prakash; FL map pin at x:92.2,y:74.2. Doral IS mirrored in the `data.js` seed (checklist
+  Asvika Prakash; FL map pin at x:92.2,y:74.2. `page.photos` = one shot (2026-10-22, Cloudinary) of
+  the chapter's "AI or Real?" presentation — as `photos[0]` it is also the hero (default crop). Doral IS mirrored in the `data.js` seed (checklist
   step 10 stays optional, but without it a cold start with Firestore unreachable drops its pin). Los Angeles = independent chapter, 2026–2027 officer cohort —
   President John Zheng (lead, `page.leadPeople`), VP Matthew Wang-Ea, Historian Parker Su; all three
   have square headshot crops on Cloudinary (2026-10-21, from the user's HEIC originals — Matthew's
