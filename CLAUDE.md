@@ -160,7 +160,12 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
 - **Chapter profile pages** (`renderChapterProfilePage` + `ensureChapterProfileLayout`, which injects
   the hero/layout into the lightweight `chapter-*.html` stubs that carry only `data-chapter-id` — edit
   the template here, not the stub HTML). Sections: (1) **Chapter members** (by category); (2) **Chapter
-  highlights** (`chapter.photos`). **Optional, hidden via `display:none` when empty**: **Impact stats**
+  highlights** (`chapter.photos`) — a 2-col grid (1-col mobile) of **4:3 `object-fit:cover` tiles,
+  NOT clickable** (no lightbox), so a portrait upload loses ~44% of its height to a centre crop:
+  upload highlights PRE-CROPPED to the 4:3 window that keeps the people in. Exception: `photos[0]`
+  is also the hero (wide `cover`), so upload it full-frame landscape and check its centre 4:3 tile.
+  Curation bar (user, 2026-10-22): **best-of, people visibly helping/working** — not posed group
+  shots, not every photo. **Optional, hidden via `display:none` when empty**: **Impact stats**
   (`chapter.stats=[{value,label}]`→`#chapter-stats-section`), **Community partners**
   (`chapter.partners=[string]`→`#chapter-partners-section`), **Current initiatives** (see admin
   Initiatives), and an **"In progress" strip** right under the hero (`chapter.inProgress===true` →
@@ -672,8 +677,15 @@ The navbar overlays all of them — see `nav-overlay` below.
       `y = 337.757 − 172.8404·φ + 0.6486·φ³ − 10.4118·φ⁵`; `x%=x/9.5`, `y%=y/6.2`.
       North-American pins are off by a few px under the global fit, so they use a **local affine**
       instead: `x = 432.1872 + 0.7217·lat + 2.6924·lng`, `y = 360.4426 − 3.5132·lat + 0.1962·lng`.
-    - `new-york.svg`/`virginia.svg`/`california.svg` stay equirectangular over the shape's bbox →
+    - `california.svg` stays equirectangular over the shape's bbox →
       `x%=(lng−lngW)/(lngE−lngW)`, `y%=(latN−lat)/(latN−latS)`, mapped in via path bbox vs viewBox.
+      ⚠️ `new-york.svg`/`virginia.svg` are NOT: they are crops of a **tilted Albers US-states map**
+      (the shape does not fill its viewBox either — ~7 units of padding each side). Fit an affine
+      from Albers (29.5/45.5, λ0 −96) to the SVG using 4–5 known border points (state corners, capes)
+      and project the city through it — residuals ≲0.3 units on NY. The bbox formula put the
+      Virginia Beach dot ~20% low, out at sea under the NC line (fixed 2026-10-22: 87.5/83.4 →
+      **91.0/62.3**, on the coast just south of the Chesapeake Bay mouth). NY's 70.7/89.9 is within
+      ~2 units of the fit and was left alone.
     - `russia.svg`/`turkey.svg` hero locators are CROPS of world.svg, so their dot = that chapter's
       `WORLD_MAP_PINS` point in world.svg units (`x%·9.5`,`y%·6.2`) remapped into the crop viewBox —
       the same city then lands identically on both maps. (They previously held stale Miller values.)
@@ -820,7 +832,7 @@ The navbar overlays all of them — see `nav-overlay` below.
 ## Current content snapshot
 - Stats (`stats` array in `script.js`, user's 2026-10-04 sheet): **$32,000+** funds & donations,
   **5,700+** people served, **3,900+** items donated, **4,000+** service hours, **216** student
-  volunteers, **124** events, **12** chapters, **5** countries, **7** digital media centers. The
+  volunteers, **124** events, **12** chapters, **6** countries (bumped from 5 on 2026-10-22), **7** digital media centers. The
   Chapters tile (12) matches the registry since Parkland was added 2026-10-04. Chapters (registry order): AHS, Cypress Bay,
   Gainesville, Coral Springs, Miami, Doral, New York, Virginia, Russia, Turkey, Los Angeles, Parkland.
 - Chapter cities (for map dots): AHS→Plantation FL, Cypress Bay→Weston/Cypress Bay FL,
@@ -851,6 +863,14 @@ The navbar overlays all of them — see `nav-overlay` below.
   are on initials — her submitted photo wasn't suitable for an officer card, so ask for a headshot.
   `page.photos` = 4 senior tech-help session shots (Cloudinary); `photos[0]`, the wide group shot,
   doubles as the hero (no `heroPos` needed — the default crop reads).
+- **Highlights batch 2026-10-22** (user's Desktop "BBL photos" folders, best-of cut — 80+ files and
+  55 Russia videos down to 8, all pre-cropped 4:3 sRGB JPEGs on Cloudinary): **Russia** 0→4, all
+  720p video FRAMES (classroom lessons); `photos[0]` = a volunteer helping at a pupil's desk, now the
+  Russia hero (was the editorial field; 1280×720, soft on retina — swap in a sharper landscape when
+  one exists). **Coral Springs** +2, **Parkland** +1, **Cypress** +1, appended after the existing
+  ones. **Miami** got none: every shot was posed or people watching a TV, so it stays photo-less.
+  Existing tiles that MISS the bar (posed, left untouched): Cypress 1/2/4/5/6, Coral Springs 1,
+  Parkland 1 (the hero).
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## AI crawlers & search (2026-10-04)

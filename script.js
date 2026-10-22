@@ -1035,7 +1035,7 @@
             { key: "volunteers", raw: 216, prefix: "", suffix: "", label: "Student Volunteers", icon: IMPACT_ICONS.cap, decimals: 0 },
             { key: "events", raw: 124, prefix: "", suffix: "", label: "Events", icon: IMPACT_ICONS.calendar, decimals: 0 },
             { key: "chapters", raw: 12, prefix: "", suffix: "", label: "Chapters", icon: IMPACT_ICONS.pin, decimals: 0 },
-            { key: "countries", raw: 5, prefix: "", suffix: "", label: "Countries", icon: IMPACT_ICONS.globe, decimals: 0 },
+            { key: "countries", raw: 6, prefix: "", suffix: "", label: "Countries", icon: IMPACT_ICONS.globe, decimals: 0 },
             { key: "media", raw: 7, prefix: "", suffix: "", label: "Digital Media Centers", icon: IMPACT_ICONS.monitor, decimals: 0 }
         ];
 
@@ -1332,8 +1332,10 @@
 
     // Chapter-hero locator map: Florida chapters show the Florida outline (so the dot %s line up with
     // FLORIDA_MAP_PINS — keep the two tables in LOCKSTEP); everyone else shows their OWN state/country
-    // outline. Dots are PROJECTED from each city's real lat/lng — FL via the Albers fit above, NY/VA/CA
-    // equirectangular over the shape's bounding box. russia.svg/turkey.svg are CROPS of world.svg, so
+    // outline. Dots are PROJECTED from each city's real lat/lng — FL via the Albers fit above, CA
+    // equirectangular over the shape's bounding box. NY/VA are crops of a tilted Albers US map, so their
+    // dots come from an affine fit to known border points (bbox-equirectangular put Virginia Beach off
+    // the coast). russia.svg/turkey.svg are CROPS of world.svg, so
     // their dots are that chapter's WORLD_MAP_PINS point in world.svg units (x%·9.5, y%·6.2) remapped
     // into the crop viewBox — the same city then lands in the same place on both maps. Each SVG fills
     // the box, so left:X%/top:Y% == X%/Y% of the map; `aspect` matches the SVG viewBox.
@@ -1343,7 +1345,7 @@
         const R = {
             "los-angeles": { map: "images/maps/california.svg", x: 59.0, y: 80.8, aspect: "0.859" },
             "new-york": { map: "images/maps/new-york.svg", x: 70.7, y: 89.9, aspect: "1.279" },
-            "virginia": { map: "images/maps/virginia.svg", x: 87.5, y: 83.4, aspect: "1.679" },
+            "virginia": { map: "images/maps/virginia.svg", x: 91.0, y: 62.3, aspect: "1.679" },
             "russia":   { map: "images/maps/russia.svg",   x: 11.6, y: 70.2, aspect: "1.714" },
             "turkey":   { map: "images/maps/turkey.svg",   x: 19.1, y: 24.0, aspect: "2.091" }
         };
