@@ -875,10 +875,10 @@ The navbar overlays all of them — see `nav-overlay` below.
   Replace them when the chapter sends real helping shots.
   Existing tiles that MISS the bar (posed, left untouched): Cypress 1/2/4/5/6, Coral Springs 1,
   Parkland 1 (the hero), all of Miami.
-- **New York × Chord Connections NYC** (2026-10-22, user request): `page.partners` = "Chord
-  Connections NYC" — that pill is ALL that remains on the site. A "Chord Connections Collab"
-  `page.initiatives` card (Learn More → chordconnections.com) was added and then removed at the
-  user's request the same day, so New York has no initiatives. Same people: per
+- **New York × Chord Connections NYC** (2026-10-22): added at the user's request, then REMOVED
+  from the site the same day, also at their request — the "Chord Connections NYC" partner pill,
+  the "Chord Connections Collab" initiative card (Learn More → chordconnections.com) and the photos
+  below. New York's page now has no partners, initiatives or photos. Same people: per
   chordconnections.com/our-team Brendan Tan is its founder, Yuxuan Che a co-founder and Troye Kim
   its executive director. Its 4 Chord Connections senior-home concert
   shots (from their site, CC's OK confirmed) went up as `page.photos` and were then PULLED at the
