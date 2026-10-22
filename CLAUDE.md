@@ -875,10 +875,11 @@ The navbar overlays all of them — see `nav-overlay` below.
   Existing tiles that MISS the bar (posed, left untouched): Cypress 1/2/4/5/6, Coral Springs 1,
   Parkland 1 (the hero), all of Miami.
 - **New York × Chord Connections NYC** (2026-10-22, user request): `page.partners` = "Chord
-  Connections NYC" + one `page.initiatives` card ("Chord Connections Collab", Learn More →
-  chordconnections.com; no date/flyer — none given). Same people: per chordconnections.com/our-team
-  Brendan Tan is its founder, Yuxuan Che a co-founder and Troye Kim its executive director. The
-  card also aggregates onto `ongoing-initiatives.html`. Its 4 Chord Connections senior-home concert
+  Connections NYC" — that pill is ALL that remains on the site. A "Chord Connections Collab"
+  `page.initiatives` card (Learn More → chordconnections.com) was added and then removed at the
+  user's request the same day, so New York has no initiatives. Same people: per
+  chordconnections.com/our-team Brendan Tan is its founder, Yuxuan Che a co-founder and Troye Kim
+  its executive director. Its 4 Chord Connections senior-home concert
   shots (from their site, CC's OK confirmed) went up as `page.photos` and were then PULLED at the
   user's request the same day — New York is photo-less again (editorial hero). The files live in
   the repo, NOT on the site: **`photo-archive/new-york-chord-connections/`** (in `.vercelignore`,
