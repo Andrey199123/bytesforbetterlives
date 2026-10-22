@@ -868,9 +868,12 @@ The navbar overlays all of them — see `nav-overlay` below.
   720p video FRAMES (classroom lessons); `photos[0]` = a volunteer helping at a pupil's desk, now the
   Russia hero (was the editorial field; 1280×720, soft on retina — swap in a sharper landscape when
   one exists). **Coral Springs** +2, **Parkland** +1, **Cypress** +1, appended after the existing
-  ones. **Miami** got none: every shot was posed or people watching a TV, so it stays photo-less.
+  ones. **Miami** 0→4 by user override ("just add them anyways") although NONE meet the bar —
+  its folder had no helping shots: posed group-with-TV-remote (`photos[0]`, hero, `heroPos`
+  `center 25%` so heads clear the nav band), TV setup, puzzle visit, lobby couch; one per moment.
+  Replace them when the chapter sends real helping shots.
   Existing tiles that MISS the bar (posed, left untouched): Cypress 1/2/4/5/6, Coral Springs 1,
-  Parkland 1 (the hero).
+  Parkland 1 (the hero), all of Miami.
 - `donateUrl` → GoFundMe ("help provide iPads to local schools"). Team is a large data-driven roster.
 
 ## AI crawlers & search (2026-10-04)
