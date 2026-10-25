@@ -58,8 +58,9 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
 - **`people` = the single source of truth for every member.** Each person defined ONCE: `name`,
   `title`, `photo`, `fallbackPhoto`, `bio`, `detail`, `contact`, `roles` array
   (`"leadership"`/`"design"`/`"volunteer"`; may hold several). Do NOT re-list elsewhere — add/remove a role.
-- **Founders are HARDCODED** in the `FOUNDERS` const at top of `script.js` — intentionally NOT in
-  `data.people`/Firestore/admin. `deriveRoles()` sets `data.founders = FOUNDERS`. No `"founder"` role exists.
+- **No Founders section** (REMOVED 2026-10-24 at user request): the Team page's "Founders / Legacy"
+  grid, the hardcoded `FOUNDERS` const, `data.founders` and `#team-founders-grid` are all gone, and no
+  `"founder"` role exists. Do not restore. (`design-system.html`'s quote specimen still cites them.)
 - `script.js` derives `data.officers`/`data.design`/`data.volunteers`/`data.execBoard` from
   `data.people` by role at startup. Homepage "All Members" roster was removed (the
   `[data-members-slider]` renderer + its CSS were deleted in the 2026-07 dead-code sweep).
@@ -70,7 +71,7 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
 - Team page sections (order): **Board of Directors** (only `person.execBoard===true`, = `data.execBoard`;
   homepage `#executive-board-preview` uses same list) → **Chapter leadership** (`chapterLeadershipBlockMarkup`,
   one block per chapter incl. AHS, all `leadership`-role members; AHS leaders may also show in Board if
-  flagged) → **Volunteers** → **Legacy** (Founders, no description).
+  flagged) → **Volunteers** (last; the Founders/"Legacy" section was removed 2026-10-24).
 - Members carry `chapter` (id) + category (`roles[0]`) set via admin Chapters board. Public chapter
   pages group members by category (`renderChapterMembersByCategory`, headings from `categories`).
   `firebase-data.js` fetches `categories`/`titles` too so labels match admin. (`tier` field retired.)
@@ -172,7 +173,8 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
   `#chapter-progress-banner`, `--gold-soft` = the `.status-launching` pill's gold, fixed copy "This
   chapter is still being formed." — user's wording, replaced "This page is still being built. Check
   back soon." the same day; on for **Turkey** since 2026-10-22). It's a flag, not
-  derived from `status`, because 9 of 12 chapters are "Launching". A closing **"Get involved" dark CTA band** (`#chapter-cta-section`, `band--ink`) is
+  derived from the status pill, because only Turkey wants it — 4 of 12 chapters are "In progress"
+  (photo-derived, see Chapters directory). A closing **"Get involved" dark CTA band** (`#chapter-cta-section`, `band--ink`) is
   ALWAYS shown once the chapter resolves — so thin chapters (no initiatives/photos yet) still end with
   a beat; its buttons: Support (always), Email-the-chapter OR Contact-Us fallback, Join when `joinUrl`.
   Hero CTAs build conditionally: always "Support this Chapter" (`chapterSupportUrl()`),
@@ -222,6 +224,30 @@ fixed `<slug>-{580,1160}.{avif,jpg}` naming — see Program tiles under Componen
 **`images/partners/<slug>.avif`** are GENERATED round-logo tiles for the impact partner orbit —
 built by `tools/partner-logos.py` from the source logos in `images/our impact/` (keep those: they
 are the script's inputs). Don't hand-edit the tiles; re-run the script.
+**`images/2026/`** (2026-10-24, user: "use more recent pictures throughout the site") holds web
+copies of the newest dated photos — 1179–1600px long edge, JPEG q80 progressive, converted to sRGB,
+EXIF/GPS stripped. Sources: the May 23 + June 5 2026 senior sessions in Plantation (`plantation-*`,
+from the gallery originals in `images/firebase/`), the Peru school computer lab (`peru-computer-lab`,
+Cloudinary gallery `IMG_1583`, pre-cropped 4:3; the Peru photos carry no EXIF, but they show the
+computers the Peru fundraiser (June 2026) paid for), and Parkland's highlight `photos[1]`. Used by About (lead card + story
+rail) and the Impact "Personalized Tech Assistance" carousel (5 Plantation shots first, then ONE
+Palomino Gardens helping shot — the posed Palomino banner photo was dropped 2026-10-25 for
+`plantation-laptop-help`, May 23 2026, pre-cropped 4:3; its copy says "at Palomino Gardens and in
+Plantation", so keep one Palomino slide). Event-specific cards (Impact kids/donations, past-events)
+keep their own event photos on purpose — a newer photo goes in only if it shows the SAME venue or
+program and is clearly better. 2026-10-25 pass (user: "update the pictures to newer ones if they
+are better"): only the Impact **His House iPad** card qualified — `images/work with kids/ipad setup
+{1,2}.jpg` (Cloudinary gallery `nthubqrb…`/`xvbou0pk…`: kids setting up the iPads; the boxed-iPad
+handover in the His House lobby, floor cropped off) replaced the posed `ipad 1.jpeg`, which stays in
+the gallery. Those two are UNDATED (no EXIF), so they're not in `images/2026/`; the room's wall
+timeline runs to 2025, so the session is 2025 or later. Checked and left alone: Broward Health
+(the card already uses the dated 2025-09-30 visit photos), Mamma's Curry Christmas (already the
+2025-12-20 event), 5 Star, Palace at Weston, the His House board-game photos (a later visit exists,
+but it isn't better), the fundraiser images (real photos already), and the home digital-safety
+story (Doral's 2026 "AI or Real?" shot is a near-empty room). The home Photo Story
+`senior-tech-help` (Firestore `site/content.gallery`) was repointed the same day to a Cloudinary copy
+of `IMG_3604` (landscape: the story card is ~4:3 `cover`, so a portrait loses the heads) — June 2026, Plantation, credited "Coral Springs & Cypress Bay Chapters" because those
+sessions' photos sit on BOTH chapters' pages; old values were Palomino Gardens / 2025 / AHS.
 
 ## Pages
 `index.html` (Home), `about.html`, `impact.html`, `ongoing-initiatives.html`, `team.html`,
@@ -331,8 +357,10 @@ The navbar overlays all of them — see `nav-overlay` below.
     digital divide through technology access, digital literacy, and community service." The eyebrow
     carries no chapter count, so it's off the add-a-chapter count-bump checklist. Home no longer has
     a title under the hero (the "Four years of impact…" `.home-intro` band was removed 2026-10-04);
-    the "4 years" figure lives on about.html and `llms.txt` ("Active for 4 years") — no founding
-    year is stated anywhere on the site; don't invent one.
+    the years-active figure is **"3 years"** (user changed it from "4 years" 2026-10-25) and lives
+    ONLY in about.html's `band--ink` — `llms.txt` gives the dated history instead (club 2023 →
+    nonprofit 2025 → 501(c)(3) 2026), and the JSON-LD `foundingDate` is "2023". Any new copy that
+    counts years must say 3, not 4.
 - **`nav-overlay` — the navbar overlays the hero on EVERY hero page** (was home-only until 2026-08):
   - **`body.nav-overlay` is a STATIC class in the page's `<body>` tag**, carried by every public page
     that opens with a hero — `index.html` (which also keeps `page-home`), the 10 `.hero-editorial`
@@ -600,7 +628,7 @@ The navbar overlays all of them — see `nav-overlay` below.
   `#fundraiser-grid`, Past-events.
 - **Editorial dark beats** — `.band--ink` sections with `.editorial-quote` (big quote glyph ::before)
   and/or `.band-figure` (oversized accent numeral): TWO stacked figures on About ("5,700+" and
-  "4 years", each its own inline-grid pair; 2026-10-04), "216" on
+  "3 years", each its own inline-grid pair; 2026-10-04, figure changed from "4 years" 2026-10-25), "216" on
   Team, dark closing CTAs on Impact/Initiatives/Chapters/Past-events. Bands: `.surface-band`
   (accent-soft 62%), `.band--tint`, `.band--ink`.
 - **Gallery** = dense mosaic (`.photo-gallery-grid` + `.g-feature`/`.g-wide`/`.g-tall` cadence + hover
@@ -624,7 +652,12 @@ The navbar overlays all of them — see `nav-overlay` below.
     `openAdminLightbox()` now plays videos.
 - **Chapters directory** = uniform grid (founding chapter just tinted via `.chapter-card--feature`).
   Status pill on EVERY card (`.status-badge`: true `999px` pill, uppercase `--font-label`;
-  `chapterStatusBadgeMarkup`: founding→"Founding Chapter", else `chapter.status`||"Active"); lead name
+  `chapterStatusBadgeMarkup`: founding→"Founding Chapter", else `chapterStatus()`). **Public status is
+  DERIVED, not the admin `status` field** (user rule, 2026-10-22): a chapter with highlight photos
+  (`page.photos`, non-empty) is **"Active"** (green), every other one **"In progress"** (the gold
+  `.status-launching` pill) — so a chapter flips to Active by itself once photos are added. The same
+  status drives the map-pin colour + tooltip. `chaptersActiveFirst()` orders the directory AND the
+  home 3-card preview: Active first, then In progress, each group in registry order. Lead name
   once ("Led by", `chapterLeadPeopleText`) + `.chapter-card-go` "View chapter →". `.chapter-card-desc`
   is `-webkit-line-clamp:3` so cards don't stretch unevenly. Chapter cards ARE links → keep hover lift.
   (Dead `card-edge-*` classes removed from `chapterDirectoryCardMarkup`.)
@@ -634,7 +667,7 @@ The navbar overlays all of them — see `nav-overlay` below.
   Google/Mapbox/Leaflet — the Florida map is a REAL map with roads, but it is still a static file).
   `renderChapterMaps()` renders pins from percent tables
   `FLORIDA_MAP_PINS`/`WORLD_MAP_PINS` (chapters carry no geo in Firestore, so hardcoded like
-  `stats`/`FOUNDERS`); each pin resolves name/status/href LIVE via `chapterById()`. Image fills
+  `stats`); each pin resolves name/status/href LIVE via `chapterById()`. Image fills
   `.map-frame` edge-to-edge so `left:X%`==X% of map. Pin classes **`.geo-pin`/`.geo-pin-dot`/`.geo-pin-label`**
   (the legacy `.map-pin` teardrop component that used to hijack markup was deleted in the dead-code sweep).
   - ⚠️ **The two Florida maps are GENERATED, not hand-drawn** (2026-08-18): `florida-roads.svg`
@@ -685,10 +718,14 @@ The navbar overlays all of them — see `nav-overlay` below.
       from Albers (29.5/45.5, λ0 −96) to the SVG using 4–5 known border points (state corners, capes)
       and project the city through it — residuals ≲0.3 units on NY. The bbox formula put the
       Virginia Beach dot ~20% low, out at sea under the NC line (fixed 2026-10-22: 87.5/83.4 →
-      **91.0/62.3**, on the coast just south of the Chesapeake Bay mouth). NY's 70.7/89.9 is within
-      ~2 units of the fit and was left alone.
+      **91.0/62.3**, on the coast just south of the Chesapeake Bay mouth) and the NYC dot ~2 units
+      into the harbour by Staten Island (70.7/89.9 → **71.8/88.5**, where Manhattan meets the
+      mainland; the fit lands Montauk and Staten Island exactly on their features).
     - `russia.svg`/`turkey.svg` hero locators are CROPS of world.svg, so their dot = that chapter's
-      `WORLD_MAP_PINS` point in world.svg units (`x%·9.5`,`y%·6.2`) remapped into the crop viewBox —
+      `WORLD_MAP_PINS` point in world.svg units (`x%·9.5`,`y%·6.2`) remapped into the crop viewBox
+      (the tiny turkey.svg crop magnifies a 1-unit error ~17×, so check the dot sits ON the outline —
+      Istanbul was in the Black Sea until 2026-10-22: world pin 55.5/34.2 → 55.7/34.4, locator
+      19.1/24.0 → 22.6/28.7) —
       the same city then lands identically on both maps. (They previously held stale Miller values.)
     - To add/move a pin: compute the %s this way, then **visually verify** against the silhouette
       (serve locally + screenshot), and **audit label-vs-DOT, not just label-vs-label** — a pill
@@ -704,7 +741,8 @@ The navbar overlays all of them — see `nav-overlay` below.
       Virginia on the world maps, AHS / Plantation on the inset). That is accepted: each label is
       inside its own `<a>`, so the pill is the real click target and both chapters stay reachable.
       A LABEL on someone else's dot is not accepted — it hides and mislabels that marker.
-  `.pin-active`=green, `.pin-launching`=gold; `.geo-pin--left` floats label inland.
+  `.pin-active`=green (Active), `.pin-launching`=gold (In progress — legend "Chapter in progress"),
+  both from `chapterStatus()`; `.geo-pin--left` floats label inland.
 - **Home "Our Reach" PAIR** (`#global-reach` on `index.html` — sits AFTER the What We Do section since
   the 2026-08 home redesign; restructured 2026-08-16): ONE `.reach-row` grid holding two `.map-card`
   figures side by side — the **CROPPED world map** `#map-world-home` (`images/maps/world-reach.svg` =
@@ -738,7 +776,7 @@ The navbar overlays all of them — see `nav-overlay` below.
     `FLORIDA_IMPACT_PINS` (9 service-site markers, each a `pin-outreach` link into
     impact/past-events). Inset %s come STRAIGHT from the Albers X,Y remapped onto `FLORIDA_SE_CROP`
     (`x%=(X−780)/24·100`, `y%=(Y−526.5)/26·100`) — never converted from the rounded full-map %s,
-    which multiplies their rounding error by 176/24. `stats`/`FOUNDERS`-style hardcoded tables —
+    which multiplies their rounding error by 176/24. `stats`-style hardcoded tables —
     chapters carry no geo. **"Hollywood" is one marker for two sites** (Five Star Premier + Joe
     DiMaggio, 1.6 km apart): at any zoom this frame can carry, their dots merge into one blob and the
     upper pill covered the lower dot's click target — one pill naming both is honest and clickable.
@@ -930,8 +968,8 @@ and run NO JavaScript — to them a chapter page was 0 words, home ~210. Googleb
   once (it's identical everywhere).
 - **Facts AI must get right** (user-confirmed 2026-10-04): BFBL became a **student club in 2023**, a
   **nonprofit in 2025** (user's wording — the Sunbiz record N26000005240 suggests the FL corporation was filed in 2026, so never say "incorporated in 2025"), **IRS 501(c)(3) in 2026** (ProPublica: Weston FL, exemption
-  July 2026). State them that way, never as a bare "N years" count (About's "4 years" is the user's own
-  framing; leave it). The chapter count in `llms.txt` must equal
+  July 2026). State them that way, never as a bare "N years" count (About's "3 years" is the user's own
+  framing — they changed it from "4 years" on 2026-10-25; leave it). The chapter count in `llms.txt` must equal
   the chapters it lists.
 - **IndexNow** — key file **`5f4fd16d128d1617bf98ce8a802f205f.txt`** at the root (body = key; must
   stay deployed — `.vercelignore` doesn't touch it) + **`tools/indexnow.mjs`**, which POSTs every
@@ -1098,7 +1136,8 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
   (`execBoard=true`, doesn't touch chapter/category); ✕ removes.
 - **Chapter Pages** — one club at a time via `#chapter-pages-pick` dropdown (`renderChapterPages`
   filters; `data-i` still indexes full `chapters` via `chapters.indexOf(c)`). Per-chapter card editor:
-  **initiatives editor FIRST**, then name, location, status, statusTag, an "In progress" banner
+  **initiatives editor FIRST**, then name, location, status (stored, but NO LONGER shown publicly —
+  the pill is photo-derived, see Chapters directory), statusTag, an "In progress" banner
   checkbox (`data-cflag="inProgress"` — stores `false` when unchecked, never deletes the key: page
   saves are merge-writes, so a deleted key would survive in Firestore), Instagram, description,
   `contactEmail`, `joinUrl`, impact stats, partners, highlight photos. **Stats/partners/initiatives are

@@ -32,7 +32,6 @@
             instagram: "https://www.instagram.com/bytesforbetterlives?igsh=cmgzYzEwczV6YWI1",
             linkedin: "https://www.linkedin.com/company/bytes-for-better-lives/about/"
         },
-        founders: [],
         officers: [],
         chapters: [],
         gallery: [],
@@ -54,36 +53,9 @@
     // two different thresholds. Never give this an initializer, here or anywhere else.
     var navOverlayObserver;
 
-    // Founders are hardcoded here on purpose — they never change, so they are NOT stored in
-    // Firestore / data.people and are NOT editable in the admin. Edit this list to update them.
-    const FOUNDERS = [
-        {
-            name: "Aaron Pinto",
-            title: "Co-Founder",
-            photo: "images/team/aaron-pinto.jpg",
-            fallbackPhoto: "images/logo.avif",
-            detail: "",
-            bio: "Aaron co-founded Bytes for Better Lives to bridge the digital divide through service, education, and donations.",
-            contact: "",
-            roles: ["founder"]
-        },
-        {
-            name: "Pranav Rai",
-            title: "Co-Founder",
-            photo: "images/team/pranav-rai.jpg",
-            fallbackPhoto: "images/logo.avif",
-            detail: "",
-            bio: "Pranav co-founded Bytes for Better Lives to help seniors and children build practical technology skills and access.",
-            contact: "",
-            roles: ["founder"]
-        }
-    ];
-
     // Central member registry (data.people): derive the role-specific rosters so the rest of the
-    // app can keep using data.founders, data.officers, etc. Re-run whenever the data changes.
-    // Founders are always the hardcoded FOUNDERS list (never from data.people / Firestore).
+    // app can keep using data.officers, data.volunteers, etc. Re-run whenever the data changes.
     function deriveRoles() {
-        data.founders = FOUNDERS;
         if (!Array.isArray(data.people)) return;
         const byRole = function (role) {
             return data.people.filter(function (person) {
@@ -618,8 +590,16 @@
     function statusClass(status) {
         const key = statusKey(status);
         if (key === "active") return "status-active";
-        if (key === "launching") return "status-launching";
+        if (key === "launching" || key === "in progress") return "status-launching";
         return "status-prospective";
+    }
+
+    // A chapter's PUBLIC status is derived, not read from the admin "status" field (user rule,
+    // 2026-10-22): a chapter with highlight photos is "Active", every other one is "In progress".
+    // Same photo filter as the highlights section, so the pill matches what the profile shows.
+    function chapterStatus(chapter) {
+        const photos = chapter && Array.isArray(chapter.photos) ? chapter.photos.filter(Boolean) : [];
+        return photos.length ? "Active" : "In progress";
     }
 
     function statusLabel(status, chapter) {
@@ -635,11 +615,11 @@
 
     function chapterStatusBadgeMarkup(chapter) {
         // Every card gets a status pill. The founding (AHS) chapter is special; everyone else
-        // shows their status (Active / Launching / …), defaulting to "Active".
+        // shows their derived status (Active / In progress — see chapterStatus).
         if (isExecutiveChapter(chapter)) {
             return `<span class="status-badge status-executive">Founding Chapter</span>`;
         }
-        const status = (chapter && chapter.status ? String(chapter.status).trim() : "") || "Active";
+        const status = chapterStatus(chapter);
         return `<span class="status-badge ${statusClass(status)}">${escapeHTML(status)}</span>`;
     }
 
@@ -764,16 +744,12 @@
         return named || !!(chapter.leadName && String(chapter.leadName).trim());
     }
 
-    function activeChapters() {
-        return (data.chapters || []).filter(function (chapter) {
-            return chapter.status === "Active";
-        });
-    }
-
-    function pipelineChapters() {
-        return (data.chapters || []).filter(function (chapter) {
-            return chapter.status !== "Active";
-        });
+    // Directory order: Active chapters first, then In progress — each group keeps registry order.
+    function chaptersActiveFirst() {
+        const chapters = data.chapters || [];
+        const active = chapters.filter(function (chapter) { return chapterStatus(chapter) === "Active"; });
+        const pending = chapters.filter(function (chapter) { return chapterStatus(chapter) !== "Active"; });
+        return active.concat(pending);
     }
 
     function chaptersNavItem() {
@@ -1205,13 +1181,13 @@
     function renderChapterPreview() {
         const root = document.querySelector("#chapters-preview-grid");
         if (!root) return;
-        root.innerHTML = (data.chapters || []).slice(0, 3).map(chapterDirectoryCardMarkup).join("");
+        root.innerHTML = chaptersActiveFirst().slice(0, 3).map(chapterDirectoryCardMarkup).join("");
     }
 
     function renderChapterDirectoryPage() {
         const root = document.querySelector("#chapters-directory-grid");
         if (!root) return;
-        root.innerHTML = (data.chapters || []).map(chapterDirectoryCardMarkup).join("");
+        root.innerHTML = chaptersActiveFirst().map(chapterDirectoryCardMarkup).join("");
         hideSectionWhenEmpty("#chapters-directory-grid");
     }
 
@@ -1224,7 +1200,7 @@
     //     (tools/maps/build.py), so real roads, coastline and bays line up with these pins.
     //   • world.svg = a hand-drawn pseudocylindrical outline; North-American pins use a local affine
     //     fit (x = 432.1872 + 0.7217·lat + 2.6924·lng, y = 360.4426 - 3.5132·lat + 0.1962·lng).
-    // Chapters carry no geo data, so positions live here (like the hardcoded `stats`/`FOUNDERS`); a
+    // Chapters carry no geo data, so positions live here (like the hardcoded `stats`); a
     // chapter id with no entry simply gets no pin, and each pin's name/status/href still resolve live
     // from data.chapters. World pins collapse the SE-Florida chapters into one "Florida" marker.
     // The SE-Florida chapters are only ~40 mi apart, so on the Florida map their dots correctly sit
@@ -1253,7 +1229,7 @@
         { id: "new-york", label: "New York", x: 27.6, y: 32.7, dy: -2 },
         { id: "virginia", label: "Virginia", x: 26.8, y: 34.9, dy: 14 },
         { id: "russia", label: "Russia", x: 57.2, y: 25.6 },
-        { id: "turkey", label: "Turkey", x: 55.5, y: 34.2 }
+        { id: "turkey", label: "Turkey", x: 55.7, y: 34.4 } // Istanbul nudged ~1 unit inland: 55.5/34.2 sat in the Black Sea off the outline's NW corner (glaring on the turkey.svg hero crop)
     ];
     // Home "Our Reach" map only: countries where BFBL outreach/donation work has reached, NOT
     // chapters — so they carry no chapter id, but they DO carry an href to the page that documents
@@ -1344,10 +1320,10 @@
         if (FL[id]) return { map: "images/maps/florida.svg", x: FL[id][0], y: FL[id][1], aspect: "176 / 152" };
         const R = {
             "los-angeles": { map: "images/maps/california.svg", x: 59.0, y: 80.8, aspect: "0.859" },
-            "new-york": { map: "images/maps/new-york.svg", x: 70.7, y: 89.9, aspect: "1.279" },
+            "new-york": { map: "images/maps/new-york.svg", x: 71.8, y: 88.5, aspect: "1.279" },
             "virginia": { map: "images/maps/virginia.svg", x: 91.0, y: 62.3, aspect: "1.679" },
             "russia":   { map: "images/maps/russia.svg",   x: 11.6, y: 70.2, aspect: "1.714" },
-            "turkey":   { map: "images/maps/turkey.svg",   x: 19.1, y: 24.0, aspect: "2.091" }
+            "turkey":   { map: "images/maps/turkey.svg",   x: 22.6, y: 28.7, aspect: "2.091" }
         };
         return R[id] || null;
     }
@@ -1387,7 +1363,7 @@
         const chapter = chapterById(pin.id);
         if (!chapter) return "";
         const href = pin.href || chapterPublicHref(chapter);
-        const realStatus = (chapter.status && String(chapter.status).trim()) || "Active";
+        const realStatus = chapterStatus(chapter);
         // forceStatus recolours the DOT only (home map: all chapter pins green to match its legend);
         // the tooltip below keeps the chapter's real status so it never claims a false one.
         // typeof guard: Array#map passes the INDEX as the 2nd arg, so `.map(mapPinMarkup)` stays safe.
@@ -1489,7 +1465,7 @@
         const cats = Array.isArray(data.categories) ? data.categories : [];
         const found = cats.find(function (c) { return c && c.id === id; });
         if (found) return found.label || found.id;
-        const defaults = { founder: "Founders", leadership: "Leadership", design: "Design", volunteer: "Volunteers" };
+        const defaults = { leadership: "Leadership", design: "Design", volunteer: "Volunteers" };
         if (defaults[id]) return defaults[id];
         return id ? id.charAt(0).toUpperCase() + id.slice(1) : "Members";
     }
@@ -2056,18 +2032,13 @@
     }
 
     function renderTeamPage() {
-        const foundersRoot = document.querySelector("#team-founders-grid");
         const execRoot = document.querySelector("#team-executive-grid");
         const designRoot = document.querySelector("#team-design-grid");
         const clubRoot = document.querySelector("#team-club-officers-grid");
         const chapterRoot = document.querySelector("#team-chapter-leaders-grid");
         const volunteerRoot = document.querySelector("#team-volunteers-grid");
 
-        if (!foundersRoot && !execRoot && !clubRoot && !chapterRoot && !volunteerRoot) return;
-
-        if (foundersRoot) {
-            renderOfficerGrid("#team-founders-grid", data.founders || [], false);
-        }
+        if (!execRoot && !clubRoot && !chapterRoot && !volunteerRoot) return;
 
         if (execRoot) {
             // Board of Directors: ONLY members flagged person.execBoard in the admin.
@@ -2696,7 +2667,7 @@
     }
 
     // "Ways to give" hub (donate.html): renders one tile per payment method into #donate-methods.
-    // Methods are hardcoded here (like `stats`/FOUNDERS) — they're not part of the Firestore model.
+    // Methods are hardcoded here (like `stats`) — they're not part of the Firestore model.
     // GoFundMe, Zelle, and PayPal are live.
     function renderDonatePage() {
         var root = document.getElementById("donate-methods");

@@ -50,8 +50,6 @@ window.BFBL_DATA = {
     //   "volunteer"  -> Team page "Volunteers" section
     // Everyone listed here also appears in the homepage "All Members" list automatically.
     // A person can hold more than one role, e.g. roles: ["leadership", "design"].
-    // NOTE: Founders are hardcoded in script.js (FOUNDERS) — they never change, so they are
-    // intentionally NOT in this registry, Firestore, or the admin. Do not re-add them here.
     people: [
         {
             name: "Andrey Vasilyev",

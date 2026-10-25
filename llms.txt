@@ -61,7 +61,7 @@
 - [About](https://www.bytesforbetterlives.net/about.html): mission, vision, values, and our story.
 - [Impact](https://www.bytesforbetterlives.net/impact.html): work with seniors and kids, donations, and partners.
 - [Initiatives](https://www.bytesforbetterlives.net/ongoing-initiatives.html): current fundraisers, donation drives, and chapter initiatives.
-- [Team](https://www.bytesforbetterlives.net/team.html): founders, board of directors, chapter leadership, and volunteers.
+- [Team](https://www.bytesforbetterlives.net/team.html): board of directors, chapter leadership, and volunteers.
 - [Chapters](https://www.bytesforbetterlives.net/chapters.html): every chapter, with maps and how to start one.
 - [Past Events](https://www.bytesforbetterlives.net/past-events.html): board-game drives, digital-safety nights, senior tech workshops, and trivia fundraisers.
 - [Gallery](https://www.bytesforbetterlives.net/gallery.html): photos from service days, events, donations, and chapter activities.

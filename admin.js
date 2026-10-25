@@ -13,7 +13,6 @@ const loginBox = $("login-box");
 const panel = $("admin-panel");
 const actions = $("admin-actions");
 
-// Founders are hardcoded in script.js (never editable), so there is no "Founder" category here.
 const DEFAULT_CATEGORIES = [
     { id: "leadership", label: "Leadership" },
     { id: "design", label: "Design" },
