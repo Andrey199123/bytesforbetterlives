@@ -33,38 +33,38 @@
 
 ## Chapters
 
-- [AHS Chapter](https://ahs.bytesforbetterlives.net/) — Plantation, Florida (founding chapter)
-- [Cypress Bay Chapter](https://cypress.bytesforbetterlives.net/) — Weston, Florida
-- [Gainesville Chapter](https://gainesville.bytesforbetterlives.net/) — Gainesville, Florida
-- [Coral Springs Chapter](https://coral-springs.bytesforbetterlives.net/) — Coral Springs, Florida
-- [Miami Chapter](https://miami.bytesforbetterlives.net/) — Miami, Florida
-- [Doral Chapter](https://www.bytesforbetterlives.net/chapter-doral.html) — Doral, Florida
-- [New York Chapter](https://new-york.bytesforbetterlives.net/) — New York, New York
-- [Virginia Chapter](https://virginia.bytesforbetterlives.net/) — Virginia Beach, Virginia
-- [Russia Chapter](https://russia.bytesforbetterlives.net/) — Moscow, Russia
-- [Turkey Chapter](https://turkey.bytesforbetterlives.net/) — Istanbul, Turkey
-- [Los Angeles Chapter](https://www.bytesforbetterlives.net/chapter-los-angeles.html) — Los Angeles, California
-- [Parkland Chapter](https://www.bytesforbetterlives.net/chapter-parkland.html) — Parkland, Florida
+- [AHS Chapter](https://ahs.bytesforbetterlives.org/) — Plantation, Florida (founding chapter)
+- [Cypress Bay Chapter](https://cypress.bytesforbetterlives.org/) — Weston, Florida
+- [Gainesville Chapter](https://gainesville.bytesforbetterlives.org/) — Gainesville, Florida
+- [Coral Springs Chapter](https://coral-springs.bytesforbetterlives.org/) — Coral Springs, Florida
+- [Miami Chapter](https://miami.bytesforbetterlives.org/) — Miami, Florida
+- [Doral Chapter](https://www.bytesforbetterlives.org/chapter-doral.html) — Doral, Florida
+- [New York Chapter](https://new-york.bytesforbetterlives.org/) — New York, New York
+- [Virginia Chapter](https://virginia.bytesforbetterlives.org/) — Virginia Beach, Virginia
+- [Russia Chapter](https://russia.bytesforbetterlives.org/) — Moscow, Russia
+- [Turkey Chapter](https://turkey.bytesforbetterlives.org/) — Istanbul, Turkey
+- [Los Angeles Chapter](https://www.bytesforbetterlives.org/chapter-los-angeles.html) — Los Angeles, California
+- [Parkland Chapter](https://www.bytesforbetterlives.org/chapter-parkland.html) — Parkland, Florida
 
 ## Get involved
 
-- [Donate](https://www.bytesforbetterlives.net/donate.html): give through GoFundMe, Zelle, or PayPal; every dollar funds devices and programs for seniors and students.
-- [Start a chapter](https://www.bytesforbetterlives.net/chapters.html#start-chapter): students can launch a Bytes for Better Lives chapter in their own community.
-- [Contact](https://www.bytesforbetterlives.net/contact.html): questions, partnerships, volunteering, or starting a chapter.
+- [Donate](https://www.bytesforbetterlives.org/donate.html): give through GoFundMe, Zelle, or PayPal; every dollar funds devices and programs for seniors and students.
+- [Start a chapter](https://www.bytesforbetterlives.org/chapters.html#start-chapter): students can launch a Bytes for Better Lives chapter in their own community.
+- [Contact](https://www.bytesforbetterlives.org/contact.html): questions, partnerships, volunteering, or starting a chapter.
 - Email: bytesforbetterlives@gmail.com
 - Instagram: https://www.instagram.com/bytesforbetterlives/
 - LinkedIn: https://www.linkedin.com/company/bytes-for-better-lives/
 
 ## Key pages
 
-- [Home](https://www.bytesforbetterlives.net/): overview, impact figures, programs, and where we work.
-- [About](https://www.bytesforbetterlives.net/about.html): mission, vision, values, and our story.
-- [Impact](https://www.bytesforbetterlives.net/impact.html): work with seniors and kids, donations, and partners.
-- [Initiatives](https://www.bytesforbetterlives.net/ongoing-initiatives.html): current fundraisers, donation drives, and chapter initiatives.
-- [Team](https://www.bytesforbetterlives.net/team.html): board of directors, chapter leadership, and volunteers.
-- [Chapters](https://www.bytesforbetterlives.net/chapters.html): every chapter, with maps and how to start one.
-- [Past Events](https://www.bytesforbetterlives.net/past-events.html): board-game drives, digital-safety nights, senior tech workshops, and trivia fundraisers.
-- [Gallery](https://www.bytesforbetterlives.net/gallery.html): photos from service days, events, donations, and chapter activities.
-- [Donate](https://www.bytesforbetterlives.net/donate.html): every way to give.
-- [Contact](https://www.bytesforbetterlives.net/contact.html): email, Instagram, LinkedIn, and a message form.
-- [FAQ](https://www.bytesforbetterlives.net/faq.html): short answers about BFBL, getting help, donating, volunteering, and starting a chapter.
+- [Home](https://www.bytesforbetterlives.org/): overview, impact figures, programs, and where we work.
+- [About](https://www.bytesforbetterlives.org/about.html): mission, vision, values, and our story.
+- [Impact](https://www.bytesforbetterlives.org/impact.html): work with seniors and kids, donations, and partners.
+- [Initiatives](https://www.bytesforbetterlives.org/ongoing-initiatives.html): current fundraisers, donation drives, and chapter initiatives.
+- [Team](https://www.bytesforbetterlives.org/team.html): board of directors, chapter leadership, and volunteers.
+- [Chapters](https://www.bytesforbetterlives.org/chapters.html): every chapter, with maps and how to start one.
+- [Past Events](https://www.bytesforbetterlives.org/past-events.html): board-game drives, digital-safety nights, senior tech workshops, and trivia fundraisers.
+- [Gallery](https://www.bytesforbetterlives.org/gallery.html): photos from service days, events, donations, and chapter activities.
+- [Donate](https://www.bytesforbetterlives.org/donate.html): every way to give.
+- [Contact](https://www.bytesforbetterlives.org/contact.html): email, Instagram, LinkedIn, and a message form.
+- [FAQ](https://www.bytesforbetterlives.org/faq.html): short answers about BFBL, getting help, donating, volunteering, and starting a chapter.

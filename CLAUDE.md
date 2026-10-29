@@ -9,6 +9,11 @@ the digital divide for seniors and children (senior tech help, digital-literacy/
 education, donations, a growing chapter network).
 
 ## Tech & how to run
+- **Canonical domain = `www.bytesforbetterlives.org`** (since 2026-10-29 — it was `.net` before, with
+  `.org` redirecting; the user flipped it). Every `.net` host 308s to its `.org` twin in `middleware.js`;
+  canonicals, og:url, JSON-LD, `sitemap.xml`, `robots.txt`, `llms.txt` and chapter-subdomain links
+  (`chapterBaseDomain()`) all say `.org`. Two deliberate `.net` leftovers: Plausible's `data-domain`
+  (the dashboard site ID) and `GALLERY_SITE_ORIGIN` (Cloudinary fetch cache keys) — see their notes.
 - **Plain static site** — vanilla HTML/CSS/JS, no build step, no framework, no package manager. All
   source files live at the **repo root** (no `src/`/`pages/`).
 - Run locally: `python3 -m http.server 8000` → http://localhost:8000/.
@@ -141,7 +146,9 @@ Top-level: `contactEmail`, `donateUrl`, `socialLinks`, `fundraisers`, `drives`, 
   `initPlausible()` (Plausible, cookie-less; `data-domain="bytesforbetterlives.net"` = the ONE
   dashboard site all hosts/subdomains report into; `script.outbound-links.js` variant so external
   donate-link clicks are tracked; skips `/admin` paths; no-ops on localhost). Dashboard:
-  plausible.io — the site must exist there under that exact domain for events to record.
+  plausible.io — the site must exist there under that exact domain for events to record. It is the
+  site ID, not the serving host, so it stayed `.net` when `.org` became canonical (2026-10-29); rename
+  it only together with Plausible's Site settings → "Change domain", or the dashboard stops recording.
 - **Avatars**: `personPhotoMarkup(name,photo,…)` → portrait or initials on brand green
   (`.avatar-initials`) when no real photo. `hasRealPhoto()` treats missing photo OR `logo.avif`
   placeholder as "no photo"; `initImageFallbacks` swaps 404'd `<img>` for initials (also catches images
@@ -637,7 +644,9 @@ The navbar overlays all of them — see `nav-overlay` below.
     the page crawled on Mac/iOS). `cloudinaryUrl(src, transform, ext)` routes EVERY gallery URL
     through Cloudinary on-the-fly transforms (cloud `rwga4efb`): Cloudinary uploads get the transform
     spliced after `/upload/`; repo files (`images/…`, ~148 legacy entries) go through Cloudinary
-    **`image/fetch`** from `GALLERY_SITE_ORIGIN` (www, so local dev shows PRODUCTION's copy — a file
+    **`image/fetch`** from `GALLERY_SITE_ORIGIN` (www**.net** on purpose even though `.org` is canonical:
+    `middleware.js` doesn't touch `/images/`, so `.net` still serves them with a 200, and moving the
+    origin would re-key — and re-fetch — every cached derivative; www, so local dev shows PRODUCTION's copy — a file
     not yet deployed won't resize locally); other hosts pass through untouched.
   - **Low-quality first**: a tile paints `GALLERY_LQ` (320px `q_auto:low`, ~12 KB), then
     `upgradeGalleryTile()` swaps in a copy sized to the tile (cover-aware, DPR capped at 2, bucketed
@@ -946,14 +955,16 @@ and run NO JavaScript — to them a chapter page was 0 words, home ~210. Googleb
   after admin edits; humans always get live content.
 - **`middleware.js`** (Vercel Routing Middleware, matcher `/` + `*.html`, runs BEFORE the filesystem —
   `vercel.json` `rewrites` can't: "precedence is given to the filesystem prior to rewrites"):
-  (1) `<id>.bytesforbetterlives.net/` → rewrite to `chapter-<id>.html` (200; replaced the 307
-  redirects, which left every chapter canonical pointing at a redirect); (2) any `.org` host → 308 to
-  the `.net` twin (it served a full indexed duplicate); (3) user-agent in `SNAPSHOT_BOTS` (GPTBot,
+  (1) `<id>.bytesforbetterlives.org/` → rewrite to `chapter-<id>.html` (200; replaced the 307
+  redirects, which left every chapter canonical pointing at a redirect); (2) any `.net` host → 308 to
+  the `.org` twin, path kept (apex → www; flipped 2026-10-29 — until then `.org` 308'd to `.net`;
+  serving both is a full indexed duplicate); (3) user-agent in `SNAPSHOT_BOTS` (GPTBot,
   OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-User/SearchBot, PerplexityBot, bingbot, Applebot,
   Amazonbot, meta-externalagent, CCBot…; NOT Googlebot) → rewrite to `/_snapshots/<page>`, response
   header **`x-bfbl-render: snapshot`**. Verify live:
-  `curl -sI -A GPTBot https://www.bytesforbetterlives.net/ | grep x-bfbl` and
-  `curl -s -o /dev/null -w '%{http_code}' https://ahs.bytesforbetterlives.net/` (→ 200).
+  `curl -sI -A GPTBot https://www.bytesforbetterlives.org/ | grep x-bfbl`,
+  `curl -s -o /dev/null -w '%{http_code}' https://ahs.bytesforbetterlives.org/` (→ 200) and
+  `curl -sI https://www.bytesforbetterlives.net/about.html | grep -i location` (→ the `.org` URL).
   `CHAPTERS`/`PUBLIC_PAGES` are exported and `tools/prerender.mjs` imports them, so a snapshot exists
   for exactly what gets rewritten. **A NEW public page** → add it to `PUBLIC_PAGES` (else bots just get
   the JS shell), `sitemap.xml` and `llms.txt` Key pages. Failure is graceful (unknown page → live page;
@@ -1110,8 +1121,9 @@ convert P3→sRGB, strip EXIF/GPS) and upload the JPEG.
   Authentication → Settings → **Authorized domains**; any other host fails with `auth/unauthorized-domain`
   (bit `bytesforbetterlives.org` on 2026-10-04 — the list had only `localhost`, the two Firebase hosts,
   `bytesforbetterlives.vercel.app` and the `.net` apex + `www`, no chapter subdomains). Any NEW host or
-  subdomain an admin page is opened on must be added there. Since 2026-10-04 `middleware.js` 308s every
-  `.org` host to `.net` (same path), so admins opening a `.org` link land on the authorized `.net` host.
+  subdomain an admin page is opened on must be added there. Since 2026-10-29 `middleware.js` 308s every
+  `.net` host to `.org` (same path), so admin pages ONLY ever load on `.org` — ⚠️ `www.bytesforbetterlives.org`
+  (+ the apex) must be on that list or every admin sign-in fails.
 
 ### Admin = one page per tab
 `admin.js` SDK + shared `admin.css` (loads AFTER `styles.css`, so `.btn`/`.impact-card` radii come from
@@ -1191,13 +1203,15 @@ its section. Google login → **auto-saving** (debounced merge-writes). Add a ta
     (name — city — subdomain URL), and the stub's JSON-LD (shared NGO block + `WebPage` whose
     `mainEntity.location` names the city); (8) add the id to `CHAPTERS` in **`middleware.js`** (serves the stub at the subdomain
     root with a 200 AND gives it a crawler snapshot; the old `vercel.json` subdomain redirects are GONE —
-    they'd run before the middleware, and `.org` now 308s to `.net` wholesale) — without it the subdomain
-    root serves the homepage — AND the subdomain itself must exist: an A record `76.76.21.21` at the DNS
-    host (NS1/`nsone.net`, not Vercel DNS) + the domain added to the Vercel project. ⚠️ As of 2026-10-04
+    they'd run before the middleware, and `.net` now 308s to `.org` wholesale) — without it the subdomain
+    root serves the homepage — AND the subdomain itself must exist ON `.org` (`<id>.bytesforbetterlives.org`
+    — a `.net`-only record just 308s to a dead host): an A record `76.76.21.21` at that domain's DNS
+    host + the domain added to the Vercel project. (The `.net` zone's DNS host is NS1/`nsone.net`, not
+    Vercel DNS; the `.org` zone's wasn't checked at the 2026-10-29 flip.) ⚠️ As of 2026-10-04
     `doral`, `los-angeles` and `parkland` have NO DNS record, so they sit in `CHAPTERS_WITHOUT_SUBDOMAIN`
     (`script.js` — `chapterPublicHref()` links them to their www page, not the dead subdomain) and their
     canonical/og:url/JSON-LD `url`, `sitemap.xml` `<loc>` and `llms.txt` link use
-    `https://www.bytesforbetterlives.net/chapter-<id>.html`; once DNS lands, drop the id from that list
+    `https://www.bytesforbetterlives.org/chapter-<id>.html`; once DNS lands, drop the id from that list
     and move those URLs back to the subdomain root; (9) add the chapter
     lead to the chapter doc's members + `page.leadPeople`; (10) optional: mirror into the `data.js` seed
     fallback. Grant a chapter admin via `site/content.chapterAdmins` (key = the **lowercased** Google

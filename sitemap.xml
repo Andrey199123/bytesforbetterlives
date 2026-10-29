@@ -1,120 +1,120 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/about.html</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.bytesforbetterlives.org/about.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/impact.html</loc>
-    <lastmod>2026-10-25</lastmod>
+    <loc>https://www.bytesforbetterlives.org/impact.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/ongoing-initiatives.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/ongoing-initiatives.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/team.html</loc>
-    <lastmod>2026-10-24</lastmod>
+    <loc>https://www.bytesforbetterlives.org/team.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/chapters.html</loc>
-    <lastmod>2026-10-22</lastmod>
+    <loc>https://www.bytesforbetterlives.org/chapters.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/contact.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/contact.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/gallery.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/gallery.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/donate.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/donate.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/past-events.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/past-events.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/faq.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/faq.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.8</priority>
   </url>
 
   <!-- Chapter Subdomains -->
   <url>
-    <loc>https://ahs.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://ahs.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://cypress.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://cypress.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://new-york.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://new-york.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://virginia.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://virginia.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://gainesville.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://gainesville.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://coral-springs.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://coral-springs.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://miami.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://miami.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/chapter-doral.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/chapter-doral.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://russia.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://russia.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://turkey.bytesforbetterlives.net/</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://turkey.bytesforbetterlives.org/</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/chapter-los-angeles.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/chapter-los-angeles.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.bytesforbetterlives.net/chapter-parkland.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <loc>https://www.bytesforbetterlives.org/chapter-parkland.html</loc>
+    <lastmod>2026-10-29</lastmod>
     <priority>0.9</priority>
   </url>
 </urlset>

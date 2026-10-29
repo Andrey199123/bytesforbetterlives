@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # AI search / answer crawlers: we WANT these to read the site so assistants describe BFBL accurately.
-# Plain-text summary for LLMs: https://www.bytesforbetterlives.net/llms.txt
+# Plain-text summary for LLMs: https://www.bytesforbetterlives.org/llms.txt
 # No Disallow anywhere: admin pages carry a noindex meta, which a crawler must be able to fetch to see.
 User-agent: GPTBot
 Allow: /
@@ -40,4 +40,4 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Sitemap: https://www.bytesforbetterlives.net/sitemap.xml
+Sitemap: https://www.bytesforbetterlives.org/sitemap.xml
