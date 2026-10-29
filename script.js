@@ -1,12 +1,12 @@
 // Subdomain Redirect Logic
 (function() {
     const host = window.location.hostname;
-    const isSubdomain = host.endsWith('.bytesforbetterlives.net') &&
-                        !host.startsWith('www.bytesforbetterlives.net');
+    const isSubdomain = host.endsWith('.bytesforbetterlives.org') &&
+                        !host.startsWith('www.bytesforbetterlives.org');
 
     if (isSubdomain) {
         if (window.location.pathname !== '/' && window.location.pathname !== '/index.html' && !window.location.pathname.startsWith('/chapter-')) {
-            window.location.replace('https://www.bytesforbetterlives.net' + window.location.pathname + window.location.search + window.location.hash);
+            window.location.replace('https://www.bytesforbetterlives.org' + window.location.pathname + window.location.search + window.location.hash);
         } else {
             document.addEventListener('click', function(e) {
                 const a = e.target.closest('a');
@@ -16,7 +16,7 @@
                         e.preventDefault();
                         let newPath = href;
                         if (!newPath.startsWith('/')) newPath = '/' + newPath;
-                        window.location.href = 'https://www.bytesforbetterlives.net' + newPath;
+                        window.location.href = 'https://www.bytesforbetterlives.org' + newPath;
                     }
                 }
             });
@@ -130,6 +130,9 @@
     // upgradeGalleryTile() swaps in one sized to the tile; the lightbox opens on whatever the tile
     // shows and swaps to the full-quality copy once that has loaded. The original URL rides along as
     // data-original-src — initImageFallbacks() retries it if a derived URL ever fails.
+    // GALLERY_SITE_ORIGIN deliberately stays on .net although .org is canonical: middleware.js only
+    // redirects "/" and *.html, so .net still serves /images/ with a 200, and every derivative
+    // Cloudinary has already cached is keyed by this exact URL. Moving it re-fetches every image.
     var CLOUDINARY_ROOT = "https://res.cloudinary.com/rwga4efb/";
     var GALLERY_SITE_ORIGIN = "https://www.bytesforbetterlives.net";
     var GALLERY_LQ = "c_limit,w_320,q_auto:low,f_auto";
@@ -458,7 +461,9 @@
 
     function initPlausible() {
         // Plausible Analytics (cookie-less, no consent banner needed). data-domain is the ONE
-        // dashboard site: every serving host (www/apex/chapter subdomains) reports into it.
+        // dashboard site: every serving host (www/apex/chapter subdomains) reports into it. It is
+        // the Plausible site ID, not the serving host, so it stays "bytesforbetterlives.net" after
+        // the move to .org — change it only together with the site's domain in Plausible settings.
         // The outbound-links variant also records clicks on external links (GoFundMe/PayPal donate
         // CTAs). Plausible's script no-ops on localhost, so local dev never records visits.
         if (window.__bfblPlausible) return;
@@ -541,20 +546,20 @@
 
     // Returns the base domain to use for chapter subdomains.
     function chapterBaseDomain() {
-        return "bytesforbetterlives.net";
+        return "bytesforbetterlives.org";
     }
 
     // Whether we should generate chapter subdomain URLs in this environment.
     // Local previews (localhost, file://, netlify.app, vercel.app, etc.) keep using relative chapter pages.
     function shouldUseChapterSubdomains() {
         var host = String(window.location.hostname || "").toLowerCase().replace(/^www\./, "");
-        return host === "bytesforbetterlives.net"
-            || host.endsWith(".bytesforbetterlives.net");
+        return host === "bytesforbetterlives.org"
+            || host.endsWith(".bytesforbetterlives.org");
     }
 
-    // Chapters whose <id>.bytesforbetterlives.net has NO DNS record yet: linking there is a dead
+    // Chapters whose <id>.bytesforbetterlives.org has NO DNS record yet: linking there is a dead
     // link, so they stay on their www page (which is also their canonical/sitemap URL). Once the A
-    // record (76.76.21.21, at the NS1 DNS host) exists AND the domain is added to the Vercel
+    // record (76.76.21.21, at the .org zone's DNS host) exists AND the domain is added to the Vercel
     // project, drop the id here and move its canonical/og:url/JSON-LD, sitemap.xml and llms.txt
     // URL back to the subdomain root.
     var CHAPTERS_WITHOUT_SUBDOMAIN = ["doral", "los-angeles", "parkland"];

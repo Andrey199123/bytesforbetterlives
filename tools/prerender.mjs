@@ -28,7 +28,7 @@ import { fileURLToPath } from "node:url";
 import { PUBLIC_PAGES } from "../middleware.js";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const SITE = "https://www.bytesforbetterlives.net";
+const SITE = "https://www.bytesforbetterlives.org";
 const args = process.argv.slice(2);
 const flag = (name) => { const i = args.indexOf(name); return i === -1 ? null : args[i + 1]; };
 const OUT = resolve(ROOT, flag("--out") || "_snapshots");

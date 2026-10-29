@@ -4,9 +4,10 @@
 //
 // 1. Chapter subdomains serve their chapter page at "/" with a 200 (was a 307 redirect to
 //    /chapter-<id>.html, which left every chapter's canonical URL pointing at a redirect).
-// 2. The .org domain (same deployment) 308s to .net, path kept. It served a full duplicate of the
-//    site with a 200, which search engines had indexed as a stale copy. Its apex → www hop is a
-//    Vercel domain setting, not this file.
+// 2. The .net domain (same deployment) 308s to its .org twin, path kept — .org has been the
+//    canonical domain since 2026-10-29 (it was the other way round before). Serving both with a 200
+//    is a full indexed duplicate of the site. Apex → www hops are Vercel domain settings and run
+//    before this file; a .net apex that reaches it goes straight to www.bytesforbetterlives.org.
 // 3. AI crawlers (and Bing, whose index feeds ChatGPT search) get a static SNAPSHOT of the page
 //    from /_snapshots/, rendered by tools/prerender.mjs in the deploy Action. These bots fetch raw
 //    HTML and run no JavaScript, and every page here is filled in by script.js — without this a
@@ -19,7 +20,7 @@
 
 export const config = { matcher: ["/", "/(.*\\.html)"] };
 
-// Every chapter id with a chapter-<id>.html stub. Its <id>.bytesforbetterlives.net host also needs
+// Every chapter id with a chapter-<id>.html stub. Its <id>.bytesforbetterlives.org host also needs
 // a DNS A record + the domain added in Vercel (see CHAPTERS_WITHOUT_SUBDOMAIN in script.js).
 export const CHAPTERS = [
     "ahs", "cypress", "new-york", "virginia", "gainesville", "coral-springs",
@@ -45,8 +46,8 @@ export const SNAPSHOT_BOTS = new RegExp([
     "DuckAssistBot", "MistralAI-User", "cohere-ai", "YouBot", "CCBot", "AI2Bot", "Diffbot"
 ].join("|"), "i");
 
-const CHAPTER_HOST = /^([a-z-]+)\.bytesforbetterlives\.net$/;
-const ORG_HOST = /^(?:([a-z-]+)\.)?bytesforbetterlives\.org$/;
+const CHAPTER_HOST = /^([a-z-]+)\.bytesforbetterlives\.org$/;
+const NET_HOST = /^(?:([a-z-]+)\.)?bytesforbetterlives\.net$/;
 
 function forward(destination, request, headers) {
     const out = new Headers(headers || {});
@@ -63,9 +64,9 @@ export default function middleware(request) {
         const url = new URL(request.url);
         if (url.pathname.startsWith("/_snapshots/")) return pass();
 
-        const org = ORG_HOST.exec(url.hostname.toLowerCase());
-        if (org) {
-            url.hostname = `${!org[1] || org[1] === "www" ? "www" : org[1]}.bytesforbetterlives.net`;
+        const net = NET_HOST.exec(url.hostname.toLowerCase());
+        if (net) {
+            url.hostname = `${!net[1] || net[1] === "www" ? "www" : net[1]}.bytesforbetterlives.org`;
             return Response.redirect(url.toString(), 308);
         }
 
