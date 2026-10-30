@@ -32,7 +32,7 @@ const CONTENT_TYPE = {
     ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
     ".webp": "image/webp", ".avif": "image/avif", ".tif": "image/tiff", ".tiff": "image/tiff",
 };
-const REPO_ROOT = new URL("..", import.meta.url).pathname;
+const REPO_ROOT = new URL("../public/", import.meta.url).pathname;
 
 const args = process.argv.slice(2);
 const commit = args.includes("--commit");

@@ -4,6 +4,9 @@
 # robots.txt, sitemap.xml, the google*.html and IndexNow *.txt verification files deployed.
 CLAUDE.md
 tools/
+config/
+AGENTS.md
+README.md
 .github/
 .claude/
 .vscode/

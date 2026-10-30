@@ -10,6 +10,8 @@ import os
 from urllib.parse import urljoin, urlparse
 import time
 
+# Resolve website paths independently of the caller's working directory.
+os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'public'))
 # Create images directory
 os.makedirs('images', exist_ok=True)
 

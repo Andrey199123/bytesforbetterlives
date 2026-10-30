@@ -21,7 +21,7 @@ from statistics import median
 
 from PIL import Image, ImageChops
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent / "public"
 SRC = ROOT / "images" / "our impact"
 OUT = ROOT / "images" / "partners"
 

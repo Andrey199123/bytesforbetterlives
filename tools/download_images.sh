@@ -20,6 +20,7 @@ if ! command -v wget &> /dev/null; then
     fi
 fi
 
+cd "$(dirname "$0")/../public" || exit 1
 # Create images directory
 mkdir -p images
 cd images

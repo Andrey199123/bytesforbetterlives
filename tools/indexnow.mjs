@@ -17,7 +17,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const KEY = "5f4fd16d128d1617bf98ce8a802f205f";
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../public");
 const DRY = process.argv.includes("--dry-run");
 
 const sitemap = await readFile(resolve(ROOT, "sitemap.xml"), "utf8");

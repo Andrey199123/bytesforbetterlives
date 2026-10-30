@@ -17,10 +17,20 @@ The site is plain HTML, CSS, and JavaScript with no framework or build step. Mos
 ## Running it locally
 
 ```
-python3 -m http.server 8000
+python3 -m http.server 8000 --directory public
 ```
 
 Then open http://localhost:8000. Pushing to `main` deploys to Vercel through `.github/workflows/vercel-deploy.yml`.
+
+## Repository layout
+
+- `public/`: the complete static website, including pages, browser scripts, styles and images. Files are served at their original URLs, without a `/public` prefix.
+- `tools/`: local administration, image helpers, maps and crawler snapshot generation.
+- `config/firebase/`: Firestore and Storage security rules.
+- `middleware.js`: Vercel routing middleware, kept at the repository root for automatic discovery.
+- `.github/workflows/`: the existing deployment pipeline.
+
+Vercel publishes `public/`. Crawler snapshots are generated into `public/_snapshots/` before deployment. Firebase is still the backend only.
 
 ## Built by
 

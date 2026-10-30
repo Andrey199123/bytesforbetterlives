@@ -377,7 +377,7 @@ def build_se(recs, parts):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--out', default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                                  '..', '..', 'images', 'maps'))
+                                                  '..', '..', 'public', 'images', 'maps'))
     args = ap.parse_args()
     recs, parts = load_roads()
     out = os.path.abspath(args.out)

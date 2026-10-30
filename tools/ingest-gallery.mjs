@@ -27,7 +27,7 @@ import { getStorage } from "firebase-admin/storage";
 import { getContent, patchContent } from "./firestore.mjs"; // initializes admin app
 
 const BUCKET = "project-686d62b7-14f5-43c7-acc.firebasestorage.app";
-const REPO_ROOT = resolve(new URL("..", import.meta.url).pathname);
+const REPO_ROOT = resolve(new URL("../public/", import.meta.url).pathname);
 const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".avif", ".tif", ".tiff"]);
 const CONTENT_TYPE = {
     ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",

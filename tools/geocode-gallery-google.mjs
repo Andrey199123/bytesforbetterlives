@@ -27,7 +27,7 @@ const RADIUS_M = num("--radius", 800);
 const NEAR_M = num("--near", 70);
 
 let KEY = process.env.GOOGLE_MAPS_KEY;
-if (!KEY) { const m = readFileSync(new URL("../firebase.js", import.meta.url), "utf8").match(/apiKey:\s*"([^"]+)"/); KEY = m && m[1]; }
+if (!KEY) { const m = readFileSync(new URL("../public/firebase.js", import.meta.url), "utf8").match(/apiKey:\s*"([^"]+)"/); KEY = m && m[1]; }
 if (!KEY) { console.error("No API key. Set GOOGLE_MAPS_KEY=... (or ensure firebase.js has apiKey)."); process.exit(1); }
 
 const R = 6371000, toR = (d) => (d * Math.PI) / 180;
