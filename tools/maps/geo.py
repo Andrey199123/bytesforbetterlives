@@ -1,7 +1,7 @@
 """Shared geo toolkit for the BFBL Florida maps.
 
 Projection is the SAME Albers conic the existing pin tables were calibrated against
-(CLAUDE.md "Map-projection note"): n=0.60283700, C=1.35122133, lng0=-96.
+(projection calibration): n=0.60283700, C=1.35122133, lng0=-96.
 Verified: it reproduces every published FLORIDA_MAP_PINS / FLORIDA_SE_CHAPTER_PINS % exactly.
 """
 import math

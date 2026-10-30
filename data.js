@@ -1,5 +1,5 @@
 // Bytes for Better Lives site data
-// Note: this file is the seed / offline fallback — live content comes from Firestore (see CLAUDE.md).
+// Note: this file is the seed / offline fallback — live content comes from Firestore.
 // Edit this file to update officer bios/photos, chapters, chapter leads, and gallery stories.
 // Chapter counts are generated from this array, and only status === "Active" counts as an active chapter.
 window.BFBL_DATA = {

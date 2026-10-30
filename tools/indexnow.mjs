@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// IndexNow ping — see CLAUDE.md "AI crawlers & search". Tells Bing (whose index feeds ChatGPT
+// IndexNow ping. Tells Bing (whose index feeds ChatGPT
 // search), Yandex, Seznam, Naver and the other IndexNow engines that every URL in sitemap.xml may
 // have changed, so they recrawl in minutes instead of weeks. The deploy Action runs it after each
 // production deploy triggered by a push (not the daily snapshot refresh).

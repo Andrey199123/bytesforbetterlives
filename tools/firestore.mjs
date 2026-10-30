@@ -1,6 +1,6 @@
 // tools/firestore.mjs — Firebase Admin helper for updating live content.
 //
-// Used by local Node scripts (run by Claude) to read/modify the Firestore `site/content`
+// Used by local Node scripts to read/modify the Firestore `site/content`
 // document directly, without the browser admin page. NOT shipped to the website.
 //
 // Auth: uses gcloud Application Default Credentials (key-less) — no secret file needed.

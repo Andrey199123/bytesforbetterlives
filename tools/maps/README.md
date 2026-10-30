@@ -6,7 +6,7 @@ They are plain static SVGs — no map library, no tiles, no runtime requests, sa
 the silhouettes they replaced.
 
 Both are drawn with the SAME Albers conic projection the site's pin tables were calibrated against
-(see the "Map-projection note" in CLAUDE.md), and each keeps its `viewBox` byte-identical to the old
+(see the projection notes in geo.py), and each keeps its `viewBox` byte-identical to the old
 file's, so `FLORIDA_MAP_PINS`, `FLORIDA_SE_CHAPTER_PINS`, `FLORIDA_IMPACT_PINS` and
 `chapterLocatorConfig` keep working untouched. **If you regenerate, do not change the viewBox** —
 every pin percentage on the site is expressed in it.

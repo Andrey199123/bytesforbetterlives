@@ -1193,7 +1193,7 @@
 
     // Pin positions for the chapters-page + home maps, as PERCENTAGES of the map frame (left%, top%).
     // These are PROJECTED from each place's real lat/lng — not eyeballed. See the "Map-projection
-    // note" in CLAUDE.md for the two calibrated models:
+    // note" in tools/maps/geo.py for the calibrated model:
     //   • florida-roads.svg (and the inset florida-se-roads.svg) = Albers conic — n 0.60283700,
     //     C 1.35122133, lng0 -96, X = 479.96 + 1264.138·ρ·sin θ, Y = -1332.38 + 1264.138·ρ·cos θ.
     //     Those two files are GENERATED from public-domain geodata with that exact projection

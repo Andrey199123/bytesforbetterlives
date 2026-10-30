@@ -12,7 +12,7 @@
 //       firestore.rules / storage.rules, not by hiding the apiKey.)
 //   2. Add your admin email(s) to ADMIN_EMAILS below AND in firestore.rules/storage.rules.
 //   3. In the console enable: Firestore, Authentication (Email/Password), Storage,
-//      and (optional) Analytics — see CLAUDE.md "Firebase" section.
+//      and (optional) Analytics.
 // ──────────────────────────────────────────────────────────────────────────────
 
 const firebaseConfig = {

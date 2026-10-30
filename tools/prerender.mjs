@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Crawler snapshots — see CLAUDE.md "AI crawlers & search".
+// Crawler snapshots.
 //
 // AI crawlers (GPTBot, ClaudeBot, PerplexityBot…) fetch raw HTML and run no JavaScript, and every
 // page on this site is filled in by script.js, so to them a chapter page is 0 words. This renders
