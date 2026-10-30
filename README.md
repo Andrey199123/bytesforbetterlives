@@ -1,68 +1,40 @@
 # Bytes for Better Lives
 
-### Technology should be for everyone.
+Website for [Bytes for Better Lives](https://www.bytesforbetterlives.net/), a student-led 501(c)(3) nonprofit that helps seniors and kids get comfortable with technology. Our volunteers run tech help sessions at senior communities, teach digital literacy and online safety, and donate devices to schools and shelters.
 
-The digital home of **Bytes for Better Lives**, a student-led 501(c)(3) nonprofit turning technology access into opportunity. Through senior tech support, digital literacy workshops, online safety education, and device donations, our volunteers help people build the skills and confidence to participate in an increasingly digital world.
+As of October 2026 we've served 5,700+ people across 124 events, with 216 student volunteers putting in 4,000+ service hours. We've raised $32,000+ in funds and donations and given away 3,900+ items. There are 12 chapters in 6 countries.
 
-[Visit the website](https://www.bytesforbetterlives.net/) · [Explore our impact](https://www.bytesforbetterlives.net/impact.html) · [Meet our chapters](https://www.bytesforbetterlives.net/chapters.html) · [Support the mission](https://www.bytesforbetterlives.net/donate.html)
+## What the site does
 
-## Student-led. Community-powered. International in reach.
+Most of the content (members, chapters, photos, fundraisers) lives in Firestore, so chapter leaders can update their own pages through an admin panel without touching code.
 
-| Impact | Reach |
-| :--- | ---: |
-| Funds & donations | **$32,000+** |
-| People served | **5,700+** |
-| Items donated | **3,900+** |
-| Service hours | **4,000+** |
-| Student volunteers | **216** |
-| Events | **124** |
-| Chapters | **12** |
-| Countries | **5** |
-| Digital media centers | **7** |
+- **Admin panel.** Leaders sign in with Google. Full admins can edit everything, and each chapter's admins can only edit their own chapter. Firestore security rules enforce that on the server, so it holds even if someone edits the page in their browser.
+- **Chapter pages.** All 12 chapters share one template, and Vercel middleware serves each one on its own subdomain (like `ahs.bytesforbetterlives.net`).
+- **Maps.** The chapter and service-site maps are static SVGs. The Florida maps are generated from public-domain map data in `tools/maps/`, and every pin is projected from its real coordinates.
+- **Gallery.** Photos are grouped by location and date from their metadata, and Cloudinary serves resized copies so the page loads fast on phones.
+- **Crawler snapshots.** The pages are filled in by JavaScript, which most search and AI crawlers don't run, so every deploy pre-renders a static copy of each page for them.
 
-*Organization-wide figures provided as of October 2026.*
+The frontend is plain HTML, CSS, and JavaScript with no framework.
 
-## A platform built for a growing mission
+## Running it locally
 
-This repository powers more than a public-facing website. It connects a distributed chapter network through a shared publishing platform, giving student leaders the tools to maintain their own pages while keeping the organization’s identity and content consistent.
+```
+cd public
+python3 -m http.server 8000
+```
 
-### One network, locally led
+Then open http://localhost:8000. Pushing to `main` deploys to Vercel through GitHub Actions.
 
-Chapter profiles bring together leadership, photos, initiatives, and ways to get involved. A shared rendering system supports all 12 chapters, with Vercel routing middleware serving chapter-specific pages on configured subdomains.
-
-### Publishing without a developer bottleneck
-
-Google-authenticated admin tools let authorized leaders manage members, galleries, chapter pages, donation drives, and fundraisers. Content lives in Firestore rather than being hardcoded into each page. Chapter-level access is enforced by server-side security rules, not just hidden controls in the interface.
-
-### Real work, made visible
-
-Interactive maps place chapters and service sites at their geographic coordinates. Photo galleries organize community work by location and capture date, with Cloudinary image delivery, responsive layouts, and a shared lightbox for exploring the details.
-
-### Lightweight delivery, thoughtful engineering
-
-The frontend uses vanilla HTML, CSS, and JavaScript without a framework runtime. Cached content snapshots support faster repeat visits, while deployment-time pre-rendering gives supported search and AI crawlers meaningful page content without requiring JavaScript execution.
-
-## Behind the platform
-
-**HTML · CSS · JavaScript · Firebase · Cloudinary · Vercel · GitHub Actions**
-
-- **Frontend:** a shared design system and data-driven rendering across public pages and admin tools.
-- **Content and access:** Firestore, Firebase Authentication, and Firebase Storage.
-- **Delivery:** Vercel hosting and routing middleware, with automated deployments through GitHub Actions.
-- **Supporting tools:** gallery ingestion, image processing, geographic map generation, and crawler snapshots.
-
-## Inside the repository
+## Repository layout
 
 ```text
-public/             Website pages, browser scripts, styles, and images
+public/             Website pages, scripts, styles, and images
 config/firebase/    Firestore and Storage security rules
-tools/              Content, image, map, and pre-rendering utilities
-.github/workflows/  Automated deployment pipeline
-middleware.js       Chapter routing and crawler snapshot delivery
+tools/              Content, image, map, and pre-rendering scripts
+.github/workflows/  Deployment pipeline
+middleware.js       Chapter subdomain routing and crawler snapshots
 ```
 
 ## Built by
 
 [Andrey Vasilyev](https://github.com/Andrey199123) and Petr Kirsanov.
-
-Built to help student volunteers spend less time maintaining a website and more time serving their communities.
