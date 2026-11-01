@@ -18,12 +18,25 @@ The frontend is plain HTML, CSS, and JavaScript with no framework.
 
 ## Running it locally
 
-```
-cd public
-python3 -m http.server 8000
+Prerequisites:
+
+- Node.js and npm for the local tooling
+- Python 3 for the static preview server and map utilities
+- Firebase credentials only for tools that access Firestore or Storage
+
+Install the tooling dependencies from the repository root:
+
+```bash
+npm install
 ```
 
-Then open http://localhost:8000. Pushing to `main` deploys to Vercel through GitHub Actions.
+Preview the public site locally:
+
+```bash
+python3 -m http.server 8000 --directory public
+```
+
+Open http://localhost:8000. Code changes are deployed to Vercel through the GitHub Actions workflow when pushed to `main`. Firebase provides Firestore, Google Authentication, and Storage; service-account credentials must stay outside the repository and browser code.
 
 ## Repository layout
 
