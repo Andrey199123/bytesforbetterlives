@@ -14,29 +14,7 @@ Most of the content (members, chapters, photos, fundraisers) lives in Firestore,
 - **Gallery.** Photos are grouped by location and date from their metadata, and Cloudinary serves resized copies so the page loads fast on phones.
 - **Crawler snapshots.** The pages are filled in by JavaScript, which most search and AI crawlers don't run, so every deploy pre-renders a static copy of each page for them.
 
-The frontend is plain HTML, CSS, and JavaScript with no framework.
-
-## Running it locally
-
-Prerequisites:
-
-- Node.js and npm for the local tooling
-- Python 3 for the static preview server and map utilities
-- Firebase credentials only for tools that access Firestore or Storage
-
-Install the tooling dependencies from the repository root:
-
-```bash
-npm install
-```
-
-Preview the public site locally:
-
-```bash
-python3 -m http.server 8000 --directory public
-```
-
-Open http://localhost:8000. Code changes are deployed to Vercel through the GitHub Actions workflow when pushed to `main`. Firebase provides Firestore, Google Authentication, and Storage; service-account credentials must stay outside the repository and browser code.
+The frontend is plain HTML, CSS, and JavaScript with no framework. Production delivery uses Vercel and GitHub Actions, while Firebase provides Firestore, Google Authentication, and Storage. This repository documents the production project and is not intended as a self-hosted or standalone release.
 
 ## Repository layout
 
