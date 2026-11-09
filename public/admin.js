@@ -1002,6 +1002,18 @@ if (!firebaseReady) {
         });
     }
 
+    on("gallery-save-metadata", "click", function () {
+        document.querySelectorAll("#gallery-editor [data-glocation], #gallery-editor [data-gdate]").forEach(function (input) {
+            const index = Number(input.dataset.glocation ?? input.dataset.gdate);
+            const item = galleryImages[index] = typeof galleryImages[index] === "string"
+                ? { src: galleryImages[index] }
+                : (galleryImages[index] || {});
+            if (input.dataset.glocation !== undefined) item.locationName = input.value.trim();
+            if (input.dataset.gdate !== undefined) item.takenAt = input.value.trim();
+        });
+        autosave("galleryImages", galleryImages);
+    });
+
     // Bulk gallery upload (shared by the "+ Upload photos" button and the drag-and-drop zone).
     // Many photos at once; oversized files are skipped individually (the rest still upload), with
     // a live "Uploading i of N…" counter.
