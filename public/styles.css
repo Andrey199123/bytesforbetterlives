@@ -1025,9 +1025,15 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
 .carousel-slide video,
 .photo-gallery-grid video,
 .story-front video {
-    border-radius: 8px !important;
+    border-radius: 12px !important;
     overflow: hidden;
-    clip-path: inset(0 round 8px);
+    clip-path: inset(0 round 12px);
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+.photo-gallery-grid .g-tile:has(> video) {
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 .card-content,
