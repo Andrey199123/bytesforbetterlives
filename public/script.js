@@ -1793,13 +1793,19 @@
                 || chapter.id === "new-york"
                 || chapter.id === "virginia"
                 || chapter.id === "turkey";
-            // Pick a fresh, distinct set on every render without changing the source gallery order.
+            // Give each chapter its own stable slice so different chapter pages do not all
+            // independently randomize into the same preview images.
             const galleryPool = (data.galleryImages || []).slice();
-            for (let i = galleryPool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [galleryPool[i], galleryPool[j]] = [galleryPool[j], galleryPool[i]];
-            }
-            const galleryPreview = galleryPool.slice(0, 4);
+            const previewChapters = ["doral", "new-york", "virginia", "turkey"];
+            const previewSlot = previewChapters.indexOf(chapter.id);
+            const previewStart = previewSlot >= 0 && galleryPool.length
+                ? (previewSlot * 4) % galleryPool.length
+                : 0;
+            const galleryPreview = galleryPool.length
+                ? [0, 1, 2, 3].map(function (offset) {
+                    return galleryPool[(previewStart + offset) % galleryPool.length];
+                })
+                : [];
             chapterGalleryPreviewGrid.innerHTML = showPreview
                 ? galleryPreview.map(function (im, i) { return galleryTileMarkup(im, i, GALLERY_PREVIEW); }).join("")
                 : "";
