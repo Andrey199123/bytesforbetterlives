@@ -207,7 +207,8 @@
     }
 
     function galleryTileMarkup(im, i) {
-        var src = im.src || "";
+        // Firestore Gallery records use `src`; the seed/story records use `image`.
+        var src = im.src || im.image || "";
         var alt = im.alt || "";
         var dateStr = galleryFormatDate(im.takenAt);
         var loc = im.locationName || "";
