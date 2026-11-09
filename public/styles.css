@@ -1025,8 +1025,9 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
 .carousel-slide video,
 .photo-gallery-grid video,
 .story-front video {
-    border-radius: 8px;
+    border-radius: 8px !important;
     overflow: hidden;
+    clip-path: inset(0 round 8px);
 }
 
 .card-content,
