@@ -1688,7 +1688,13 @@
         const chapterGalleryPreviewGrid = document.querySelector("#chapter-gallery-preview-grid");
         if (chapterGalleryPreviewSection && chapterGalleryPreviewGrid) {
             const showPreview = chapter.id === "doral";
-            const galleryPreview = (data.gallery || []).slice(0, 3);
+            // Pick a fresh, distinct set on every render without changing the source gallery order.
+            const galleryPool = (data.gallery || []).slice();
+            for (let i = galleryPool.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [galleryPool[i], galleryPool[j]] = [galleryPool[j], galleryPool[i]];
+            }
+            const galleryPreview = galleryPool.slice(0, 4);
             chapterGalleryPreviewGrid.innerHTML = showPreview
                 ? galleryPreview.map(storyCardMarkup).join("")
                 : "";
