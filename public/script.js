@@ -1843,7 +1843,7 @@
                         <h2 class="section-title">Gallery preview</h2>
                         <p class="section-description">Browse more moments from Bytes for Better Lives.</p>
                     </div>
-                    <div class="gallery-grid chapter-gallery-preview-grid" id="chapter-gallery-preview-grid" aria-label="Gallery preview"></div>
+                    <div class="photo-gallery-grid chapter-gallery-preview-grid" id="chapter-gallery-preview-grid" aria-label="Gallery preview"></div>
                     <div class="chapter-gallery-preview-action">
                         <a class="btn btn-primary" href="gallery.html">View more</a>
                     </div>
