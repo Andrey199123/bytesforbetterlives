@@ -281,6 +281,13 @@ main {
     min-height: 70vh;
 }
 
+/* The initiatives page can legitimately have no fundraiser, drive, or chapter
+   initiative cards. Let its footer follow the hero instead of reserving a
+   blank paper-colored ribbon to satisfy the generic main-height floor. */
+body.page-initiatives main {
+    min-height: 0;
+}
+
 .container {
     width: min(1180px, calc(100% - 40px));
     margin-inline: auto;
