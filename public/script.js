@@ -133,6 +133,7 @@
     var CLOUDINARY_ROOT = "https://res.cloudinary.com/rwga4efb/";
     var GALLERY_SITE_ORIGIN = "https://www.bytesforbetterlives.net";
     var GALLERY_LQ = "c_limit,w_320,q_auto:low,f_auto";
+    var GALLERY_PREVIEW = "c_limit,w_900,q_auto:good,f_auto";
     var GALLERY_FULL = "c_limit,w_2560,h_2560,q_auto:good,f_auto";
     var GALLERY_WIDTHS = [480, 800, 1200, 1600, 2000];
     var GALLERY_VIDEO_TILE = "c_limit,w_720,h_720,q_auto";
@@ -206,7 +207,7 @@
         videos.forEach(function (video) { observer.observe(video); });
     }
 
-    function galleryTileMarkup(im, i) {
+    function galleryTileMarkup(im, i, imageTransform) {
         // Firestore Gallery records use `src`; the seed/story records use `image`.
         var src = im.src || im.image || "";
         var alt = im.alt || "";
@@ -232,7 +233,7 @@
                 ' data-src="' + escapeHTML(tileVideo) + '" data-full-src="' + escapeHTML(cloudinaryUrl(src, GALLERY_VIDEO_FULL, "mp4")) + '"' +
                 mediaAttrs + ' loop muted playsinline preload="none" data-fallback="images/logo.avif"></video>';
         } else {
-            mediaTag = '<img class="clickable-image" src="' + escapeHTML(cloudinaryUrl(src, GALLERY_LQ)) + '"' +
+            mediaTag = '<img class="clickable-image" src="' + escapeHTML(cloudinaryUrl(src, imageTransform || GALLERY_LQ)) + '"' +
                 ' data-full-src="' + escapeHTML(cloudinaryUrl(src, GALLERY_FULL)) + '"' +
                 mediaAttrs + ' loading="lazy" decoding="async" data-fallback="images/logo.avif">';
         }
@@ -1690,14 +1691,14 @@
         if (chapterGalleryPreviewSection && chapterGalleryPreviewGrid) {
             const showPreview = chapter.id === "doral";
             // Pick a fresh, distinct set on every render without changing the source gallery order.
-            const galleryPool = (data.gallery || []).slice();
+            const galleryPool = (data.galleryImages || []).slice();
             for (let i = galleryPool.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [galleryPool[i], galleryPool[j]] = [galleryPool[j], galleryPool[i]];
             }
             const galleryPreview = galleryPool.slice(0, 4);
             chapterGalleryPreviewGrid.innerHTML = showPreview
-                ? galleryPreview.map(galleryTileMarkup).join("")
+                ? galleryPreview.map(function (im, i) { return galleryTileMarkup(im, i, GALLERY_PREVIEW); }).join("")
                 : "";
             chapterGalleryPreviewSection.style.display = showPreview && galleryPreview.length ? "" : "none";
         }
