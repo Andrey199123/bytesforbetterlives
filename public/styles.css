@@ -2141,7 +2141,8 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     display: block;
 }
 
-.story-front img {
+.story-front img,
+.story-front video {
     position: absolute;
     inset: 0;
     display: block;

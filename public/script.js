@@ -2001,6 +2001,8 @@
         const root = document.querySelector("#gallery-preview-grid");
         if (!root) return;
         root.innerHTML = (data.gallery || []).slice(0, 3).map(storyCardMarkup).join("");
+        initGalleryMedia(root);
+        initImageFallbacks(root);
     }
 
     function renderInitiativesPage() {
@@ -2240,11 +2242,14 @@
     }
 
     function storyCardMarkup(story) {
+        const storyMedia = isGalleryVideo(story.image)
+            ? `<video class="story-card-media" data-src="${escapeHTML(story.image)}" data-original-src="${escapeHTML(story.image)}" muted playsinline loop autoplay preload="none" aria-label="${escapeHTML(story.alt || story.title || "Gallery video")}"></video>`
+            : imageMarkup(story.image, story.alt || story.title, "", "images/logo.avif");
         return `
             <article class="story-card" role="button" tabindex="0" aria-pressed="false">
                 <div class="story-card-inner">
                     <div class="story-face story-front">
-                        ${imageMarkup(story.image, story.alt || story.title, "", "images/logo.avif")}
+                        ${storyMedia}
                         <span class="story-overlay-label">Tap to view story</span>
                     </div>
                     <div class="story-face story-back">
