@@ -1696,7 +1696,7 @@
             }
             const galleryPreview = galleryPool.slice(0, 4);
             chapterGalleryPreviewGrid.innerHTML = showPreview
-                ? galleryPreview.map(storyCardMarkup).join("")
+                ? galleryPreview.map(galleryTileMarkup).join("")
                 : "";
             chapterGalleryPreviewSection.style.display = showPreview && galleryPreview.length ? "" : "none";
         }
