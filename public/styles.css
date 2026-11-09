@@ -2054,6 +2054,16 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     color: var(--ink-soft);
 }
 
+/* Keep the existing Tech Donations content directly below Partner Organizations on Impact. */
+#impact-detailed-sections > .container {
+    display: flex;
+    flex-direction: column;
+}
+
+#impact-detailed-sections > .container > #donations {
+    order: -1;
+}
+
 /* ===== GALLERY STORY CARDS ===== */
 .gallery-grid {
     align-items: start;
