@@ -1780,6 +1780,7 @@
                 }
                 return imageMarkup(photo, `${chapter.name} photo ${index + 1}`, "", "images/logo.avif");
             }).join("");
+            if (chapter.id === "russia" || chapter.id === "turkey") initGalleryMedia(photoGrid);
             // Global rule: don't show a section with nothing inside — hide highlights if no photos.
             if (highlightsSection) highlightsSection.style.display = photos.length ? "" : "none";
             if (chapter.id === "new-york") {
@@ -1814,6 +1815,7 @@
             chapterGalleryPreviewGrid.innerHTML = showPreview
                 ? galleryPreview.map(function (im, i) { return galleryTileMarkup(im, i, GALLERY_PREVIEW); }).join("")
                 : "";
+            if (showPreview) initGalleryMedia(chapterGalleryPreviewGrid);
             chapterGalleryPreviewSection.style.display = showPreview && galleryPreview.length ? "" : "none";
         }
 
