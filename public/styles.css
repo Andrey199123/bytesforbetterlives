@@ -2529,8 +2529,9 @@ body.page-impact .carousel-slide video {
     color: var(--paper);
 }
 
-/* Chapter profiles finish directly with the closing CTA band. */
-body.page-chapter .footer {
+/* Chapter profiles and Impact finish directly with the closing CTA band. */
+body.page-chapter .footer,
+body.page-impact .footer {
     margin-top: 0;
 }
 
