@@ -1547,6 +1547,16 @@
             return;
         }
 
+        // Gainesville's recurring senior support is best introduced by its recent photos.
+        // Keep the shared chapter layout unchanged for every other chapter.
+        if (chapter.id === "gainesville") {
+            const highlightsSection = document.querySelector("#chapter-highlights-section");
+            const initiativesSection = document.querySelector("#chapter-initiatives-section");
+            if (highlightsSection && initiativesSection) {
+                initiativesSection.parentNode.insertBefore(highlightsSection, initiativesSection);
+            }
+        }
+
         const titleEl = document.querySelector("#chapter-page-title");
         if (titleEl) titleEl.textContent = chapter.name;
 
