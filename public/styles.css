@@ -2919,7 +2919,7 @@ body.page-chapter .footer {
 /* Uniform card grid: every card is the same width, rows stretch to equal height, evenly spaced. */
 .cards-grid--feature {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
     gap: var(--space-lg);
     align-items: stretch;
 }
