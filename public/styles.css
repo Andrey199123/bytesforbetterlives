@@ -1958,6 +1958,7 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     display: block;
     object-fit: cover;
     background: var(--surface);
+    border-radius: inherit;
 }
 
 .photo-gallery-grid figcaption {
@@ -2157,6 +2158,7 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     height: 100%;
     object-fit: cover;
     background: var(--surface);
+    border-radius: inherit;
 }
 
 .story-front-content,
