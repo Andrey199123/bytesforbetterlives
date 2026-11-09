@@ -2059,6 +2059,12 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     background: var(--surface);
 }
 
+/* Match the rounded photo tiles; clip-path also clips the poster and composited video frames. */
+.chapter-photo-grid video {
+    border-radius: 8px;
+    clip-path: inset(0 round 8px);
+}
+
 .chapter-gallery-preview-grid {
     margin-top: var(--space-lg);
 }
@@ -2328,6 +2334,13 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     height: 100%;
     object-fit: contain;
     background: var(--surface);
+}
+
+/* Impact carousels: fill the frame from its top-left so differently shaped photos leave no blank bars. */
+body.page-impact .carousel-slide img,
+body.page-impact .carousel-slide video {
+    object-fit: cover;
+    object-position: left top;
 }
 
 .clickable-image {
@@ -2955,6 +2968,11 @@ body.page-chapter .footer {
    own height so an incomplete row does not create stretched blank areas. */
 body.page-impact .cards-grid--feature {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Equal-height cards: pack the text at the top instead of spreading the spare height between rows. */
+body.page-impact .cards-grid--feature > .card > .card-content {
+    align-content: start;
 }
 
 @media (max-width: 900px) {
