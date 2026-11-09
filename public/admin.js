@@ -987,7 +987,7 @@ if (!firebaseReady) {
             });
         });
         editor.querySelectorAll("[data-glocation], [data-gdate]").forEach(function (input) {
-            input.addEventListener("change", function () {
+            ["input", "change"].forEach(function (eventName) { input.addEventListener(eventName, function () {
                 const index = Number(input.dataset.glocation ?? input.dataset.gdate);
                 const item = galleryImages[index] = typeof galleryImages[index] === "string"
                     ? { src: galleryImages[index] }
@@ -995,7 +995,7 @@ if (!firebaseReady) {
                 if (input.dataset.glocation !== undefined) item.locationName = input.value.trim();
                 if (input.dataset.gdate !== undefined) item.takenAt = input.value.trim();
                 autosave("galleryImages", galleryImages);
-            });
+            }); });
         });
         editor.querySelectorAll("[data-zoom]").forEach(function (img) {
             img.addEventListener("click", function () { openAdminLightbox(img.getAttribute("data-zoom")); });
