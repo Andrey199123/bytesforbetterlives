@@ -3,6 +3,14 @@
    and blocked first paint behind the whole chain. */
 
 /* ===== BYTES FOR BETTER LIVES DESIGN SYSTEM ===== */
+/* Keep HDR media at the page's standard brightness instead of letting highlights
+   become much brighter than surrounding text and surfaces on HDR displays.
+   Unsupported browsers ignore this declaration; no image filter is applied. */
+img,
+video {
+    dynamic-range-limit: standard;
+}
+
 *,
 *::before,
 *::after {
