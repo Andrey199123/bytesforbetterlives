@@ -307,7 +307,11 @@
 
         root.innerHTML = sections.map(function (name) {
             var items = buckets[name];
-            items.sort(function (a, b) { return (Date.parse(a.takenAt) || 0) - (Date.parse(b.takenAt) || 0); });
+            // Put videos first within every location, then preserve chronological order.
+            items.sort(function (a, b) {
+                var videoOrder = Number(isGalleryVideo(b.src)) - Number(isGalleryVideo(a.src));
+                return videoOrder || ((Date.parse(a.takenAt) || 0) - (Date.parse(b.takenAt) || 0));
+            });
             var meta = galleryDateLabel(items);
             var sub = (meta ? meta + " · " : "") + items.length + " photo" + (items.length === 1 ? "" : "s");
             return '<section class="gallery-location">' +
@@ -1676,12 +1680,23 @@
         const photoGrid = document.querySelector("#chapter-photo-grid");
         const highlightsSection = document.querySelector("#chapter-highlights-section");
         if (photoGrid) {
-            const photos = (Array.isArray(chapter.photos) ? chapter.photos : []).filter(Boolean);
+            const photos = (chapter.id === "new-york"
+                ? [
+                    "images/chapters/new-york/old-dominion-outreach.jpeg",
+                    "images/chapters/new-york/school-supply-donations.png",
+                    "images/chapters/new-york/school-supply-crates.png",
+                    "images/chapters/new-york/board-game-donations.png"
+                ]
+                : (Array.isArray(chapter.photos) ? chapter.photos : [])).filter(Boolean);
             photoGrid.innerHTML = photos.map(function (photo, index) {
                 return imageMarkup(photo, `${chapter.name} photo ${index + 1}`, "", "images/logo.avif");
             }).join("");
             // Global rule: don't show a section with nothing inside — hide highlights if no photos.
             if (highlightsSection) highlightsSection.style.display = photos.length ? "" : "none";
+            if (chapter.id === "new-york") {
+                const highlightsDescription = highlightsSection && highlightsSection.querySelector(".section-description");
+                if (highlightsDescription) highlightsDescription.textContent = "The New York Chapter makes regular monthly donations to seniors and supports local community needs.";
+            }
         }
 
         // Doral also gets a small preview of the site-wide Gallery beneath its chapter highlights.
@@ -1689,7 +1704,7 @@
         const chapterGalleryPreviewSection = document.querySelector("#chapter-gallery-preview-section");
         const chapterGalleryPreviewGrid = document.querySelector("#chapter-gallery-preview-grid");
         if (chapterGalleryPreviewSection && chapterGalleryPreviewGrid) {
-            const showPreview = chapter.id === "doral";
+            const showPreview = chapter.id === "doral" || chapter.id === "new-york";
             // Pick a fresh, distinct set on every render without changing the source gallery order.
             const galleryPool = (data.galleryImages || []).slice();
             for (let i = galleryPool.length - 1; i > 0; i--) {

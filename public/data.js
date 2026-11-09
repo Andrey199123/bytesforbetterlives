@@ -252,9 +252,12 @@ window.BFBL_DATA = {
             ],
             leadBio: "Troye Kim leads the New York Chapter's outreach and digital literacy service as a student at Stuyvesant High School.",
             coordinates: { lat: 40.7128, lng: -74.0060 },
-            description: "Launched chapter based in New York and led by a Stuyvesant High School student, expanding BFBL digital literacy and community service outreach.",
+            description: "Launched chapter based in New York and led by a Stuyvesant High School student, expanding BFBL digital literacy and community service outreach through regular monthly donations to seniors.",
             photos: [
-                "images/logo.avif"
+                "images/chapters/new-york/old-dominion-outreach.jpeg",
+                "images/chapters/new-york/school-supply-donations.png",
+                "images/chapters/new-york/school-supply-crates.png",
+                "images/chapters/new-york/board-game-donations.png"
             ]
         },
         {
