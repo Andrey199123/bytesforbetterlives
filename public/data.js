@@ -369,7 +369,6 @@ window.BFBL_DATA = {
             leadTitle: "Launching Chapter Lead",
             leadPhoto: "images/logo.avif",
             leadBio: "Building a local chapter focused on community service and digital literacy support in Turkey.",
-            instagram: "https://instagram.com/bfbl_turkiye",
             coordinates: { lat: 41.0082, lng: 28.9784 },
             description: "Launching chapter focused on local community service and digital literacy support.",
             photos: [

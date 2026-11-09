@@ -1581,7 +1581,11 @@
         // gets the photo-less editorial field below (.chapter-hero already paints that field's
         // ground, see --hero-img in styles.css).
         const heroEl = document.querySelector(".chapter-hero");
-        const firstPhoto = chapter.photos && chapter.photos[0] ? chapter.photos[0] : "";
+        // Turkey keeps its chapter highlights, but its profile should use the plain
+        // editorial hero instead of promoting the first highlight into a backdrop.
+        const firstPhoto = chapter.id === "turkey"
+            ? ""
+            : (chapter.photos && chapter.photos[0] ? chapter.photos[0] : "");
         if (heroEl) {
             if (firstPhoto && hasRealPhoto(firstPhoto)) {
                 heroEl.classList.remove("chapter-hero--editorial");
@@ -1641,7 +1645,7 @@
                 // Quiet supporting action so a single primary CTA ("Support this Chapter") leads the hero.
                 actions.push(`<a href="${escapeHTML(safeUrl(chapter.joinUrl))}" target="_blank" rel="noopener noreferrer" class="btn btn-quiet">Get Involved</a>`);
             }
-            if (chapter.instagram) {
+            if (chapter.instagram && chapter.id !== "turkey") {
                 actions.push(`<a href="${escapeHTML(safeUrl(chapter.instagram))}" target="_blank" rel="noopener noreferrer" class="btn btn-quiet">Instagram</a>`);
             }
             if (chapter.contactEmail) {
