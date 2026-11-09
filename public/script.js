@@ -1677,6 +1677,76 @@
 
         renderChapterMembersByCategory(chapter);
 
+        const russiaTurkeyPhotos = [
+                    "images/chapters/russia-turkey/2692fa69-c6de-49d2-b22d-66127524de8b.mov",
+                    "images/chapters/russia-turkey/33e7a483-bd79-4886-bef8-6c18c00270cc.jpg",
+                    "images/chapters/russia-turkey/IMG_1121.mov",
+                    "images/chapters/russia-turkey/IMG_1126.mov",
+                    "images/chapters/russia-turkey/IMG_1127.mov",
+                    "images/chapters/russia-turkey/IMG_1128.mov",
+                    "images/chapters/russia-turkey/IMG_1130.mov",
+                    "images/chapters/russia-turkey/IMG_1139.mov",
+                    "images/chapters/russia-turkey/IMG_1143.mov",
+                    "images/chapters/russia-turkey/IMG_1144.mov",
+                    "images/chapters/russia-turkey/IMG_1147.mov",
+                    "images/chapters/russia-turkey/IMG_1153.mov",
+                    "images/chapters/russia-turkey/IMG_1713.mov",
+                    "images/chapters/russia-turkey/IMG_4758.mov",
+                    "images/chapters/russia-turkey/IMG_4762.mov",
+                    "images/chapters/russia-turkey/IMG_4763.mov",
+                    "images/chapters/russia-turkey/IMG_4764.mov",
+                    "images/chapters/russia-turkey/IMG_4766.mov",
+                    "images/chapters/russia-turkey/IMG_4779.mov",
+                    "images/chapters/russia-turkey/IMG_4786.mov",
+                    "images/chapters/russia-turkey/IMG_4787.mov",
+                    "images/chapters/russia-turkey/IMG_4792.mov",
+                    "images/chapters/russia-turkey/IMG_4795.mov",
+                    "images/chapters/russia-turkey/IMG_4796.mov",
+                    "images/chapters/russia-turkey/IMG_7134.mov",
+                    "images/chapters/russia-turkey/IMG_7136.mov",
+                    "images/chapters/russia-turkey/IMG_7137.mov",
+                    "images/chapters/russia-turkey/IMG_7138.mov",
+                    "images/chapters/russia-turkey/IMG_7139.mov",
+                    "images/chapters/russia-turkey/IMG_7141.mov",
+                    "images/chapters/russia-turkey/IMG_7145.mov",
+                    "images/chapters/russia-turkey/IMG_7147.mov",
+                    "images/chapters/russia-turkey/IMG_7155.mov",
+                    "images/chapters/russia-turkey/IMG_7835.JPG",
+                    "images/chapters/russia-turkey/IMG_7836.JPG",
+                    "images/chapters/russia-turkey/IMG_7837.JPG",
+                    "images/chapters/russia-turkey/IMG_7838.JPG",
+                    "images/chapters/russia-turkey/IMG_7839.JPG",
+                    "images/chapters/russia-turkey/IMG_7840.JPG",
+                    "images/chapters/russia-turkey/IMG_7841.JPG",
+                    "images/chapters/russia-turkey/IMG_7842.JPG",
+                    "images/chapters/russia-turkey/IMG_7866.JPG",
+                    "images/chapters/russia-turkey/IMG_7868.JPG",
+                    "images/chapters/russia-turkey/IMG_7869.JPG",
+                    "images/chapters/russia-turkey/IMG_7870.JPG",
+                    "images/chapters/russia-turkey/IMG_7871.JPG",
+                    "images/chapters/russia-turkey/IMG_7878.JPG",
+                    "images/chapters/russia-turkey/IMG_7879.JPG",
+                    "images/chapters/russia-turkey/IMG_7880.JPG",
+                    "images/chapters/russia-turkey/IMG_7881.JPG",
+                    "images/chapters/russia-turkey/IMG_7889.JPG",
+                    "images/chapters/russia-turkey/IMG_7896.JPG",
+                    "images/chapters/russia-turkey/IMG_7899.JPG",
+                    "images/chapters/russia-turkey/IMG_7904.JPG",
+                    "images/chapters/russia-turkey/IMG_7909.JPG",
+                    "images/chapters/russia-turkey/IMG_7911.JPG",
+                    "images/chapters/russia-turkey/fe22f088-5217-430a-b385-cdb1a9cbb643.jpg",
+                    "images/chapters/russia-turkey/telegram_video (1).mov",
+                    "images/chapters/russia-turkey/telegram_video (10).mov",
+                    "images/chapters/russia-turkey/telegram_video (2).mov",
+                    "images/chapters/russia-turkey/telegram_video (3).mov",
+                    "images/chapters/russia-turkey/telegram_video (4).mov",
+                    "images/chapters/russia-turkey/telegram_video (5).mov",
+                    "images/chapters/russia-turkey/telegram_video (6).mov",
+                    "images/chapters/russia-turkey/telegram_video (7).mov",
+                    "images/chapters/russia-turkey/telegram_video (8).mov",
+                    "images/chapters/russia-turkey/telegram_video (9).mov",
+                    "images/chapters/russia-turkey/telegram_video.mov"
+        ];
         const photoGrid = document.querySelector("#chapter-photo-grid");
         const highlightsSection = document.querySelector("#chapter-highlights-section");
         if (photoGrid) {
@@ -1687,8 +1757,13 @@
                     "images/chapters/new-york/school-supply-crates.png",
                     "images/chapters/new-york/board-game-donations.png"
                 ]
-                : (Array.isArray(chapter.photos) ? chapter.photos : [])).filter(Boolean);
+                : ((chapter.id === "russia" || chapter.id === "turkey")
+                    ? russiaTurkeyPhotos
+                    : (Array.isArray(chapter.photos) ? chapter.photos : []))).filter(Boolean);
             photoGrid.innerHTML = photos.map(function (photo, index) {
+                if (chapter.id === "russia" || chapter.id === "turkey") {
+                    return galleryTileMarkup({ src: photo, alt: `${chapter.name} highlight ${index + 1}` }, index, GALLERY_PREVIEW);
+                }
                 return imageMarkup(photo, `${chapter.name} photo ${index + 1}`, "", "images/logo.avif");
             }).join("");
             // Global rule: don't show a section with nothing inside — hide highlights if no photos.
