@@ -305,13 +305,14 @@
             .sort(function (a, b) { return sectionTime(b) - sectionTime(a); });
         if (buckets[GALLERY_NO_LOCATION]) sections.push(GALLERY_NO_LOCATION);
 
-        root.innerHTML = sections.map(function (name) {
+        // Keep every video together at the very top of the gallery, followed by the
+        // normal photo sections. This makes video content easy to find without
+        // changing the location-based organization of the photo archive.
+        var videoItems = imgs.filter(function (im) { return isGalleryVideo(im.src); });
+        var photoSections = sections.map(function (name) {
             var items = buckets[name];
-            // Put videos first within this location only; do not move all videos above every section.
-            items.sort(function (a, b) {
-                var videoOrder = Number(isGalleryVideo(b.src)) - Number(isGalleryVideo(a.src));
-                return videoOrder || ((Date.parse(a.takenAt) || 0) - (Date.parse(b.takenAt) || 0));
-            });
+            items = items.filter(function (im) { return !isGalleryVideo(im.src); });
+            if (!items.length) return "";
             var meta = galleryDateLabel(items);
             var sub = (meta ? meta + " · " : "") + items.length + " photo" + (items.length === 1 ? "" : "s");
             return '<section class="gallery-location">' +
@@ -324,6 +325,15 @@
                 '</div>' +
                 '</section>';
         }).join("");
+        var videoSection = "";
+        if (videoItems.length) {
+            videoSection = '<section class="gallery-location gallery-videos-section">' +
+                '<div class="gallery-location-head"><h2 class="gallery-location-title">Videos</h2>' +
+                '<p class="gallery-location-meta">' + videoItems.length + ' video' + (videoItems.length === 1 ? '' : 's') + '</p></div>' +
+                '<div class="photo-gallery-grid" data-lightbox-group>' +
+                videoItems.map(galleryTileMarkup).join("") + '</div></section>';
+        }
+        root.innerHTML = videoSection + photoSections;
         initGalleryMedia(root);
     }
 
@@ -2674,15 +2684,13 @@
 
         document.querySelectorAll(".clickable-image").forEach(function (media) {
             if (media.dataset.lightboxBound) return;
-            // Videos keep their native controls inline — the click/role=button hijack made
-            // taps on play/pause open the lightbox instead. (They stay reachable through a
-            // group's prev/next navigation, where the lightbox renders them with controls.)
-            if (media.tagName === "VIDEO") return;
             media.dataset.lightboxBound = "true";
+            // Videos open in the same full-screen viewer as photos. The inline gallery
+            // videos do not expose native controls, while the lightbox video does.
             // Make the bare <img> tile a real keyboard-operable control (matches the flip-card pattern).
             if (!media.hasAttribute("role")) media.setAttribute("role", "button");
             if (!media.hasAttribute("tabindex")) media.setAttribute("tabindex", "0");
-            if (!media.getAttribute("aria-label")) media.setAttribute("aria-label", "Enlarge image" + (media.alt ? ": " + media.alt : ""));
+            if (!media.getAttribute("aria-label")) media.setAttribute("aria-label", media.tagName === "VIDEO" ? "Play video larger" : "Enlarge image" + (media.alt ? ": " + media.alt : ""));
             media.addEventListener("click", function (event) {
                 event.stopPropagation();
                 openLightboxFrom(media);
