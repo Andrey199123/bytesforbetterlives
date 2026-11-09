@@ -1763,6 +1763,12 @@
                     "images/chapters/russia-turkey/telegram_video (9).mov",
                     "images/chapters/russia-turkey/telegram_video.mov"
         ];
+        const turkeyHighlightPhotos = russiaTurkeyPhotos
+            .filter(function (photo) {
+                return photo !== "images/chapters/russia-turkey/33e7a483-bd79-4886-bef8-6c18c00270cc.jpg";
+            })
+            .slice()
+            .reverse();
         const photoGrid = document.querySelector("#chapter-photo-grid");
         const highlightsSection = document.querySelector("#chapter-highlights-section");
         if (photoGrid) {
@@ -1774,7 +1780,7 @@
                     "images/chapters/new-york/board-game-donations.png"
                 ]
                 : ((chapter.id === "russia" || chapter.id === "turkey")
-                    ? russiaTurkeyPhotos
+                    ? (chapter.id === "turkey" ? turkeyHighlightPhotos : russiaTurkeyPhotos)
                     : (Array.isArray(chapter.photos) ? chapter.photos : []))).filter(Boolean);
             photoGrid.innerHTML = photos.map(function (photo, index) {
                 if (chapter.id === "russia" || chapter.id === "turkey") {
