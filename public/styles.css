@@ -2987,6 +2987,29 @@ body.page-impact .cards-grid--feature > .card > .card-content {
     }
 }
 
+/* A lone card on the last row spans the row (photo left, text right) so no empty slots remain. */
+@media (min-width: 901px) {
+    body.page-impact .cards-grid--feature > .card:last-child:nth-child(3n + 1) {
+        grid-column: 1 / -1;
+        flex-direction: row;
+    }
+    body.page-impact .cards-grid--feature > .card:last-child:nth-child(3n + 1) > .card-media {
+        flex: 0 0 calc((100% - 2 * var(--space-lg)) / 3);
+        width: auto;
+    }
+}
+
+@media (min-width: 681px) and (max-width: 900px) {
+    body.page-impact .cards-grid--feature > .card:last-child:nth-child(2n + 1) {
+        grid-column: 1 / -1;
+        flex-direction: row;
+    }
+    body.page-impact .cards-grid--feature > .card:last-child:nth-child(2n + 1) > .card-media {
+        flex: 0 0 calc((100% - var(--space-lg)) / 2);
+        width: auto;
+    }
+}
+
 /* Donate hub tiles: three simple ways to give, styled to feel like one family. */
 .donate-methods {
     margin-top: var(--space-md);
