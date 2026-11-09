@@ -2481,6 +2481,11 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     color: var(--paper);
 }
 
+/* Chapter profiles finish directly with the closing CTA band. */
+body.page-chapter .footer {
+    margin-top: 0;
+}
+
 .footer-content {
     display: grid;
     grid-template-columns: minmax(240px, 1.1fr) repeat(3, minmax(180px, 0.75fr));
