@@ -1796,11 +1796,12 @@
             const showPreview = chapter.id === "doral"
                 || chapter.id === "new-york"
                 || chapter.id === "virginia"
-                || chapter.id === "turkey";
+                || chapter.id === "turkey"
+                || chapter.id === "los-angeles";
             // Give each chapter its own stable slice so different chapter pages do not all
             // independently randomize into the same preview images.
             const galleryPool = (data.galleryImages || []).slice();
-            const previewChapters = ["doral", "new-york", "virginia", "turkey"];
+            const previewChapters = ["doral", "new-york", "virginia", "turkey", "los-angeles"];
             const previewSlot = previewChapters.indexOf(chapter.id);
             const previewStart = previewSlot >= 0 && galleryPool.length
                 ? (previewSlot * 4) % galleryPool.length
