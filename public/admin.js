@@ -969,6 +969,12 @@ if (!firebaseReady) {
 
             cell.innerHTML = `
                 ${mediaTag}${isVideo ? `<span aria-hidden="true" style="position:absolute; left:4px; bottom:4px; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; color:var(--paper); background:color-mix(in oklch, var(--ink) 70%, transparent); pointer-events:none;">▶ Video</span>` : ""}
+                <label style="display:block; padding:0.35rem 0.45rem 0; font-size:0.72rem;">Gallery section
+                    <input type="text" data-glocation="${index}" value="${escapeAttr((im && im.locationName) || "")}" placeholder="e.g. Peru Fundraiser — July 2026" style="width:100%; font-size:0.72rem;">
+                </label>
+                <label style="display:block; padding:0.25rem 0.45rem 0.4rem; font-size:0.72rem;">Date (optional)
+                    <input type="text" data-gdate="${index}" value="${escapeAttr((im && im.takenAt) || "")}" placeholder="Leave blank if day is unknown" style="width:100%; font-size:0.72rem;">
+                </label>
                 <button class="btn btn-secondary" type="button" data-gremove="${index}" style="position:absolute; top:4px; right:4px; padding:0.1rem 0.5rem; font-size:0.85rem;">✕</button>
             `;
             editor.appendChild(cell);
@@ -977,6 +983,17 @@ if (!firebaseReady) {
             btn.addEventListener("click", function () {
                 galleryImages.splice(Number(btn.dataset.gremove), 1);
                 renderGallery();
+                autosave("galleryImages", galleryImages);
+            });
+        });
+        editor.querySelectorAll("[data-glocation], [data-gdate]").forEach(function (input) {
+            input.addEventListener("change", function () {
+                const index = Number(input.dataset.glocation ?? input.dataset.gdate);
+                const item = galleryImages[index] = typeof galleryImages[index] === "string"
+                    ? { src: galleryImages[index] }
+                    : (galleryImages[index] || {});
+                if (input.dataset.glocation !== undefined) item.locationName = input.value.trim();
+                if (input.dataset.gdate !== undefined) item.takenAt = input.value.trim();
                 autosave("galleryImages", galleryImages);
             });
         });
