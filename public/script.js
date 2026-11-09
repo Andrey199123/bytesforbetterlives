@@ -307,7 +307,7 @@
 
         root.innerHTML = sections.map(function (name) {
             var items = buckets[name];
-            // Put videos first within every location, then preserve chronological order.
+            // Put videos first within this location only; do not move all videos above every section.
             items.sort(function (a, b) {
                 var videoOrder = Number(isGalleryVideo(b.src)) - Number(isGalleryVideo(a.src));
                 return videoOrder || ((Date.parse(a.takenAt) || 0) - (Date.parse(b.takenAt) || 0));
