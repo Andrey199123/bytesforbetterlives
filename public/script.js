@@ -1799,19 +1799,24 @@
                 || chapter.id === "virginia"
                 || chapter.id === "turkey"
                 || chapter.id === "los-angeles";
-            // Give each chapter its own stable slice so different chapter pages do not all
-            // independently randomize into the same preview images.
-            const galleryPool = (data.galleryImages || []).slice();
-            const previewChapters = ["doral", "new-york", "virginia", "turkey", "los-angeles"];
-            const previewSlot = previewChapters.indexOf(chapter.id);
-            const previewStart = previewSlot >= 0 && galleryPool.length
-                ? (previewSlot * 4) % galleryPool.length
-                : 0;
-            const galleryPreview = galleryPool.length
-                ? [0, 1, 2, 3].map(function (offset) {
-                    return galleryPool[(previewStart + offset) % galleryPool.length];
-                })
-                : [];
+            // Sample four unique photos from the entire Gallery on every render. This keeps
+            // chapter previews from being tied to a small hand-picked story slice and makes a
+            // reload choose a fresh set.
+            const galleryPool = [];
+            const seenGallerySources = new Set();
+            (data.galleryImages || []).forEach(function (image) {
+                const source = image && image.src;
+                if (!source || seenGallerySources.has(source)) return;
+                seenGallerySources.add(source);
+                galleryPool.push(image);
+            });
+            for (let i = galleryPool.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const temporary = galleryPool[i];
+                galleryPool[i] = galleryPool[j];
+                galleryPool[j] = temporary;
+            }
+            const galleryPreview = galleryPool.slice(0, 4);
             chapterGalleryPreviewGrid.innerHTML = showPreview
                 ? galleryPreview.map(function (im, i) { return galleryTileMarkup(im, i, GALLERY_PREVIEW); }).join("")
                 : "";
