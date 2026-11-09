@@ -2949,14 +2949,6 @@ body.page-chapter .footer {
    own height so an incomplete row does not create stretched blank areas. */
 body.page-impact .cards-grid--feature {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: start;
-}
-
-body.page-impact .impact-masonry-column {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
-    min-width: 0;
 }
 
 @media (max-width: 900px) {

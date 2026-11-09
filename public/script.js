@@ -392,30 +392,6 @@
         initPartnerOrbit();
     }
 
-    function initImpactMasonry() {
-        if (!document.body.classList.contains("page-impact")) return;
-        document.querySelectorAll(".cards-grid--feature").forEach(function (grid) {
-            if (grid.dataset.masonryReady === "true") return;
-            const cards = Array.from(grid.children).filter(function (child) {
-                return child.classList.contains("card");
-            });
-            if (!cards.length) return;
-            grid.dataset.masonryReady = "true";
-            const columns = [0, 1, 2].map(function () {
-                const column = document.createElement("div");
-                column.className = "impact-masonry-column";
-                grid.appendChild(column);
-                return column;
-            });
-            cards.forEach(function (card) {
-                const shortest = columns.reduce(function (current, column) {
-                    return column.offsetHeight < current.offsetHeight ? column : current;
-                }, columns[0]);
-                shortest.appendChild(card);
-            });
-        });
-    }
-
     function initRender() {
         initVercelAnalytics();
         initPlausible();
@@ -424,7 +400,6 @@
 
         renderGalleryImages();
         renderInitiativesPage();
-        initImpactMasonry();
         renderTeamPage();
         renderChapterDirectoryPage();
         renderChapterMaps();
