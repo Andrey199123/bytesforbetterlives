@@ -1021,6 +1021,14 @@ body[data-chapter-id] main:not([data-chapter-ready]) {
     object-fit: cover;
 }
 
+.card-media video,
+.carousel-slide video,
+.photo-gallery-grid video,
+.story-front video {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
 .card-content,
 .team-info {
     display: grid;
