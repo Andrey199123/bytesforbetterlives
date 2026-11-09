@@ -2939,19 +2939,27 @@ body.page-chapter .footer {
 /* Impact cards use the editorial three-column rhythm. Start each card at its
    own height so an incomplete row does not create stretched blank areas. */
 body.page-impact .cards-grid--feature {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: start;
+    display: block;
+    column-count: 3;
+    column-gap: var(--space-lg);
+}
+
+body.page-impact .cards-grid--feature > .card {
+    width: 100%;
+    margin: 0 0 var(--space-lg);
+    break-inside: avoid;
+    page-break-inside: avoid;
 }
 
 @media (max-width: 900px) {
     body.page-impact .cards-grid--feature {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-count: 2;
     }
 }
 
 @media (max-width: 680px) {
     body.page-impact .cards-grid--feature {
-        grid-template-columns: 1fr;
+        column-count: 1;
     }
 }
 
