@@ -2036,6 +2036,16 @@ body.page-gallery .gallery-locations:has(> .gallery-empty) {
     background: var(--surface);
 }
 
+.chapter-gallery-preview-grid {
+    margin-top: var(--space-lg);
+}
+
+.chapter-gallery-preview-action {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--space-lg);
+}
+
 .chapter-note {
     padding: var(--space-md);
     border: 1px solid color-mix(in oklch, var(--gold) 45%, var(--line));

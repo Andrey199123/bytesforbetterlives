@@ -1682,6 +1682,19 @@
             if (highlightsSection) highlightsSection.style.display = photos.length ? "" : "none";
         }
 
+        // Doral also gets a small preview of the site-wide Gallery beneath its chapter highlights.
+        // Keep the full gallery as the single destination for browsing the complete collection.
+        const chapterGalleryPreviewSection = document.querySelector("#chapter-gallery-preview-section");
+        const chapterGalleryPreviewGrid = document.querySelector("#chapter-gallery-preview-grid");
+        if (chapterGalleryPreviewSection && chapterGalleryPreviewGrid) {
+            const showPreview = chapter.id === "doral";
+            const galleryPreview = (data.gallery || []).slice(0, 3);
+            chapterGalleryPreviewGrid.innerHTML = showPreview
+                ? galleryPreview.map(storyCardMarkup).join("")
+                : "";
+            chapterGalleryPreviewSection.style.display = showPreview && galleryPreview.length ? "" : "none";
+        }
+
         // Community partners — only rendered when the chapter lists any.
         const partnersSection = document.querySelector("#chapter-partners-section");
         const partnersEl = document.querySelector("#chapter-partners");
@@ -1813,6 +1826,20 @@
                         <p class="section-description">A few moments from chapter events and community outreach.</p>
                     </div>
                     <div class="chapter-photo-grid" id="chapter-photo-grid" aria-label="Chapter photos"></div>
+                </div>
+            </section>
+
+            <section class="section" id="chapter-gallery-preview-section" style="display: none;">
+                <div class="container">
+                    <div class="section-header">
+                        <p class="section-kicker">More to explore</p>
+                        <h2 class="section-title">Gallery preview</h2>
+                        <p class="section-description">Browse more moments from Bytes for Better Lives.</p>
+                    </div>
+                    <div class="gallery-grid chapter-gallery-preview-grid" id="chapter-gallery-preview-grid" aria-label="Gallery preview"></div>
+                    <div class="chapter-gallery-preview-action">
+                        <a class="btn btn-primary" href="gallery.html">View more</a>
+                    </div>
                 </div>
             </section>
 
