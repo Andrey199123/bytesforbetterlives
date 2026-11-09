@@ -1704,7 +1704,10 @@
         const chapterGalleryPreviewSection = document.querySelector("#chapter-gallery-preview-section");
         const chapterGalleryPreviewGrid = document.querySelector("#chapter-gallery-preview-grid");
         if (chapterGalleryPreviewSection && chapterGalleryPreviewGrid) {
-            const showPreview = chapter.id === "doral" || chapter.id === "new-york";
+            const showPreview = chapter.id === "doral"
+                || chapter.id === "new-york"
+                || chapter.id === "virginia"
+                || chapter.id === "turkey";
             // Pick a fresh, distinct set on every render without changing the source gallery order.
             const galleryPool = (data.galleryImages || []).slice();
             for (let i = galleryPool.length - 1; i > 0; i--) {
