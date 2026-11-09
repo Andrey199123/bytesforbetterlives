@@ -227,9 +227,11 @@
         var mediaAttrs = ' data-original-src="' + escapeHTML(src) + '" alt="' + escapeHTML(alt) + '"' + titleAttr + dataAttrs;
         var mediaTag;
         if (isGalleryVideo(src)) {
-            var poster = src.indexOf("res.cloudinary.com") !== -1 ? cloudinaryUrl(src, "c_limit,w_480,h_480,q_auto", "jpg") : "";
+            var poster = src.indexOf("res.cloudinary.com") !== -1
+                ? cloudinaryUrl(src, "c_limit,w_480,h_480,q_auto", "jpg")
+                : src.replace(/\.[a-z0-9]+$/i, ".poster.jpg");
             var tileVideo = cloudinaryUrl(src, GALLERY_VIDEO_TILE, "mp4");
-            mediaTag = '<video class="clickable-image"' + (poster ? ' data-poster="' + escapeHTML(poster) + '"' : "") +
+            mediaTag = '<video class="clickable-image"' + (poster ? ' poster="' + escapeHTML(poster) + '" data-poster="' + escapeHTML(poster) + '"' : "") +
                 ' data-src="' + escapeHTML(tileVideo) + '" data-full-src="' + escapeHTML(cloudinaryUrl(src, GALLERY_VIDEO_FULL, "mp4")) + '"' +
                 mediaAttrs + ' loop muted playsinline preload="none" data-fallback="images/logo.avif"></video>';
         } else {
