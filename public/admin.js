@@ -1170,6 +1170,14 @@ if (!firebaseReady) {
         });
     }
 
+    function safeGalleryUrl(value) {
+        if (typeof value !== "string" || !value.trim()) return "";
+        try {
+            const url = new URL(value, window.location.href);
+            return url.protocol === "https:" || url.origin === window.location.origin ? url.href : "";
+        } catch (_) { return ""; }
+    }
+
     // ---- Chapter pages (details + highlight photos) ----
     // Structured list editors (each row + a "+ Add" button) for stats / partners / initiatives —
     // replaces the old one-per-line textareas. ci = index into the full `chapters` array.
@@ -1278,11 +1286,49 @@ if (!firebaseReady) {
                 ${partnersEditorMarkup(c, index)}
                 <div style="font-weight:700; font-size:0.8rem; color:var(--ink-soft); margin-top:0.4rem;">Chapter highlights (${c.photos.length})</div>
                 <div class="gallery-grid-admin">${photosHtml}</div>
+                <details data-gallery-picker="${index}">
+                    <summary style="cursor:pointer;">Choose from Gallery</summary>
+                    <p>Select existing photos to reuse their links without uploading duplicates.</p>
+                    <div class="gallery-grid-admin" data-gallery-choices></div>
+                    <button type="button" class="btn btn-secondary" data-gallery-use="${index}">Add selected gallery photos</button>
+                </details>
                 <label class="btn btn-secondary" style="cursor:pointer; justify-self:start;">+ Add highlight photos<input type="file" accept="image/*,video/*" multiple data-cphoto-upload="${index}" style="display:none;"></label>
             `;
             editor.appendChild(card);
         });
 
+        editor.querySelectorAll("[data-gallery-picker]").forEach(function (picker) {
+            picker.addEventListener("toggle", function () {
+                if (!picker.open || picker.dataset.loaded) return;
+                picker.dataset.loaded = "1";
+                const ci = Number(picker.dataset.galleryPicker);
+                const selected = new Set(chapters[ci].photos || []);
+                picker.querySelector("[data-gallery-choices]").innerHTML = galleryImages.map(function (photo, gi) {
+                    const src = typeof photo === "string" ? photo : photo.src;
+                    if (!src || selected.has(src) || !safeGalleryUrl(src)) return "";
+                    const alt = (photo && photo.alt) || "Gallery photo " + (gi + 1);
+                    return `<label style="cursor:pointer;"><input type="checkbox" data-gallery-choice="${gi}" aria-label="${escapeAttr(alt)}"><img src="${escapeAttr(safeGalleryUrl(src))}" alt="${escapeAttr(alt)}" loading="lazy" style="width:100%;height:120px;object-fit:cover;"></label>`;
+                }).join("");
+            });
+        });
+        editor.querySelectorAll("[data-gallery-use]").forEach(function (button) {
+            button.addEventListener("click", function () {
+                const ci = Number(button.dataset.galleryUse);
+                const picker = button.closest("[data-gallery-picker]");
+                const selected = Array.from(picker.querySelectorAll("[data-gallery-choice]:checked"));
+                if (!selected.length) return;
+                const photos = new Set(chapters[ci].photos || []);
+                selected.forEach(function (input) {
+                    const photo = galleryImages[Number(input.dataset.galleryChoice)];
+                    const src = typeof photo === "string" ? photo : photo && photo.src;
+                    if (src && safeGalleryUrl(src)) photos.add(src);
+                });
+                chapters[ci].photos = Array.from(photos);
+                if (window.BFBL_DATA) window.BFBL_DATA.chapters = chapters;
+                renderChapterPages();
+                autosave("chapters", chapters);
+            });
+        });
         editor.querySelectorAll("[data-cfield]").forEach(function (input) {
             input.addEventListener("input", function () {
                 const i = Number(input.dataset.i);
